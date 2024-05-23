@@ -1,0 +1,12 @@
+# Pycharm
+.idea/
+
+# Visual Studio Code
+.vscode/
+
+# Environments
+.venv/
+.env/
+
+# Python
+**/__pycache__/

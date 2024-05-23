@@ -1,0 +1,20 @@
+[tool.poetry]
+name = "tiptrip"
+version = "0.1.0"
+description = """"""
+authors = [
+    "Aguilera Gómez Donaji <daguilerad1700@alumno.ipn.mx>",
+    "Ayala Gonzáles Ricardo Ángel <rayalag1700@alumno.ipn.mx>",
+    "Sandoval Gil Gael Sebastián <gsandovalg1700@alumno.ipn.mx>"
+]
+readme = "README.md"
+
+[tool.poetry.dependencies]
+python = "^3.11"
+flet = "^0.22.1"
+db-sqlite3 = "^0.0.1"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
