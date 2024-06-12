@@ -1,102 +1,149 @@
+import logging
+from flet_route import Params, Basket
 from flet import (
     Page, View, AppBar, Column, Container,
-    Text, TextField, Checkbox, ElevatedButton,
-    MainAxisAlignment, TextAlign, padding,
+    Text, TextField, Checkbox, ElevatedButton, IconButton,
+    MainAxisAlignment, TextAlign, padding, icons,
     ControlEvent
 )
 
-from data.db import *
+from data import db
 from resources.config import *
+from resources.functions import load_user_to_basket
 
 
-def sign_up_view(page: Page) -> View:
-    txt_username: TextField = TextField(
-                                    label="Nombre de usuario",
-                                    text_align=TextAlign.LEFT,
-                                    width=COMPONENTS_WIDTH
-                                )
-    txt_password: TextField = TextField(
-                                    label="Contraseña",
-                                    text_align=TextAlign.LEFT,
-                                    width=COMPONENTS_WIDTH,
-                                    password=True
-                                )
-    chk_signup: Checkbox = Checkbox(
-                                label="Acepto términos y condiciones",
-                                value=False
-                            )
-    btn_submit: ElevatedButton = ElevatedButton(
-                                        text="Crear usuario",
-                                        width=COMPONENTS_WIDTH,
-                                        disabled=True
-                                    )
+logger = logging.getLogger(f"{PROJECT_NAME}.{__name__}")
 
-    def validate(event: ControlEvent) -> None:
-        if all([txt_username.value, txt_password.value, chk_signup.value]):
-            btn_submit.disabled = False
-        else:
-            btn_submit.disabled = True
-        page.update()
 
-    def submit(event: ControlEvent) -> None:
-        connection = connect_to_db()
-        data = (txt_username.value, txt_password.value)
+class SignUpView:
+    def __init__(self):
+        self.page = None
+        self.params = None
+        self.basket = None
 
-        if not check_record_exists(connection, data):
-            insert_record(connection, data)
-
-        new_user = get_all_records(connection)[-1]
-        print(
-            "Usuario con credenciales:\n"
-            f"    Nombre de usuario: {new_user[0]}\n"
-            f"    Contraseña: {new_user[1]}\n"
-            "creado con éxito"
+        self.txt_username: TextField = TextField(
+            label="Nombre de usuario",
+            text_align=TextAlign.LEFT,
+            width=COMPONENTS_WIDTH,
+            on_change=self.validate
         )
-        close_connection_to_db(connection)
+        self.txt_password: TextField = TextField(
+            label="Contraseña",
+            text_align=TextAlign.LEFT,
+            width=COMPONENTS_WIDTH,
+            password=True,
+            on_change=self.validate
+        )
+        self.chk_signup: Checkbox = Checkbox(
+            label="Acepto Términos y Condiciones",
+            value=False,
+            on_change=self.validate
+        )
+        self.btn_submit: ElevatedButton = ElevatedButton(
+            text="Crear usuario",
+            width=COMPONENTS_WIDTH,
+            disabled=True,
+            on_click=self.submit
+        )
 
-        page.go("/home")
+    def view(self, page: Page, params: Params, basket: Basket) -> View:
+        self.page = page
+        self.params = params
+        self.basket = basket
 
-    txt_username.on_change = validate
-    txt_password.on_change = validate
-    chk_signup.on_change = validate
-    btn_submit.on_click = submit
-
-    return View(
-        route="/sign_up",
-        controls=[
-            AppBar(
-                title=Text(value=""),
-                bgcolor="white",
-                leading_width=APP_BAR_HEIGHT
-            ),
-            Container(
-                width=APP_WIDTH,
-                height=APP_HEIGHT - (APP_BAR_HEIGHT * 2),
-                padding=padding.only(
-                    left=EXTERIOR_PADDING,
-                    right=EXTERIOR_PADDING
+        return View(
+            route="/sign_up",
+            controls=[
+                AppBar(
+                    title=Text(value=""),
+                    leading=IconButton(
+                        icon=icons.ARROW_BACK,
+                        on_click=self.go_back
+                    ),
+                    bgcolor="white",
+                    leading_width=APP_BAR_HEIGHT
                 ),
-                content=Column(
-                    alignment=MainAxisAlignment.SPACE_EVENLY,
-                    controls=[
-                        Container(
-                            content=Text(
-                                value=PROJECT_NAME,
-                                size=30
-                            )
-                        ),
-                        Container(
-                            content=Text(
-                                value="Crear cuenta",
-                                size=15
-                            )
-                        ),
-                        Container(content=txt_username),
-                        Container(content=txt_password),
-                        Container(content=chk_signup),
-                        Container(content=btn_submit)
-                    ]
+                Container(
+                    width=APP_WIDTH,
+                    height=APP_HEIGHT - (APP_BAR_HEIGHT * 2),
+                    padding=padding.only(
+                        left=EXTERIOR_PADDING,
+                        right=EXTERIOR_PADDING
+                    ),
+                    content=Column(
+                        alignment=MainAxisAlignment.SPACE_EVENLY,
+                        controls=[
+                            Container(
+                                content=Text(
+                                    value=PROJECT_NAME,
+                                    size=PROJECT_NAME_SIZE
+                                )
+                            ),
+                            Container(
+                                content=Text(
+                                    value="Crear cuenta",
+                                    size=TITLE_SIZE
+                                )
+                            ),
+                            Container(content=self.txt_username),
+                            Container(content=self.txt_password),
+                            Container(content=self.chk_signup),
+                            Container(content=self.btn_submit)
+                        ]
+                    )
                 )
-            )
-        ]
-    )
+            ]
+        )
+
+    def go_back(self, event: ControlEvent):
+        self.page.banner.close_banner(event)
+        if self.basket.get("role") == "admin":
+            self.page.go(f"/home/{self.basket.get('username')}")
+        else:
+            self.page.go('/')
+
+    def validate(self, event: ControlEvent) -> None:
+        if all([
+            self.txt_username.value,
+            self.txt_password.value,
+            self.chk_signup.value
+        ]):
+            self.btn_submit.disabled = False
+        else:
+            self.btn_submit.disabled = True
+        self.page.update()
+
+    def submit(self, event: ControlEvent) -> None:
+        logger.info("Creando conexión a la base de datos...")
+        connection = db.connect_to_db()
+
+        logger.info("Verificando que el registro no exista...")
+        conditions: dict = {
+            "username": self.txt_username.value,
+            "password": self.txt_password.value
+        }
+        record = db.get_record(connection, "users", conditions)
+
+        if record is None:
+            logger.info("Insertando nuevo registro...")
+            values: list = [self.txt_username.value, self.txt_password.value]
+            if self.basket.get("role") == "admin":
+                values.append("admin")
+            else:
+                values.append("user")
+
+            db.insert_record(connection, "users", values)
+            conditions: dict = {"username": self.txt_username.value}
+            record: list = db.get_record(connection, "users", conditions)
+            load_user_to_basket(self.basket, record)
+
+        logger.info(
+            "Nuevo usuario con credenciales: {}|{} creado correctamente"
+            .format(self.txt_username.value, self.txt_password.value)
+        )
+
+        logger.info("Cerrando conexión con la base de datos...")
+        db.close_connection_to_db(connection)
+
+        logger.info("Redirigiendo a la vista \"Inicio\" (\"/home\")...")
+        self.page.go(f"/home/{self.txt_username.value}")

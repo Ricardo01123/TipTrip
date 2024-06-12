@@ -197,13 +197,13 @@ files = [
 
 [[package]]
 name = "click"
-version = "8.1.7"
+version = "8.1.3"
 description = "Composable command line interface toolkit"
 optional = false
 python-versions = ">=3.7"
 files = [
-    {file = "click-8.1.7-py3-none-any.whl", hash = "sha256:ae74fb96c20a0277a1d615f1e4d73c8414f5a98db8b799a7931d1582f3390c28"},
-    {file = "click-8.1.7.tar.gz", hash = "sha256:ca9853ad459e787e2192211578cc907e7594e294c7ccc834310722b41b9ca6de"},
+    {file = "click-8.1.3-py3-none-any.whl", hash = "sha256:bb4d8133cb15a609f44e8213d9b391b0809795062913b383c62be0ee95b1db48"},
+    {file = "click-8.1.3.tar.gz", hash = "sha256:7682dc8afb30297001674575ea00d1814d808d6a36af415a82bd481d37ba7b8e"},
 ]
 
 [package.dependencies]
@@ -387,6 +387,22 @@ files = [
 
 [package.dependencies]
 repath = ">=0.9.0,<0.10.0"
+
+[[package]]
+name = "flet-route"
+version = "0.3.3"
+description = "This makes it easy to manage multiple views with dynamic routing."
+optional = false
+python-versions = "*"
+files = [
+    {file = "flet_route-0.3.3-py3-none-any.whl", hash = "sha256:d11ffa2df4b5bfbf17adda1ef9725746b95f984d609259dbe6b97e298e3ac20c"},
+    {file = "flet_route-0.3.3.tar.gz", hash = "sha256:931c1bdfa0fe4ff8852418763fefa3d61461b27848b68411a0080091ab13700c"},
+]
+
+[package.dependencies]
+click = "8.1.3"
+flet = "*"
+repath = "*"
 
 [[package]]
 name = "flet-runtime"
@@ -1537,4 +1553,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "144a3ba5f42e0a401a6f876afe0c7c4c7dd7a0ce61ab2c2bc19e829fcad0cabe"
+content-hash = "0ff1b59b0795d9a8694cd2419f31d27797eb488d6498469834d8477b1240b133"
