@@ -1,22 +1,22 @@
-from flet import Page, View
+from flet import Page
+from logging import Logger
 from flet_route import path
 
-from resources.config import PROJECT_NAME
-
 from views.home import HomeView
-from views.paid import PaidView
 from views.sign_in import SignInView
 from views.sign_up import SignUpView
-from views.history_view import HistoryView
-from views.forgotten_pwd import ForgottenPwdView
+from views.loading import LoadingView
+from views.change_password import ChangePasswordView
+from views.privacy_politics import PrivacyPoliticsView
+from views.terms_conditions import TermsConditionsView
 
 
-routes: list = [
-	path(url='/', clear=True, view=SignInView().view),
-	path(url="/home/:username", clear=True, view=HomeView().view),
-	path(url="/sign_in", clear=True, view=SignInView().view),
+routes: list[path] = [
+	path(url="/loading", clear=True, view=LoadingView().view),
+	path(url="/", clear=True, view=SignInView().view),
+	path(url="/change_password", clear=True, view=ChangePasswordView().view),
 	path(url="/sign_up", clear=True, view=SignUpView().view),
-	path(url="/forgotten_pwd", clear=True, view=ForgottenPwdView().view),
-	path(url="/paid/:last_order_id", clear=True, view=PaidView().view),
-	path(url="/history", clear=True, view=HistoryView().view)
+	path(url="/privacy_politics", clear=True, view=PrivacyPoliticsView().view),
+	path(url="/terms_conditions", clear=True, view=TermsConditionsView().view),
+	path(url="/home", clear=True, view=HomeView().view),
 ]
