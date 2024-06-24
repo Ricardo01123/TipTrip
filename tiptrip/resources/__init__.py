@@ -1,4 +1,5 @@
-from . import texts
 from . import config
-from . import router
 from . import functions
+from . import router
+from . import styles
+from . import texts

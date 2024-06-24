@@ -1,22 +1,22 @@
-import logging
+from logging import basicConfig, getLogger, info, INFO
+from time import sleep
 
 from flet_route import Routing
 from flet import app, Page, View, ThemeMode, RouteChangeEvent, ViewPopEvent
 
-from data.db import initialize_db
+from resources.config import *
+# from data.db import initialize_db
 from resources.router import routes
-from resources.config import TOTAL_WIDTH, TOTAL_HEIGHT
-from resources.config import PROJECT_NAME, LOGGING_FORMAT
 
 
-logging.basicConfig(level=logging.INFO, format=LOGGING_FORMAT)
-logger = logging.getLogger(PROJECT_NAME)
+basicConfig(level=INFO, format=LOGGING_FORMAT)
+logger = getLogger(PROJECT_NAME)
 
 
 def main(page: Page) -> None:
-	logger.info(f"Iniciando configuraciones básicas de la app...")
-	page.window_width = TOTAL_WIDTH
-	page.window_height = TOTAL_HEIGHT
+	info(f"Iniciando configuraciones básicas de la app...")
+	page.window_width = APP_WIDTH
+	page.window_height = HEIGHT_PLUS_HEADER
 	page.window_resizable = False
 	page.theme_mode = ThemeMode.LIGHT
 	page.title = "Tip Trip"
@@ -24,8 +24,11 @@ def main(page: Page) -> None:
 	# logger.info(f"Iniciando base de datos...")
 	# initialize_db()
 
-	logger.info(f"Iniciando configuraciones de navegación de la app...")
+	info(f"Iniciando configuraciones de navegación de la app...")
 	Routing(page=page, app_routes=routes)
+	# page.go("/loading")
+	# sleep(1)
+	# page.go("/sign_in")
 	page.go(page.route)
 
 

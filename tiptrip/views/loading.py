@@ -1,18 +1,14 @@
-import logging
 from random import choice
 from flet_route import Params, Basket
 
 from flet import (
     Page, View, Container, Column, Text, Icon,
-    MainAxisAlignment, CrossAxisAlignment, TextAlign,
-    BoxShadow, padding, margin, border_radius, colors, icons
+    padding, margin, border_radius, BoxShadow, colors, icons,
+    MainAxisAlignment, CrossAxisAlignment, TextAlign
 )
 
 from resources.config import *
 from resources.texts import ADVICES
-
-
-logger = logging.getLogger(f"{PROJECT_NAME}.{__name__}")
 
 
 class LoadingView:
@@ -28,24 +24,24 @@ class LoadingView:
 
         return View(
             route="/loading",
-            padding=padding.all(value=0.0),
+            padding=padding.all(value=0),
             controls=[
                 Container(
-                    width=TOTAL_WIDTH,
-                    height=(TOTAL_HEIGHT * 0.80),
+                    expand=8,
+                    width=APP_WIDTH,
+                    bgcolor=MAIN_COLOR,
                     border_radius=border_radius.only(
                         bottom_left=RADIUS,
                         bottom_right=RADIUS
                     ),
-                    shadow=BoxShadow(blur_radius=BLUR),
-                    bgcolor=MAIN_COLOR,
+                    shadow=BoxShadow(blur_radius=LOW_BLUR),
                     content=Column(
                         alignment=MainAxisAlignment.CENTER,
                         horizontal_alignment=CrossAxisAlignment.CENTER,
                         controls=[
                             Text(
                                 value=PROJECT_NAME,
-                                size=PROJECT_NAME_SIZE,
+                                size=45,
                                 color=colors.WHITE
                             ),
                             Icon(
@@ -55,15 +51,15 @@ class LoadingView:
                             ),
                             Text(
                                 value="Cargando...",
-                                size=TITLE_SIZE,
+                                size=30,
                                 color=colors.WHITE
                             ),
                         ]
                     )
                 ),
                 Container(
-                    width=TOTAL_WIDTH,
-                    height=(TOTAL_HEIGHT * 0.20),
+                    expand=2,
+                    width=APP_WIDTH,
                     margin=margin.only(top=20),
                     content=Text(
                         value=f"Consejo: {choice(ADVICES)}",

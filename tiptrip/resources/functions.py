@@ -1,6 +1,6 @@
 from logging import Logger
 from flet_route import Basket
-from flet import Page, ControlEvent
+from flet import Page, ControlEvent, colors
 
 from resources.config import MAIN_COLOR, SECONDARY_COLOR
 
@@ -32,4 +32,10 @@ def main_btn_hover(event: ControlEvent) -> None:
 
 def secondary_btn_hover(event: ControlEvent) -> None:
 	event.control.color = SECONDARY_COLOR if event.data == "true" else MAIN_COLOR
+	event.control.update()
+
+
+def danger_btn_hover(event: ControlEvent) -> None:
+	event.control.color = colors.WHITE if event.data == "true" else colors.RED
+	event.control.bgcolor = colors.RED if event.data == "true" else colors.WHITE
 	event.control.update()
