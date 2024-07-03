@@ -7,7 +7,7 @@ from resources.config import *
 
 
 class Message(Container):
-	def __init__(self, user, message):
+	def __init__(self, is_bot: bool, message: str) -> None:
 		super().__init__(
 			expand=True,
 			expand_loose=True,
@@ -19,29 +19,17 @@ class Message(Container):
 			),
 			padding=padding.all(value=(SPACING / 2)),
 			bgcolor=(
-				SECONDARY_COLOR
-				if user != BOT_NAME
-				else colors.WHITE
+				colors.WHITE
+				if is_bot
+				else SECONDARY_COLOR
 			),
-			content=Column(
-				controls=[
-					Text(
-						value=user,
-						weight=FontWeight.BOLD,
-						color=(
-							colors.WHITE
-							if user != BOT_NAME
-							else colors.BLACK
-						)
-					),
-					Text(
-						value=message,
-						color=(
-							colors.WHITE
-							if user != BOT_NAME
-							else colors.BLACK
-						)
-					)
-				]
+			content=Text(
+				value=message,
+				color=(
+					colors.BLACK
+					if is_bot
+					else colors.WHITE
+				),
+				size=MESSAGE_TEXT_SIZE
 			)
 		)

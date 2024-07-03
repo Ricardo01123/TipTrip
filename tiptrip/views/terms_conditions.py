@@ -8,9 +8,9 @@ from flet import (
 
 # from data import db
 from resources.config import *
+from components.titles import MainTitle
+from resources.functions import go_to_view
 from resources.texts import TERMS_CONDITIONS
-from components.titles import MainTitleColumn
-from resources.functions import secondary_btn_hover, go_to_view
 from resources.styles import cont_main_style, btn_secondary_style
 
 
@@ -22,11 +22,19 @@ class TermsConditionsView:
 		self.page = None
 		self.params = None
 		self.basket = None
+		self.btn_back = None
+
+	def view(self, page: Page, params: Params, basket: Basket) -> View:
+		self.page = page
+		self.params = params
+		self.basket = basket
 
 		self.btn_back: ElevatedButton = ElevatedButton(
-			icon=icons.LOGIN,
-			text="Regresar a Registrarse",
-			on_hover=secondary_btn_hover,
+			width=self.page.width,
+			content=Text(
+				value="Regresar a Registrarse",
+				size=BTN_TEXT_SIZE
+			),
 			on_click=lambda _: go_to_view(
 				page=self.page,
 				logger=logger,
@@ -34,11 +42,6 @@ class TermsConditionsView:
 			),
 			**btn_secondary_style
 		)
-
-	def view(self, page: Page, params: Params, basket: Basket) -> View:
-		self.page = page
-		self.params = params
-		self.basket = basket
 
 		return View(
 			route="/terms_conditions",
@@ -48,16 +51,18 @@ class TermsConditionsView:
 				Container(
 					content=Column(
 						controls=[
-							IconButton(
-								icon=icons.ARROW_BACK,
-								icon_color=colors.BLACK,
-								on_click=lambda _: go_to_view(
-									page=self.page,
-									logger=logger,
-									route="sign_up"
-								),
+							Container(
+								content=IconButton(
+									icon=icons.ARROW_BACK,
+									icon_color=colors.BLACK,
+									on_click=lambda _: go_to_view(
+										page=self.page,
+										logger=logger,
+										route="sign_up"
+									),
+								)
 							),
-							MainTitleColumn(
+							MainTitle(
 								subtitle="Términos y condiciones",
 								top_margin=(SPACING / 2)
 							),
@@ -65,7 +70,10 @@ class TermsConditionsView:
 								margin=margin.only(top=SPACING),
 								content=Column(
 									controls=[
-										Text(value=TERMS_CONDITIONS)
+										Text(
+											value=TERMS_CONDITIONS,
+											color=colors.BLACK
+										)
 									]
 								)
 							),

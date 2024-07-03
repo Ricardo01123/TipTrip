@@ -3,14 +3,14 @@ from flet_route import Params, Basket
 
 from flet import (
 	Page, View, Container, Column, Text, ElevatedButton, IconButton,
-	padding, margin, colors, icons
+	padding, margin, ScrollMode, colors, icons
 )
 
 # from data import db
 from resources.config import *
+from components.titles import MainTitle
+from resources.functions import go_to_view
 from resources.texts import PRIVACY_POLITICS
-from components.titles import MainTitleColumn
-from resources.functions import secondary_btn_hover, go_to_view
 from resources.styles import cont_main_style, btn_secondary_style
 
 
@@ -22,11 +22,19 @@ class PrivacyPoliticsView:
 		self.page = None
 		self.params = None
 		self.basket = None
+		self.btn_back = None
+
+	def view(self, page: Page, params: Params, basket: Basket) -> View:
+		self.page = page
+		self.params = params
+		self.basket = basket
 
 		self.btn_back: ElevatedButton = ElevatedButton(
-			icon=icons.LOGIN,
-			text="Regresar a Iniciar sesión",
-			on_hover=secondary_btn_hover,
+			width=self.page.width,
+			content=Text(
+				value="Regresar a Iniciar sesión",
+				size=BTN_TEXT_SIZE
+			),
 			on_click=lambda _: go_to_view(
 				page=self.page,
 				logger=logger,
@@ -34,11 +42,6 @@ class PrivacyPoliticsView:
 			),
 			**btn_secondary_style
 		)
-
-	def view(self, page: Page, params: Params, basket: Basket) -> View:
-		self.page = page
-		self.params = params
-		self.basket = basket
 
 		return View(
 			route="/privacy_politics",
@@ -48,24 +51,30 @@ class PrivacyPoliticsView:
 				Container(
 					content=Column(
 						controls=[
-							IconButton(
-								icon=icons.ARROW_BACK,
-								icon_color=colors.BLACK,
-								on_click=lambda _: go_to_view(
-									page=self.page,
-									logger=logger,
-									route=""  # '/'
-								),
+							Container(
+								content=IconButton(
+									icon=icons.ARROW_BACK,
+									icon_color=colors.BLACK,
+									on_click=lambda _: go_to_view(
+										page=self.page,
+										logger=logger,
+										route=""  # '/'
+									),
+								)
 							),
-							MainTitleColumn(
+							MainTitle(
 								subtitle="Política de Privacidad",
 								top_margin=(SPACING / 2)
 							),
 							Container(
 								margin=margin.only(top=SPACING),
 								content=Column(
+									scroll=ScrollMode.HIDDEN,
 									controls=[
-										Text(value=PRIVACY_POLITICS)
+										Text(
+											value=PRIVACY_POLITICS,
+											color=colors.BLACK
+										)
 									]
 								)
 							),

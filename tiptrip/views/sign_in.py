@@ -3,18 +3,16 @@ from logging import getLogger, info
 from flet_route import Params, Basket
 
 from flet import (
-	Page, View, Container, Column, Banner, Text, TextField, TextButton,
-	ElevatedButton, Divider, Markdown, padding, margin, colors, icons,
+	Page, View, Container, Column, Text, TextField, TextButton, ElevatedButton,
+	Divider, Markdown, padding, margin, colors, icons, TextStyle, ScrollMode,
 	ControlEvent
 )
 
-# from data import db
 from resources.config import *
+from resources.styles import *
 from resources.functions import *
-from components.titles import MainTitleColumn
-from resources.styles import (
-	cont_main_style, txt_style, btn_primary_style, btn_secondary_style
-)
+from components.titles import MainTitle
+# from data import db
 # from components.banners import ErrorBanner
 
 
@@ -26,11 +24,12 @@ class SignInView:
 		self.page = None
 		self.params = None
 		self.basket = None
+		self.btn_submit = None
+		self.btn_sign_up = None
 
 		self.txt_email: TextField = TextField(
 			prefix_icon=icons.EMAIL,
 			hint_text="Correo electrónico",
-			on_change=self.validate,
 			**txt_style
 		)
 
@@ -39,20 +38,24 @@ class SignInView:
 			hint_text="Contraseña",
 			password=True,
 			can_reveal_password=True,
-			on_change=self.validate,
 			**txt_style
 		)
 
+	def view(self, page: Page, params: Params, basket: Basket) -> View:
+		self.page = page
+		self.params = params
+		self.basket = basket
+
 		self.btn_submit: ElevatedButton = ElevatedButton(
-			text="Iniciar sesión",
+			width=self.page.width,
+			content=Text(value="Iniciar sesión", size=BTN_TEXT_SIZE),
 			on_click=self.btn_submit_clicked,
-			on_hover=main_btn_hover,
 			**btn_primary_style
 		)
 
 		self.btn_sign_up: ElevatedButton = ElevatedButton(
-			text="Registrarse",
-			on_hover=secondary_btn_hover,
+			width=self.page.width,
+			content=Text(value="Registrarse", size=BTN_TEXT_SIZE),
 			on_click=lambda _: go_to_view(
 				page=self.page,
 				logger=logger,
@@ -60,11 +63,6 @@ class SignInView:
 			),
 			**btn_secondary_style,
 		)
-
-	def view(self, page: Page, params: Params, basket: Basket) -> View:
-		self.page = page
-		self.params = params
-		self.basket = basket
 
 		# self.page.banner = ErrorBanner(page)
 
@@ -75,52 +73,63 @@ class SignInView:
 			controls=[
 				Container(
 					content=Column(
+						scroll=ScrollMode.HIDDEN,
 						controls=[
-							MainTitleColumn(
+							MainTitle(
 								subtitle="Iniciar sesión",
-								top_margin=(SPACING * 2)
-							),
+								top_margin=(SPACING * 2),
+					   		),
 							Container(
-								margin=margin.only(top=(SPACING * 3)),
+								margin=margin.only(top=(SPACING * 4)),
 								content=Column(
-									spacing=SPACING,
+									spacing=(SPACING * 1.5),
 									controls=[
-										Container(content=self.txt_email),
-										Container(content=self.txt_password),
-										TextButton(
-											content=Container(
-												content=Text(
-													value="¿Olvidaste tu contraseña?",
-													color=colors.BLACK
-												)
-											),
-											on_click=lambda _: go_to_view(
-												page=self.page,
-												logger=logger,
-												route="change_password"
-											),
-										)
+										Container(
+											height=TXT_CONT_SIZE,
+											content=self.txt_email
+										),
+										Container(
+											height=TXT_CONT_SIZE,
+											content=self.txt_password
+										),
+										Container(
+											content=TextButton(
+												content=Container(
+													content=Text(
+														value="¿Olvidaste tu contraseña?",
+														color=colors.BLACK
+													)
+												),
+												on_click=lambda _: go_to_view(
+													page=self.page,
+													logger=logger,
+													route="change_password"
+												),
+											)
+										),
 									]
 								)
 							),
 							Container(
-								margin=margin.only(top=(SPACING * 2)),
+								margin=margin.only(top=(SPACING * 3)),
 								content=Column(
 									controls=[
 										self.btn_submit,
-										Divider(),
+										Divider(color=colors.TRANSPARENT),
 										self.btn_sign_up
 									]
 								)
 							),
 							Container(
 								margin=margin.only(top=(SPACING * 2)),
-								width=(APP_WIDTH - (SPACING * 4)),
 								content=Markdown(
 									value=(
 										"Para conocer más acerca de nuestra "
 										"Política de Privacidad da click "
 										"[aquí](https://www.google.com)."
+									),
+									code_style=TextStyle(
+										color=colors.BLACK
 									),
 									on_tap_link=lambda _: go_to_view(
 										page=self.page,
@@ -135,14 +144,6 @@ class SignInView:
 				)
 			]
 		)
-
-	def validate(self, event: ControlEvent) -> None:
-		if self.txt_password.value\
-				and match(pattern=RGX_EMAIL, string=self.txt_email.value):
-			self.btn_submit.disabled = False
-		else:
-			self.btn_submit.disabled = True
-		self.page.update()
 
 	def btn_submit_clicked(self, event: ControlEvent) -> None:
 		info("Creando conexión a la base de datos...")

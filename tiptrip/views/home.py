@@ -2,9 +2,10 @@ from logging import getLogger, info
 from flet_route import Params, Basket
 
 from flet import (
-	Page, View, Container, ListView, Column, Row, Text, TextField, Stack, Icon,
-	TextButton, AlertDialog, MainAxisAlignment, CircleAvatar, alignment,
-	Offset, padding, BoxShadow, InputBorder, border_radius, colors, icons,
+	Page, View, Container, ListView, Column, Row, Text, TextField, Stack,
+	ClipBehavior, Icon, TextButton, AlertDialog, MainAxisAlignment,
+	CircleAvatar, alignment, Offset, padding, margin, BoxShadow,
+	border_radius, colors, icons,
 )
 
 # from data import db
@@ -12,6 +13,7 @@ from components.bars import *
 from resources.config import *
 from resources.functions import *
 from components.place_details import PlaceCard
+from resources.styles import txt_messages_style
 
 
 logger = getLogger(f"{PROJECT_NAME}.{__name__}")
@@ -29,10 +31,8 @@ class HomeView:
 
 		self.txt_place: TextField = TextField(
 			prefix_icon=icons.SEARCH,
-			label=None,
 			hint_text="Busca un lugar",
-			border=InputBorder.NONE,
-			cursor_color=SECONDARY_COLOR,
+			**txt_messages_style
 			# on_change=self.validate
 		)
 
@@ -80,92 +80,79 @@ class HomeView:
 			route=self.route,
 			bgcolor=colors.WHITE,
 			padding=padding.all(value=0.0),
+			spacing=0,
 			controls=[
 				TopBar(page=self.page, leading=False, logger=logger),
 				Container(
-					expand=True,
-					width=APP_WIDTH,
-					content=Stack(
+					width=self.page.width,
+					height=RADIUS,
+					bgcolor=MAIN_COLOR,
+					border_radius=border_radius.only(
+						bottom_left=RADIUS,
+						bottom_right=RADIUS
+					),
+					shadow=BoxShadow(
+						blur_radius=BLUR,
+						color=colors.GREY_800
+					),
+				),
+				Container(
+					width=self.page.width,
+					height=TXT_CONT_SIZE,
+					margin=margin.symmetric(vertical=10),
+					content=Row(
 						controls=[
+							Container(expand=1),
 							Container(
-								left=0,
-								top=0,
-								width=(APP_WIDTH - 16),
-								height=30,
-								bgcolor=MAIN_COLOR,
-								border_radius=border_radius.only(
-									bottom_left=RADIUS,
-									bottom_right=RADIUS
+								expand=8,
+								bgcolor=colors.WHITE,
+								padding=padding.symmetric(
+									horizontal=(SPACING / 2)
+								),
+								border_radius=border_radius.all(
+									value=RADIUS
 								),
 								shadow=BoxShadow(
-									blur_radius=BLUR,
-									color=colors.GREY_800
+									blur_radius=(BLUR / 2),
+									offset=Offset(0, 2),
+									color=colors.GREY
 								),
-								content=Text(value=""),
-							),
-							Container(
-								left=0,
-								top=5,
-								width=(APP_WIDTH - 16),
-								height=50,
-								alignment=alignment.center,
-								content=Container(
-									width=(APP_WIDTH - (SPACING * 4)),
-									bgcolor=colors.WHITE,
-									padding=padding.symmetric(
-										horizontal=(SPACING / 2)
-									),
-									border_radius=border_radius.all(
-										value=RADIUS
-									),
-									shadow=BoxShadow(
-										blur_radius=(BLUR / 2),
-										offset=Offset(0, 2),
-										color=colors.GREY
-									),
-									content=Row(
-										alignment=MainAxisAlignment.SPACE_BETWEEN,
-										spacing=None,
-										controls=[
-											Container(
-												expand=4,
-												content=self.txt_place,
+								content=Row(
+									alignment=MainAxisAlignment.SPACE_BETWEEN,
+									spacing=None,
+									controls=[
+										Container(
+											expand=4,
+											content=self.txt_place,
+										),
+										Container(
+											expand=1,
+											content=CircleAvatar(
+												bgcolor=colors.WHITE,
+												radius=SPACING,
+												content=Icon(
+													name=icons.FILTER_LIST,
+													color=colors.BLACK
+												)
 											),
-											Container(
-												expand=1,
-												content=CircleAvatar(
-													bgcolor=colors.WHITE,
-													radius=SPACING,
-													content=Icon(
-														name=icons.FILTER_LIST,
-														color=colors.BLACK
-													)
-												),
-												# on_click=self.open_dialog
-											)
-										]
-									)
+											# on_click=self.open_dialog
+										)
+									]
 								)
 							),
-							Container(
-								left=0,
-								top=60,
-								width=(APP_WIDTH - 16),
-								height=530,
-								content=self.lv_places_list
-							),
-							Container(
-								left=0,
-								bottom=0,
-								width=(APP_WIDTH - 16),
-								content=BottomBar(
-									page=self.page,
-									logger=logger,
-									current_route=self.route
-								)
-							)
+							Container(expand=1),
 						]
 					)
+				),
+				Container(
+					expand=True,
+					width=self.page.width,
+					content=self.lv_places_list
+				),
+				BottomBar(
+					page=self.page,
+					logger=logger,
+					current_route=self.route
 				)
 			]
 		)
@@ -190,7 +177,7 @@ class HomeView:
 			),
 			PlaceCard(
 				page=self.page,
-				title="BELLAS ARTES",
+				title="KJASHDFKJASHDKFJHASDKFJHASKDFJ",
 				category="MUSEUM",
 				address="Av. Juárez s/n esq. Eje Central Lázaro Cárdenas, Centro Histórico, Cuauhtémoc.",
 				punctuation=4,

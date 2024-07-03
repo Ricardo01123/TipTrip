@@ -4,16 +4,14 @@ from flet_route import Params, Basket
 
 from flet import (
 	Page, View, Container, Column, Banner, Text, TextField, ElevatedButton,
-	Divider, padding, margin, icons, ControlEvent
+	IconButton, Divider, padding, margin, icons, ControlEvent
 )
 
-# from data import db
 from resources.config import *
+from resources.styles import *
 from resources.functions import *
-from components.titles import MainTitleColumn
-from resources.styles import (
-	cont_main_style, txt_style, btn_primary_style, btn_secondary_style
-)
+from components.titles import MainTitle
+# from data import db
 # from components.banners import ErrorBanner
 
 
@@ -25,11 +23,12 @@ class ChangePasswordView:
 		self.page = None
 		self.params = None
 		self.basket = None
+		self.btn_submit = None
+		self.btn_back = None
 
 		self.txt_email: TextField = TextField(
 			prefix_icon=icons.EMAIL,
 			hint_text="Correo electrónico",
-			on_change=self.validate,
 			**txt_style
 		)
 
@@ -38,44 +37,33 @@ class ChangePasswordView:
 			hint_text="Contraseña",
 			password=True,
 			can_reveal_password=True,
-			on_change=self.validate,
 			**txt_style
 		)
 
 		self.txt_confirm_password: TextField = TextField(
 			prefix_icon=icons.LOCK,
-			hint_text="Contraseña",
+			hint_text="Confirmar contraseña",
 			password=True,
 			can_reveal_password=True,
-			on_change=self.validate,
 			**txt_style
-		)
-
-		self.btn_submit: ElevatedButton = ElevatedButton(
-			text="Continuar",
-			on_hover=main_btn_hover,
-			on_click=self.btn_submit_clicked,
-			**btn_primary_style
-		)
-
-		self.btn_back: ElevatedButton = ElevatedButton(
-			icon=icons.LOGIN,
-			text="Regresar a Iniciar sesión",
-			on_hover=secondary_btn_hover,
-			on_click=self.btn_back_clicked,
-			**btn_secondary_style
 		)
 
 		self.cont_email: Container = Container(
 			content=Column(
 				controls=[
-					Text(
-						value=(
-							"Ingresa tu correo electrónico "
-							"para cambiar tu contraseña:"
+					Container(
+						content=Text(
+							value=(
+								"Ingresa tu correo electrónico "
+								"para cambiar tu contraseña:"
+							),
+							color=colors.BLACK
 						)
 					),
-					Container(content=self.txt_email)
+					Container(
+						height=TXT_CONT_SIZE,
+						content=self.txt_email,
+					)
 				]
 			)
 		)
@@ -84,8 +72,16 @@ class ChangePasswordView:
 			visible=False,
 			content=Column(
 				controls=[
-					Text(value="Ingresa una contraseña nueva:"),
-					Container(content=self.txt_password)
+					Container(
+						content=Text(
+							value="Ingresa una contraseña nueva:",
+							color=colors.BLACK
+						)
+					),
+					Container(
+						height=TXT_CONT_SIZE,
+						content=self.txt_password,
+					)
 				]
 			)
 		)
@@ -94,8 +90,16 @@ class ChangePasswordView:
 			visible=False,
 			content=Column(
 				controls=[
-					Text(value="Confirmar contraseña nueva:"),
-					Container(content=self.txt_confirm_password)
+					Container(
+						content=Text(
+							value="Confirmar contraseña nueva:",
+							color=colors.BLACK
+						)
+					),
+					Container(
+						height=TXT_CONT_SIZE,
+						content=self.txt_confirm_password,
+					)
 				]
 			)
 		)
@@ -105,6 +109,20 @@ class ChangePasswordView:
 		self.params = params
 		self.basket = basket
 
+		self.btn_submit: ElevatedButton = ElevatedButton(
+			width=self.page.width,
+			text="Continuar",
+			on_click=self.btn_submit_clicked,
+			**btn_primary_style
+		)
+
+		self.btn_back: ElevatedButton = ElevatedButton(
+			width=self.page.width,
+			content=Text(value="Regresar a Iniciar sesión", size=BTN_TEXT_SIZE),
+			on_click=self.btn_back_clicked,
+			**btn_secondary_style
+		)
+
 		return View(
 			route="/change_password",
 			padding=padding.all(value=0.0),
@@ -113,25 +131,38 @@ class ChangePasswordView:
 				Container(
 					content=Column(
 						controls=[
-							MainTitleColumn(
+							Container(
+								content=IconButton(
+									icon=icons.ARROW_BACK,
+									icon_color=colors.BLACK,
+									on_click=lambda _: go_to_view(
+										page=self.page,
+										logger=logger,
+										route=""  # '/'
+									),
+								)
+							),
+							MainTitle(
 								subtitle="Cambiar contraseña",
 								top_margin=(SPACING * 2)
 							),
-							Divider(height=SPACING, color="white"),
-							Column(
-								spacing=SPACING,
-								controls=[
-									self.cont_email,
-									self.cont_password,
-									self.cont_confirm_password
-								]
+							Container(
+								margin=margin.only(top=SPACING),
+								content=Column(
+									spacing=(SPACING * 1.5),
+									controls=[
+										self.cont_email,
+										self.cont_password,
+										self.cont_confirm_password
+									]
+								)
 							),
 							Container(
-								margin=margin.only(top=(SPACING * 3)),
+								margin=margin.only(top=(SPACING * 4)),
 								content=Column(
 									controls=[
 										self.btn_submit,
-										Divider(),
+										Divider(color=colors.TRANSPARENT),
 										self.btn_back
 									]
 								)
@@ -143,20 +174,20 @@ class ChangePasswordView:
 			]
 		)
 
-	def validate(self, event: ControlEvent) -> None:
-		# Case when only txt_email is displayed
-		if not self.cont_password.visible and not self.cont_confirm_password.visible\
-				and match(pattern=RGX_EMAIL, string=self.txt_email.value):
-			self.btn_submit.disabled = False
-		# Case when only txt_email and cont_password and cont_confirm_password are all displayed
-		elif self.cont_password.visible and self.cont_confirm_password.visible\
-			and all([
-				self.txt_password.value,
-				self.txt_confirm_password.value,
-				match(pattern=RGX_EMAIL, string=self.txt_email.value)]):
-			self.btn_submit.disabled = False
-		else:
-			self.btn_submit.disabled = True
+	# def validate(self, event: ControlEvent) -> None:
+	# 	# Case when only txt_email is displayed
+	# 	if not self.cont_password.visible and not self.cont_confirm_password.visible\
+	# 			and match(pattern=RGX_EMAIL, string=self.txt_email.value):
+	# 		self.btn_submit.disabled = False
+	# 	# Case when only txt_email and cont_password and cont_confirm_password are all displayed
+	# 	elif self.cont_password.visible and self.cont_confirm_password.visible\
+	# 		and all([
+	# 			self.txt_password.value,
+	# 			self.txt_confirm_password.value,
+	# 			match(pattern=RGX_EMAIL, string=self.txt_email.value)]):
+	# 		self.btn_submit.disabled = False
+	# 	else:
+	# 		self.btn_submit.disabled = True
 
 		self.page.update()
 
@@ -171,7 +202,7 @@ class ChangePasswordView:
 		if self.cont_password.visible and self.cont_confirm_password.visible:
 			info("Cambiando contraseña...")
 		else:
-			self.btn_submit.disabled = True
+			# self.btn_submit.disabled = True
 			self.cont_password.visible = True
 			self.cont_confirm_password.visible = True
 			self.page.update()

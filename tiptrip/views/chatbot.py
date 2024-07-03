@@ -2,16 +2,16 @@ from logging import getLogger, info
 from flet_route import Params, Basket
 
 from flet import (
-	Page, View, Container, ListView, Column, Row, Text, TextField, CircleAvatar,
-	Icon, Stack, MainAxisAlignment, CrossAxisAlignment, alignment, Offset,
-	LinearGradient, padding, BoxShadow, InputBorder, border_radius,
-	colors, icons, ControlEvent
+	Page, View, Container, ListView, Row, TextField, CircleAvatar, Icon,
+	MainAxisAlignment, CrossAxisAlignment, alignment, Offset, padding,
+	BoxShadow, border_radius, colors, icons, ControlEvent
 )
 
 # from data import db
 from resources.config import *
 from components.bars import TopBar
 from components.message import Message
+from resources.styles import txt_messages_style
 
 
 logger = getLogger(f"{PROJECT_NAME}.{__name__}")
@@ -24,11 +24,9 @@ class ChatbotView:
 		self.basket = None
 
 		self.txt_message: TextField = TextField(
-			label=None,
 			hint_text="Escribe un mensaje",
-			border=InputBorder.NONE,
-			cursor_color=SECONDARY_COLOR,
-			on_change=self.validate
+			on_change=self.validate,
+			**txt_messages_style
 		)
 
 		self.lv_chat: ListView = ListView(
@@ -42,7 +40,8 @@ class ChatbotView:
 			radius=SPACING,
 			content=Icon(
 				name=icons.MIC,
-				color=colors.WHITE
+				color=colors.WHITE,
+				size=25
 			)
 		)
 
@@ -51,7 +50,8 @@ class ChatbotView:
 			radius=SPACING,
 			content=Icon(
 				name=icons.SEND,
-				color=colors.WHITE
+				color=colors.WHITE,
+				size=25
 			)
 		)
 
@@ -70,68 +70,55 @@ class ChatbotView:
 			route="/chatbot",
 			bgcolor=colors.WHITE,
 			padding=padding.all(value=0.0),
+			spacing=0,
 			controls=[
 				TopBar(page=self.page, leading=True, logger=logger),
 				Container(
+					width=self.page.width,
+					height=RADIUS,
+					bgcolor=MAIN_COLOR,
+					border_radius=border_radius.only(
+						bottom_left=RADIUS,
+						bottom_right=RADIUS
+					),
+					shadow=BoxShadow(
+						blur_radius=BLUR,
+						color=colors.GREY_800
+					),
+				),
+				Container(
 					expand=True,
-					width=APP_WIDTH,
-					content=Stack(
+					width=self.page.width,
+					content=self.lv_chat
+				),
+				Container(
+					width=self.page.width,
+					padding=padding.all(value=(SPACING / 2)),
+					height=CONT_MESSAGE_HEIGHT,
+					content=Row(
+						alignment=MainAxisAlignment.SPACE_BETWEEN,
+						vertical_alignment=CrossAxisAlignment.CENTER,
+						spacing=0,
 						controls=[
 							Container(
-								left=0,
-								top=0,
-								width=(APP_WIDTH - 16),
-								height=30,
-								bgcolor=MAIN_COLOR,
-								border_radius=border_radius.only(
-									bottom_left=RADIUS,
-									bottom_right=RADIUS
+								expand=5,
+								height=TXT_CONT_SIZE,
+								bgcolor=colors.WHITE,
+								padding=padding.symmetric(
+									horizontal=SPACING
+								),
+								border_radius=border_radius.all(
+									value=RADIUS
 								),
 								shadow=BoxShadow(
-									blur_radius=BLUR,
-									color=colors.GREY_800
+									blur_radius=(BLUR / 2),
+									offset=Offset(0, 2),
+									color=colors.BLACK12
 								),
-								content=Text(value=""),
+								alignment=alignment.center_left,
+								content=self.txt_message
 							),
-							Container(
-								left=0,
-								top=30,
-								width=(APP_WIDTH - 16),
-								height=544,
-								content=self.lv_chat
-							),
-							Container(
-								left=0,
-								bottom=(SPACING / 2),
-								width=(APP_WIDTH - 16),
-								height=45,
-								alignment=alignment.center,
-								content=Row(
-									width=(APP_WIDTH - (SPACING * 2)),
-									alignment=MainAxisAlignment.SPACE_BETWEEN,
-									vertical_alignment=CrossAxisAlignment.CENTER,
-									spacing=0,
-									controls=[
-										Container(
-											expand=5,
-											bgcolor=colors.WHITE,
-											padding=padding.symmetric(
-												horizontal=SPACING
-											),
-											border_radius=border_radius.all(
-												value=RADIUS
-											),
-											shadow=BoxShadow(
-												blur_radius=(BLUR / 2),
-												offset=Offset(0, 2),
-												color=colors.BLACK12
-											),
-											content=self.txt_message
-										),
-										self.cont_icon,
-									],
-								)
-							)
+							self.cont_icon,
 						]
 					)
 				)
@@ -151,9 +138,14 @@ class ChatbotView:
 			Row(
 				alignment=MainAxisAlignment.END,
 				controls=[
-					Message(
-						user="Fernanda",
-						message=self.txt_message.value
+					Container(expand=1),
+					Container(
+						expand=9,
+						expand_loose=True,
+						content=Message(
+							is_bot=False,
+							message=self.txt_message.value
+						)
 					)
 				]
 			)
@@ -163,10 +155,15 @@ class ChatbotView:
 			Row(
 				alignment=MainAxisAlignment.START,
 				controls=[
-					Message(
-						user="Bot",
-						message="Buscando respuesta..."
-					)
+					Container(
+						expand=9,
+						expand_loose=True,
+						content=Message(
+							is_bot=True,
+							message="Buscando respuesta..."
+						)
+					),
+					Container(expand=1)
 				]
 			)
 		)

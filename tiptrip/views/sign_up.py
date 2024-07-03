@@ -3,18 +3,16 @@ from logging import getLogger, info
 from flet_route import Params, Basket
 
 from flet import (
-	Page, View, Container, Column, Row, Banner, Text, TextField,
-	ElevatedButton, Checkbox, Divider, MainAxisAlignment,
+	Page, View, Container, Column, Row, Text, TextField,
+	IconButton, ElevatedButton, Checkbox, Divider, MainAxisAlignment,
 	CrossAxisAlignment, Markdown, padding, margin, icons, ControlEvent
 )
 
-from data import db
+# from data import db
 from resources.config import *
+from resources.styles import *
 from resources.functions import *
-from components.titles import MainTitleColumn
-from resources.styles import (
-	cont_main_style, txt_style, btn_primary_style, btn_secondary_style
-)
+from components.titles import MainTitle
 
 
 logger = getLogger(f"{PROJECT_NAME}.{__name__}")
@@ -51,7 +49,7 @@ class SignUpView:
 
 		self.txt_confirm_password: TextField = TextField(
 			prefix_icon=icons.LOCK,
-			hint_text="Contraseña",
+			hint_text="Confirmar contraseña",
 			password=True,
 			can_reveal_password=True,
 			on_change=self.validate,
@@ -66,7 +64,7 @@ class SignUpView:
 		)
 
 		self.cont_tyc: Container = Container(
-			width=(APP_WIDTH - (SPACING * 4)),
+			# width=self.page.width,
 			content=Row(
 				alignment=MainAxisAlignment.START,
 				vertical_alignment=CrossAxisAlignment.CENTER,
@@ -88,17 +86,27 @@ class SignUpView:
 			)
 		)
 
+	def view(self, page: Page, params: Params, basket: Basket) -> View:
+		self.page = page
+		self.params = params
+		self.basket = basket
+
 		self.btn_submit: ElevatedButton = ElevatedButton(
-			text="Crear cuenta",
-			on_hover=main_btn_hover,
+			width=self.page.width,
+			content=Text(
+				value="Crear cuenta",
+				size=BTN_TEXT_SIZE
+			),
 			on_click=self.btn_submit_clicked,
 			**btn_primary_style
 		)
 
 		self.btn_back: ElevatedButton = ElevatedButton(
-			icon=icons.LOGIN,
-			text="Regresar a iniciar sesión",
-			on_hover=secondary_btn_hover,
+			width=self.page.width,
+			content=Text(
+				value="Regresar a Iniciar sesión",
+				size=BTN_TEXT_SIZE
+			),
 			on_click=lambda _: go_to_view(
 				page=self.page,
 				logger=logger,
@@ -106,13 +114,6 @@ class SignUpView:
 			),
 			**btn_secondary_style
 		)
-
-	def view(self, page: Page, params: Params, basket: Basket) -> View:
-		self.page = page
-		self.params = params
-		self.basket = basket
-
-		# self.page.banner = ErrorBanner(page)
 
 		return View(
 			route="/sign_up",
@@ -122,7 +123,18 @@ class SignUpView:
 				Container(
 					content=Column(
 						controls=[
-							MainTitleColumn(
+							Container(
+								content=IconButton(
+									icon=icons.ARROW_BACK,
+									icon_color=colors.BLACK,
+									on_click=lambda _: go_to_view(
+										page=self.page,
+										logger=logger,
+										route=""  # '/'
+									),
+								)
+							),
+							MainTitle(
 								subtitle="Registrarse",
 								top_margin=(SPACING * 2)
 							),
@@ -136,17 +148,32 @@ class SignUpView:
 												"Ingresa los siguientes "
 												"datos para crear tu nueva "
 												"cuenta:"
-											)
+											),
+											color=colors.BLACK
 										),
 										Container(
 											content=Column(
 												spacing=SPACING,
 												controls=[
-													self.txt_username,
-													self.txt_email,
-													self.txt_password,
-													self.txt_confirm_password,
-													self.cont_tyc
+													Container(
+														height=TXT_CONT_SIZE,
+														content=self.txt_username,
+													),
+													Container(
+														height=TXT_CONT_SIZE,
+														content=self.txt_email,
+													),
+													Container(
+														height=TXT_CONT_SIZE,
+														content=self.txt_password,
+													),
+													Container(
+														height=TXT_CONT_SIZE,
+														content=self.txt_confirm_password,
+													),
+													Container(
+														content=self.cont_tyc
+													)
 												]
 											)
 										)
@@ -158,7 +185,7 @@ class SignUpView:
 								content=Column(
 									controls=[
 										self.btn_submit,
-										Divider(),
+										Divider(color=colors.TRANSPARENT),
 										self.btn_back
 									]
 								)

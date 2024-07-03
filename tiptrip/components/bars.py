@@ -15,6 +15,7 @@ class TopBar(AppBar):
 			leading=(
 				IconButton(
 					icon=icons.ARROW_BACK,
+					icon_color=colors.BLACK,
 					on_click=lambda _: go_to_view(
 						page=page,
 						logger=logger,
@@ -24,7 +25,10 @@ class TopBar(AppBar):
 				if leading == True
 				else None
 			),
-			title=Text(value=PROJECT_NAME),
+			title=Text(
+				value=PROJECT_NAME,
+				color=colors.BLACK
+			),
 			actions=[
 				IconButton(
 					icon=icons.LOGOUT,
@@ -44,7 +48,8 @@ class TopBar(AppBar):
 class BottomBar(Container):
 	def __init__(self, page: Page, logger: Logger, current_route: str) -> None:
 		super().__init__(
-			expand=True,
+			# expand=True,
+			width=page.width,
 			height=60,
 			bgcolor=colors.WHITE,
 			border_radius=border_radius.only(top_left=RADIUS, top_right=RADIUS),

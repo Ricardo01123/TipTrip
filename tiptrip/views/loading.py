@@ -2,9 +2,8 @@ from random import choice
 from flet_route import Params, Basket
 
 from flet import (
-    Page, View, Container, Column, Text, Icon,
-    padding, margin, border_radius, BoxShadow, colors, icons,
-    MainAxisAlignment, CrossAxisAlignment, TextAlign
+    Page, View, Container, Column, Text, Icon, padding, margin, border_radius,
+    BoxShadow, colors, icons, MainAxisAlignment, CrossAxisAlignment, TextAlign
 )
 
 from resources.config import *
@@ -24,12 +23,14 @@ class LoadingView:
 
         return View(
             route="/loading",
+            bgcolor=colors.WHITE,
             padding=padding.all(value=0),
             controls=[
                 Container(
                     expand=8,
-                    width=APP_WIDTH,
+                    width=self.page.width,
                     bgcolor=MAIN_COLOR,
+                    padding=padding.all(value=SPACING),
                     border_radius=border_radius.only(
                         bottom_left=RADIUS,
                         bottom_right=RADIUS
@@ -38,31 +39,45 @@ class LoadingView:
                     content=Column(
                         alignment=MainAxisAlignment.CENTER,
                         horizontal_alignment=CrossAxisAlignment.CENTER,
+                        spacing=SPACING,
                         controls=[
-                            Text(
-                                value=PROJECT_NAME,
-                                size=45,
-                                color=colors.WHITE
+                            Container(
+                                width=self.page.width,
+                                content=Text(
+                                    value=PROJECT_NAME,
+                                    size=45,
+                                    color=colors.WHITE,
+                                    text_align=TextAlign.CENTER
+                                )
                             ),
-                            Icon(
-                                name=icons.FMD_GOOD_OUTLINED,
-                                size=300,
-                                color=colors.WHITE
+                            Container(
+                                width=self.page.width,
+                                content=Icon(
+                                    name=icons.FMD_GOOD_OUTLINED,
+                                    size=300,
+                                    color=colors.WHITE
+                                )
                             ),
-                            Text(
-                                value="Cargando...",
-                                size=30,
-                                color=colors.WHITE
-                            ),
+                            Container(
+                                width=self.page.width,
+                                content=Text(
+                                    value="Cargando...",
+                                    size=30,
+                                    color=colors.WHITE,
+                                    text_align=TextAlign.CENTER
+                                )
+                            )
                         ]
                     )
                 ),
                 Container(
                     expand=2,
-                    width=APP_WIDTH,
-                    margin=margin.only(top=20),
+                    width=self.page.width,
+                    padding=padding.all(value=SPACING),
                     content=Text(
                         value=f"Consejo: {choice(ADVICES)}",
+                        size=20,
+                        color=colors.BLACK,
                         text_align=TextAlign.CENTER
                     )
                 )
