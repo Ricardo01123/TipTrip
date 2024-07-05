@@ -12,7 +12,7 @@ from flet import (
 from components.bars import *
 from resources.config import *
 from resources.functions import *
-from components.place_details import PlaceCard
+from components.place_card import PlaceCard
 from resources.styles import txt_messages_style
 
 

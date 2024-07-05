@@ -2,17 +2,15 @@ from logging import getLogger
 from flet_route import Params, Basket
 
 from flet import (
-	Page, View, AppBar, BottomAppBar, Container, Stack, Column, Row, Text, TextField, TextButton, IconButton, Icon,
-	Image, ImageFit, ImageRepeat,
-	MainAxisAlignment, CrossAxisAlignment, alignment, VerticalAlignment, Offset, ScrollMode, FontWeight, ButtonStyle,
-	padding, margin, BoxShadow, border_radius, colors, icons,
+	Page, View, Container, Column, Row, Text, Icon, MainAxisAlignment,
+	alignment, Offset, ScrollMode, FontWeight, padding, BoxShadow,
+	border_radius, colors, icons,
 )
 
 # from data import db
 from components.bars import *
 from resources.config import *
-from resources.functions import go_to_view
-from components.place_details import PlaceHeader
+from components.carousel import Carousel
 
 
 logger = getLogger(f"{PROJECT_NAME}.{__name__}")
@@ -38,7 +36,6 @@ class PlaceDetailsView:
 		return View(
 			route=self.route,
 			bgcolor=colors.WHITE,
-			# bgcolor=MAIN_COLOR,
 			padding=padding.all(value=0.0),
 			spacing=0,
 			controls=[
@@ -87,7 +84,7 @@ class PlaceDetailsView:
 									alignment=alignment.bottom_left,
 									content=Text(
 										value=self.place_name.upper().replace('_', ' '),
-										color=colors.BLACK,
+										color=MAIN_COLOR,
 										weight=FontWeight.BOLD,
 										size=25,
 									),
@@ -161,41 +158,20 @@ class PlaceDetailsView:
 				Container(
 					width=self.page.width,
 					padding=padding.only(
-						right=SPACING,
-						left=SPACING,
+						right=10,
+						left=10,
 						bottom=10,
 					),
 					alignment=alignment.center,
-					content=Container(
-						border_radius=border_radius.all(value=RADIUS),
-						shadow=BoxShadow(
-							blur_radius=LOW_BLUR,
-							color=colors.GREY_500
-						),
-						content=Image(
-							src=f"/places/{self.place_name}.jpg",
-							# src=f"/places/monumento.jpg",
-							# src=f"/places/castillo.jpg",
-							fit=ImageFit.FILL,
-							repeat=ImageRepeat.NO_REPEAT,
-							border_radius=border_radius.all(value=RADIUS)
-						)
+					content=Carousel(
+						page=self.page,
+						items=[
+							"bellas_artes.jpg",
+							"castillo.jpg",
+							"monumento.jpg"
+						]
 					)
 				),
-				# Container(
-				# 	bgcolor=MAIN_COLOR,
-				# 	width=self.page.width,
-				# 	alignment=alignment.center,
-				# 	padding=padding.only(
-				# 		left=SPACING,
-				# 		right=SPACING,
-				# 		bottom=SPACING,
-				# 	),
-				# 	content=PlaceHeader(
-				# 		width=(self.page.width - (SPACING * 2)),
-				# 		place_name=self.place_name
-				# 	)
-				# ),
 				Container(
 					width=self.page.width,
 					bgcolor=colors.WHITE,
