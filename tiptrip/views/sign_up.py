@@ -8,7 +8,6 @@ from flet import (
 	CrossAxisAlignment, Markdown, padding, margin, icons, ControlEvent
 )
 
-# from data import db
 from resources.config import *
 from resources.styles import *
 from resources.functions import *

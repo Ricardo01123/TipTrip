@@ -3,8 +3,7 @@ from logging import getLogger
 from flet import (
 	Page, Container, Row, Column, Text, Image, Icon,
 	ImageFit, ImageRepeat, padding, border_radius, BoxShadow, Offset,
-	ScrollMode, FontWeight, MainAxisAlignment, CrossAxisAlignment,
-	colors, icons,
+	ScrollMode, FontWeight, MainAxisAlignment, colors, icons,
 )
 
 from resources.config import *
@@ -17,7 +16,7 @@ logger = getLogger(f"{PROJECT_NAME}.{__name__}")
 class PlaceCard(Container):
 	def __init__(
 			self, page: Page, title: str, category: str, address: str,
-			punctuation: int, image_name: str
+			punctuation: int, image_link: str
 		) -> None:
 
 		super().__init__(
@@ -37,94 +36,87 @@ class PlaceCard(Container):
 			on_click = lambda _: go_to_view(
 				page=page,
 				logger=logger,
-				route=f"place_details/{title.lower().replace(' ', '_')}"
+				route=f"place_details/{title}"
 			),
-			content=Row(
-				expand=True,
-				spacing=5,
+			content=Column(
 				controls=[
 					Container(
-						expand=1,
-						content=Column(
-							spacing=(SPACING / 2),
+						content=Row(
+							scroll=ScrollMode.HIDDEN,
+							controls=[
+								Text(
+									value=title,
+									color=MAIN_COLOR,
+									size=PLC_TITLE_SIZE,
+									weight=FontWeight.BOLD,
+								)
+							]
+						)
+					),
+					Container(
+						content=Row(
 							controls=[
 								Container(
+									expand=1,
 									content=Image(
-										src=f"places/{image_name}",
+										src=image_link,
+										# src=f"/places/{image_link}",
 										fit=ImageFit.FILL,
 										repeat=ImageRepeat.NO_REPEAT,
 										border_radius=border_radius.all(RADIUS)
 									)
 								),
 								Container(
-									content=Row(
-										alignment=MainAxisAlignment.CENTER,
-										spacing=3,
-										controls=[
-											Icon(
-												name=icons.STAR,
-												color=colors.AMBER,
-												size=20
-											)
-											for _ in range(punctuation)
-										]
-									)
-								)
-							]
-						)
-					),
-					Container(
-						expand=1,
-						content=Column(
-							scroll=ScrollMode.HIDDEN,
-							height=120,
-							alignment=MainAxisAlignment.START,
-							horizontal_alignment=CrossAxisAlignment.START,
-							spacing=5,
-							controls=[
-								Container(
-									content=Row(
-										scroll=ScrollMode.HIDDEN,
-										controls=[
-											Text(
-												value=title,
-												color=MAIN_COLOR,
-												size=PLC_TITLE_SIZE,
-												weight=FontWeight.BOLD,
-											)
-										]
-									)
-								),
-								Container(
-									content=Row(
-										spacing=3,
-										alignment=MainAxisAlignment.START,
+									expand=1,
+									content=Column(
 										controls=[
 											Container(
-												content=Icon(
-													name=icons.MUSEUM_SHARP,
-													color=SECONDARY_COLOR,
-													size=15
+												content=Row(
+													spacing=3,
+													alignment=MainAxisAlignment.START,
+													controls=[
+														Container(
+															content=Icon(
+																name=icons.MUSEUM_SHARP,
+																color=SECONDARY_COLOR,
+																size=15
+															)
+														),
+														Container(
+															content=Text(
+																value=category,
+																color=SECONDARY_COLOR,
+																size=PLC_CATEGORY_SIZE
+															)
+														)
+													]
 												)
 											),
 											Container(
 												content=Text(
-													value=category,
-													color=SECONDARY_COLOR,
-													size=PLC_CATEGORY_SIZE
+													value=address,
+													color=colors.BLACK
+												)
+											),
+											Container(
+												content=Row(
+													alignment=MainAxisAlignment.START,
+													spacing=3,
+													controls=[
+														Icon(
+															name=icons.STAR,
+															color=colors.AMBER,
+															size=20
+														)
+														for _ in range(punctuation)
+													]
 												)
 											)
 										]
 									)
 								),
-								Container(
-									content=Text(
-										value=address,
-										color=colors.BLACK
-									)
-								)
 							]
-						)
+						),
 					)
 				]
 			)

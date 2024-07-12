@@ -6,7 +6,6 @@ from flet_route import Routing
 
 from resources.router import routes
 from resources.config import LOGGING_FORMAT, PROJECT_NAME
-# from data.db import initialize_db
 
 
 basicConfig(level=INFO, format=LOGGING_FORMAT)
@@ -14,9 +13,6 @@ logger = getLogger(PROJECT_NAME)
 
 
 def main(page: Page) -> None:
-	# logger.info(f"Iniciando base de datos...")
-	# initialize_db()
-
 	info(f"Iniciando configuraciones de navegación de la app...")
 	Routing(page=page, app_routes=routes)
 	# page.go("/loading")

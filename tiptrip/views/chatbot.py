@@ -7,7 +7,6 @@ from flet import (
 	BoxShadow, border_radius, colors, icons, ControlEvent
 )
 
-# from data import db
 from resources.config import *
 from components.bars import TopBar
 from components.message import Message

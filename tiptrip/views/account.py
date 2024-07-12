@@ -8,7 +8,6 @@ from flet import (
 	ControlEvent
 )
 
-# from data import db
 from components.bars import *
 from resources.config import *
 from resources.styles import btn_secondary_style, btn_danger_style

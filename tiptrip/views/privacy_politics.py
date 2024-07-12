@@ -6,7 +6,6 @@ from flet import (
 	padding, margin, ScrollMode, colors, icons
 )
 
-# from data import db
 from resources.config import *
 from components.titles import MainTitle
 from resources.functions import go_to_view

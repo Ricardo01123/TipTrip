@@ -1,14 +1,15 @@
-from logging import getLogger, info
+from requests import get, Response
+from requests.auth import HTTPBasicAuth
+
+from logging import getLogger
 from flet_route import Params, Basket
 
 from flet import (
-	Page, View, Container, ListView, Column, Row, Text, TextField, Stack,
-	ClipBehavior, Icon, TextButton, AlertDialog, MainAxisAlignment,
-	CircleAvatar, alignment, Offset, padding, margin, BoxShadow,
-	border_radius, colors, icons,
+	Page, View, Container, ListView, Column, Row, Text, TextField, CircleAvatar,
+	Icon, AlertDialog, MainAxisAlignment, Offset, alignment, padding, margin,
+	BoxShadow, border_radius, colors, icons,
 )
 
-# from data import db
 from components.bars import *
 from resources.config import *
 from resources.functions import *
@@ -166,53 +167,40 @@ class HomeView:
 	# 	self.page.update()
 
 	def get_places(self) -> list:
-		return [
-			PlaceCard(
-				page=self.page,
-				title="BELLAS ARTES",
-				category="MUSEUM",
-				address="Av. Juárez s/n esq. Eje Central Lázaro Cárdenas, Centro Histórico, Cuauhtémoc.",
-				punctuation=5,
-				image_name="bellas_artes.jpg"
-			),
-			PlaceCard(
-				page=self.page,
-				title="KJASHDFKJASHDKFJHASDKFJHASKDFJ",
-				category="MUSEUM",
-				address="Av. Juárez s/n esq. Eje Central Lázaro Cárdenas, Centro Histórico, Cuauhtémoc.",
-				punctuation=4,
-				image_name="bellas_artes.jpg"
-			),
-			PlaceCard(
-				page=self.page,
-				title="BELLAS ARTES",
-				category="MUSEUM",
-				address="Av. Juárez s/n esq. Eje Central Lázaro Cárdenas, Centro Histórico, Cuauhtémoc.",
-				punctuation=3,
-				image_name="bellas_artes.jpg"
-			),
-			PlaceCard(
-				page=self.page,
-				title="BELLAS ARTES",
-				category="MUSEUM",
-				address="Av. Juárez s/n esq. Eje Central Lázaro Cárdenas, Centro Histórico, Cuauhtémoc.",
-				punctuation=2,
-				image_name="bellas_artes.jpg"
-			),
-			PlaceCard(
-				page=self.page,
-				title="BELLAS ARTES",
-				category="MUSEUM",
-				address="Av. Juárez s/n esq. Eje Central Lázaro Cárdenas, Centro Histórico, Cuauhtémoc.",
-				punctuation=1,
-				image_name="bellas_artes.jpg"
-			),
-			PlaceCard(
-				page=self.page,
-				title="BELLAS ARTES",
-				category="MUSEUM",
-				address="Av. Juárez s/n esq. Eje Central Lázaro Cárdenas, Centro Histórico, Cuauhtémoc.",
-				punctuation=5,
-				image_name="bellas_artes.jpg"
-			)
-		]
+		response: Response = get(
+			f"{BACK_END_URL}{GET_ALL_RECORDS_ENDPOINT}",
+			json={"table_name": "sitios_turisticos"},
+			headers=REQUEST_HEADERS,
+			auth=HTTPBasicAuth("admin", "admin")
+		)
+
+		if response.status_code != 200:
+			return [
+				Container(
+					alignment=alignment.center,
+					content=Text(
+						value="No se encontró ningún lugar.",
+						color=colors.BLACK,
+						size=35
+					)
+				)
+			]
+		else:
+			places_data: dict = response.json()["data"]
+			return [
+				PlaceCard(
+					page=self.page,
+					title=place["nombre"],
+					category=place["clasificacion_sitio"],
+					punctuation=place["puntuacion"],
+					image_link=place["ruta"],
+					address=(
+						f"{place['calle_numero']}, "
+						f"{place['colonia']}, "
+						f"{place['cp']}, "
+						f"{place['delegacion_municipio']}, "
+						f"{place['entidad_federativa']}."
+					)
+				)
+				for place in places_data
+			]

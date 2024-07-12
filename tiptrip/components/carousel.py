@@ -50,6 +50,7 @@ class Carousel(Container):
 		return [
 			Image(
 				src=f"/places/{item}",
+				# src=item,
 				fit=ImageFit.FILL,
 				repeat=ImageRepeat.NO_REPEAT,
 				border_radius=border_radius.all(value=RADIUS)
@@ -58,6 +59,7 @@ class Carousel(Container):
 		]
 
 	def previus_item(self, event: ControlEvent):
+		print("PREVIUS ITEM")
 		if self.current_item == 0:
 			self.current_item = self.total_items - 1
 		else:
@@ -67,6 +69,7 @@ class Carousel(Container):
 		self.page.update()
 
 	def next_item(self, event: ControlEvent):
+		print("NEXT ITEM")
 		if self.current_item == self.total_items - 1:
 			self.current_item = 0
 		else:

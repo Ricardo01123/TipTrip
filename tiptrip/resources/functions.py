@@ -22,20 +22,3 @@ def clean_basket(basket: Basket) -> None:
 	basket.user_id = ""
 	basket.username = ""
 	basket.role = ""
-
-
-# Hover functions
-def main_btn_hover(event: ControlEvent) -> None:
-	event.control.bgcolor = SECONDARY_COLOR if event.data == "true" else MAIN_COLOR
-	event.control.update()
-
-
-def secondary_btn_hover(event: ControlEvent) -> None:
-	event.control.color = SECONDARY_COLOR if event.data == "true" else MAIN_COLOR
-	event.control.update()
-
-
-def danger_btn_hover(event: ControlEvent) -> None:
-	event.control.color = colors.WHITE if event.data == "true" else colors.RED
-	event.control.bgcolor = colors.RED if event.data == "true" else colors.WHITE
-	event.control.update()

@@ -11,8 +11,6 @@ from resources.config import *
 from resources.styles import *
 from resources.functions import *
 from components.titles import MainTitle
-# from data import db
-# from components.banners import ErrorBanner
 
 
 logger = getLogger(f"{PROJECT_NAME}.{__name__}")
