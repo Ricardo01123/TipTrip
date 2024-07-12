@@ -12,16 +12,6 @@ files = [
 ]
 
 [[package]]
-name = "antiorm"
-version = "1.2.1"
-description = "A Pythonic Helper for DBAPI-2.0 SQL Access"
-optional = false
-python-versions = "*"
-files = [
-    {file = "antiorm-1.2.1.tar.gz", hash = "sha256:96eb1841ce5163db4cf1dc13f4499ec2d7cffc190cf724b78ffdd3e6b7c4ff93"},
-]
-
-[[package]]
 name = "anyio"
 version = "4.3.0"
 description = "High level compatibility layer for multiple asynchronous event loop implementations"
@@ -240,32 +230,6 @@ python-slugify = ">=4.0.0"
 pyyaml = ">=5.3.1"
 requests = ">=2.23.0"
 rich = "*"
-
-[[package]]
-name = "db"
-version = "0.1.1"
-description = "Databases for Humans"
-optional = false
-python-versions = "*"
-files = [
-    {file = "db-0.1.1.tar.gz", hash = "sha256:980e772f15c1161d3b287ffec4f144e40961b0b3e6d5102809577870bf6c5808"},
-]
-
-[package.dependencies]
-antiorm = "*"
-
-[[package]]
-name = "db-sqlite3"
-version = "0.0.1"
-description = "sqlite3 driver for db"
-optional = false
-python-versions = "*"
-files = [
-    {file = "db-sqlite3-0.0.1.tar.gz", hash = "sha256:4dd410aa28a2c5b66de477f9dc62f523133217dd31c7ed7eb085214bea148db9"},
-]
-
-[package.dependencies]
-db = "*"
 
 [[package]]
 name = "dnspython"
@@ -1031,13 +995,13 @@ six = ">=1.9.0"
 
 [[package]]
 name = "requests"
-version = "2.32.2"
+version = "2.32.3"
 description = "Python HTTP for Humans."
 optional = false
 python-versions = ">=3.8"
 files = [
-    {file = "requests-2.32.2-py3-none-any.whl", hash = "sha256:fc06670dd0ed212426dfeb94fc1b983d917c4f9847c863f313c9dfaaffb7c23c"},
-    {file = "requests-2.32.2.tar.gz", hash = "sha256:dd951ff5ecf3e3b3aa26b40703ba77495dab41da839ae72ef3c8e5d8e2433289"},
+    {file = "requests-2.32.3-py3-none-any.whl", hash = "sha256:70761cfe03c773ceb22aa2f671b4757976145175cdfca038c02654d061d6dcc6"},
+    {file = "requests-2.32.3.tar.gz", hash = "sha256:55365417734eb18255590a9ff9eb97e9e1da868d4ccd6402399eaf68af20a760"},
 ]
 
 [package.dependencies]
@@ -1553,4 +1517,4 @@ files = [
 [metadata]
 lock-version = "2.0"
 python-versions = "^3.11"
-content-hash = "0ff1b59b0795d9a8694cd2419f31d27797eb488d6498469834d8477b1240b133"
+content-hash = "f058fdcd142f973e81c925220513fe309be4bb55a2efd7599995b9206b88c7cc"
