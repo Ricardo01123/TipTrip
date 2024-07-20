@@ -21,10 +21,22 @@ class Message(Container):
 			bgcolor=(
 				colors.WHITE
 				if is_bot
-				else SECONDARY_COLOR
+				else (
+					colors.RED
+					if message == "ERROR"
+					else SECONDARY_COLOR
+				)
 			),
 			content=Text(
-				value=message,
+				value=(
+					message
+					if message != "ERROR"
+					else (
+						f"{message}\n"
+						"Ocurrió un error al transcribir voz a texto. "
+						"Favor de intentarlo de nuevo más tarde."
+					)
+				),
 				color=(
 					colors.BLACK
 					if is_bot

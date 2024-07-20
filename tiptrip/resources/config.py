@@ -39,4 +39,13 @@ BACK_END_URL: str = "http://127.0.0.1:5000/"
 GET_ALL_RECORDS_ENDPOINT: str = "get_demo_data"
 GET_RECORD_ENDPOINT: str = "get_record"
 
-REQUEST_HEADERS: dict = {"Content-Type": "application/json"}
+REQUEST_HEADERS: dict[str, str] = {"Content-Type": "application/json"}
+
+SAMPLING_RATE: int = 16_000
+CHANNELS: int = 1
+FRAMES_PER_BUFFER: int = 8_192
+FRAMES_FLOW: int = 4_096
+CUTOFF: int = 3_000
+ORDER: int = 6
+
+MODEL_ABS_PATH: str = r"D:\Todo\ESCOM\Clases\TT\tt_codes\TipTrip\tiptrip\models\vosk-model-small-es-0.42"

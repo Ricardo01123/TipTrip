@@ -13,3 +13,6 @@
 
 # Assets
 assets/
+
+# Vosk model
+vosk-model-small-es-0.42/

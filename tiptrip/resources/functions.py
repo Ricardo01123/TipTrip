@@ -1,8 +1,7 @@
 from logging import Logger
-from flet_route import Basket
-from flet import Page, ControlEvent, colors
 
-from resources.config import MAIN_COLOR, SECONDARY_COLOR
+from flet import Page
+from flet_route import Basket
 
 
 # Navigation functions

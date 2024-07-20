@@ -17,6 +17,8 @@ logger = getLogger(f"{PROJECT_NAME}.{__name__}")
 
 
 class ChatbotView:
+	_record_flag: bool = False
+
 	def __init__(self) -> None:
 		self.page = None
 		self.params = None
@@ -58,6 +60,7 @@ class ChatbotView:
 			expand=1,
 			alignment=alignment.center_right,
 			content=self.cca_mic,
+			on_click=self.cca_mic_clicked
 		)
 
 	def view(self, page: Page, params: Params, basket: Basket) -> View:
@@ -125,48 +128,90 @@ class ChatbotView:
 		)
 
 	def validate(self, event: ControlEvent) -> None:
-		if self.txt_message.value:
+		if self.txt_message.value == "":
+			self.record_flag = True
+			self.cont_icon.content = self.cca_mic
+			self.cont_icon.on_click = self.cca_mic_clicked
+		else:
 			self.cont_icon.content = self.cca_send
 			self.cont_icon.on_click = self.cca_send_clicked
-		else:
-			self.cont_icon.content = self.cca_mic
 		self.page.update()
 
-	def cca_send_clicked(self, event: ControlEvent) -> None:
-		self.lv_chat.controls.append(
-			Row(
-				alignment=MainAxisAlignment.END,
-				controls=[
-					Container(expand=1),
-					Container(
-						expand=9,
-						expand_loose=True,
-						content=Message(
-							is_bot=False,
-							message=self.txt_message.value
-						)
-					)
-				]
+	def add_message(self, is_bot: bool, message: str) -> None:
+		if is_bot:
+			self.lv_chat.controls.append(
+				Row(
+					alignment=MainAxisAlignment.START,
+					controls=[
+						Container(
+							expand=9,
+							expand_loose=True,
+							content=Message(is_bot=is_bot, message=message)
+						),
+						Container(expand=1)
+					]
+				)
 			)
-		)
+		else:
+			self.lv_chat.controls.append(
+				Row(
+					alignment=MainAxisAlignment.END,
+					controls=[
+						Container(expand=1),
+						Container(
+							expand=9,
+							expand_loose=True,
+							content=Message(is_bot=is_bot, message=message)
+						)
+					]
+				)
+			)
 
-		self.lv_chat.controls.append(
-			Row(
-				alignment=MainAxisAlignment.START,
-				controls=[
-					Container(
-						expand=9,
-						expand_loose=True,
-						content=Message(
-							is_bot=True,
-							message="Buscando respuesta..."
-						)
-					),
-					Container(expand=1)
-				]
-			)
-		)
+	def cca_send_clicked(self, event: ControlEvent) -> None:
+		self.add_message(is_bot=False, message=self.txt_message.value)
+		self.add_message(is_bot=True, message="Buscando respuesta...")
 
 		self.txt_message.value = ""
 		self.cont_icon.content = self.cca_mic
+		self.cont_icon.on_click = self.cca_mic_clicked
 		self.page.update()
+
+	def end_recording_auth(self) -> None:
+		logger.info("Ending authorization for audio recording...")
+		self.set_record_flag(False)
+		self.txt_message.value = ""
+		self.page.update()
+
+
+	def cca_mic_clicked(self, event: ControlEvent) -> None:
+		if self.get_record_flag():
+			self.end_recording_auth()
+		else:
+			from models.vosk_main import speech_recognition
+
+			logger.info("Starting authorization for audio recording...")
+			self.set_record_flag(True)
+
+			logger.info("Starting speech recognition...")
+			self.txt_message.value = "Grabando audio..."
+			self.page.update()
+			user_message: str | None = speech_recognition(logger=logger)
+			self.end_recording_auth()
+
+			logger.info(f"Speech captured: {user_message}")
+
+			if not user_message:
+				self.add_message(is_bot=False, message="ERROR")
+			else:
+				self.add_message(is_bot=False, message=user_message.capitalize())
+
+			self.add_message(is_bot=True, message="Buscando respuesta...")
+			self.page.update()
+
+	@classmethod
+	def get_record_flag(cls) -> bool:
+		return cls._record_flag
+
+	@classmethod
+	def set_record_flag(cls, value: bool) -> None:
+		cls._record_flag =  value
