@@ -1,5 +1,5 @@
 from re import match
-from logging import getLogger, info
+from logging import getLogger
 from flet_route import Params, Basket
 
 from flet import (
@@ -27,6 +27,7 @@ class ChangePasswordView:
 		self.txt_email: TextField = TextField(
 			prefix_icon=icons.EMAIL,
 			hint_text="Correo electrónico",
+			on_change=self.validate,
 			**txt_style
 		)
 
@@ -110,6 +111,7 @@ class ChangePasswordView:
 		self.btn_submit: ElevatedButton = ElevatedButton(
 			width=self.page.width,
 			text="Continuar",
+			disabled=True,
 			on_click=self.btn_submit_clicked,
 			**btn_primary_style
 		)
@@ -172,20 +174,20 @@ class ChangePasswordView:
 			]
 		)
 
-	# def validate(self, event: ControlEvent) -> None:
-	# 	# Case when only txt_email is displayed
-	# 	if not self.cont_password.visible and not self.cont_confirm_password.visible\
-	# 			and match(pattern=RGX_EMAIL, string=self.txt_email.value):
-	# 		self.btn_submit.disabled = False
-	# 	# Case when only txt_email and cont_password and cont_confirm_password are all displayed
-	# 	elif self.cont_password.visible and self.cont_confirm_password.visible\
-	# 		and all([
-	# 			self.txt_password.value,
-	# 			self.txt_confirm_password.value,
-	# 			match(pattern=RGX_EMAIL, string=self.txt_email.value)]):
-	# 		self.btn_submit.disabled = False
-	# 	else:
-	# 		self.btn_submit.disabled = True
+	def validate(self, event: ControlEvent) -> None:
+		# Case when only txt_email is displayed
+		if not self.cont_password.visible and not self.cont_confirm_password.visible \
+				and match(pattern=RGX_EMAIL, string=self.txt_email.value):
+			self.btn_submit.disabled = False
+		# Case all input fields are displayed
+		elif self.cont_password.visible and self.cont_confirm_password.visible \
+			and all([
+				self.txt_password.value,
+				self.txt_confirm_password.value,
+				match(pattern=RGX_EMAIL, string=self.txt_email.value)]):
+			self.btn_submit.disabled = False
+		else:
+			self.btn_submit.disabled = True
 
 		self.page.update()
 
@@ -198,8 +200,9 @@ class ChangePasswordView:
 
 	def btn_submit_clicked(self, event: ControlEvent) -> None:
 		if self.cont_password.visible and self.cont_confirm_password.visible:
-			info("Cambiando contraseña...")
+			logger.info("Changing password...")
 		else:
+			logger.info("Verifying email...")
 			# self.btn_submit.disabled = True
 			self.cont_password.visible = True
 			self.cont_confirm_password.visible = True

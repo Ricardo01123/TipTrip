@@ -27,7 +27,7 @@ def lowpass_filter(data, cutoff: int, fs: int, order: int = 5):
 
 def speech_recognition(logger: Logger) -> str | None:
 	logger.info("Activating model...")
-	model = Model(model_path=MODEL_ABS_PATH)
+	model = Model(model_path=VOSK_ABSPATH)
 	recognizer = KaldiRecognizer(model, SAMPLING_RATE)
 
 	logger.info("Activating microphone...")
@@ -44,7 +44,7 @@ def speech_recognition(logger: Logger) -> str | None:
 	logger.info("Recording audio...")
 	text: list = []
 	while ChatbotView.get_record_flag():
-		logger.info("Waiting for sound...")
+		logger.info("Listening...")
 		try:
 			data = stream.read(FRAMES_FLOW)
 

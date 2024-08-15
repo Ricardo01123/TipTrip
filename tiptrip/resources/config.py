@@ -1,3 +1,6 @@
+import os
+
+
 # Names
 PROJECT_NAME: str = "TIP TRIP"
 BOT_NAME: str = "Bot"
@@ -35,12 +38,14 @@ PLACE_DETAILS_CONT_TITLE_HEIGHT: int = 80
 LOGGING_FORMAT: str = "[%(asctime)s] %(levelname)s in %(name)s: %(message)s"
 RGX_EMAIL: str = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
-BACK_END_URL: str = "http://127.0.0.1:5000/"
-GET_ALL_RECORDS_ENDPOINT: str = "get_demo_data"
+# Back-End API
+BACK_END_URL: str = "http://127.0.0.1:5000"
+GET_DEMO_DATA_ENDPOINT: str = "get_demo_data"
 GET_RECORD_ENDPOINT: str = "get_record"
+ADD_USER_ENDPOINT: str = "add_user"
+AUTH_USER_ENDPOINT: str = "auth_user"
 
-REQUEST_HEADERS: dict[str, str] = {"Content-Type": "application/json"}
-
+# Speech recognition
 SAMPLING_RATE: int = 16_000
 CHANNELS: int = 1
 FRAMES_PER_BUFFER: int = 8_192
@@ -48,4 +53,7 @@ FRAMES_FLOW: int = 4_096
 CUTOFF: int = 3_000
 ORDER: int = 6
 
-MODEL_ABS_PATH: str = r"D:\Todo\ESCOM\Clases\TT\tt_codes\TipTrip\tiptrip\models\vosk-model-small-es-0.42"
+PROJECT_DIR_ABSPATH: str = os.getcwd()
+MODELS_ABSPATH: str = os.path.join(PROJECT_DIR_ABSPATH, "models")
+VOSK_ABSPATH: str = os.path.join(MODELS_ABSPATH, "vosk-model-small-es-0.42")
+# MODEL_ABS_PATH: str = r"D:\Todo\ESCOM\Clases\TT\tt_codes\TipTrip\tiptrip\models\vosk-model-small-es-0.42"

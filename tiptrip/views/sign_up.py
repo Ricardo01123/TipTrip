@@ -1,11 +1,13 @@
 from re import match
-from logging import getLogger, info
+from logging import getLogger
+from requests import post, Response
 from flet_route import Params, Basket
 
 from flet import (
-	Page, View, Container, Column, Row, Text, TextField,
-	IconButton, ElevatedButton, Checkbox, Divider, MainAxisAlignment,
-	CrossAxisAlignment, Markdown, padding, margin, icons, ControlEvent
+	Page, View, Container, Column, Row, Text, TextField, AlertDialog, Banner,
+	IconButton, ElevatedButton, TextButton, Checkbox, Divider, Markdown, Icon,
+	MainAxisAlignment, CrossAxisAlignment, padding, margin, icons, ControlEvent,
+	ButtonStyle, TextStyle
 )
 
 from resources.config import *
@@ -55,6 +57,12 @@ class SignUpView:
 			**txt_style
 		)
 
+		self.lbl_pwd_match: Text = Text(
+			value = "Las contraseñas no coinciden.",
+			style=TextStyle(color=colors.RED),
+			visible=False
+		)
+
 		self.chk_tyc: Checkbox = Checkbox(
 			label="",
 			value=False,
@@ -63,7 +71,6 @@ class SignUpView:
 		)
 
 		self.cont_tyc: Container = Container(
-			# width=self.page.width,
 			content=Row(
 				alignment=MainAxisAlignment.START,
 				vertical_alignment=CrossAxisAlignment.CENTER,
@@ -72,7 +79,7 @@ class SignUpView:
 					self.chk_tyc,
 					Markdown(
 						value=(
-							"Acepto [Términos y Condiciones]"
+							"Acepto los [Términos y Condiciones]"
 							"(https://www.google.com)."
 						),
 						on_tap_link=lambda _: go_to_view(
@@ -83,6 +90,35 @@ class SignUpView:
 					)
 				]
 			)
+		)
+
+		self.dlg_success: AlertDialog = AlertDialog(
+			modal=True,
+			title=Text("Usuario creado"),
+			content=Text("El usuario ha sido creado correctamente."),
+			actions=[
+				TextButton("Aceptar", on_click=self.dlg_handle_dismiss),
+			],
+			actions_alignment=MainAxisAlignment.END,
+			on_dismiss=self.dlg_handle_dismiss
+		)
+
+		self.bnr_error: Banner = Banner(
+			bgcolor=colors.RED_50,
+			leading=Icon(
+				icons.ERROR_OUTLINE_ROUNDED,
+				color=colors.RED,
+				size=40
+			),
+			content=Text(value=""),
+			actions=[
+				TextButton(
+					text="Aceptar",
+					style=ButtonStyle(color=colors.BLUE),
+					on_click=self.bnr_handle_dismiss
+				)
+			],
+			force_actions_below=True
 		)
 
 	def view(self, page: Page, params: Params, basket: Basket) -> View:
@@ -96,6 +132,7 @@ class SignUpView:
 				value="Crear cuenta",
 				size=BTN_TEXT_SIZE
 			),
+			disabled=True,
 			on_click=self.btn_submit_clicked,
 			**btn_primary_style
 		)
@@ -135,7 +172,7 @@ class SignUpView:
 							),
 							MainTitle(
 								subtitle="Registrarse",
-								top_margin=(SPACING * 2)
+								top_margin=SPACING
 							),
 							Container(
 								margin=margin.only(top=SPACING),
@@ -171,6 +208,9 @@ class SignUpView:
 														content=self.txt_confirm_password,
 													),
 													Container(
+														content=self.lbl_pwd_match
+													),
+													Container(
 														content=self.cont_tyc
 													)
 												]
@@ -197,7 +237,14 @@ class SignUpView:
 		)
 
 	def validate(self, event: ControlEvent) -> None:
-		if all([
+		if self.txt_password.value != self.txt_confirm_password.value:
+			self.lbl_pwd_match.visible = True
+			self.page.update()
+		else:
+			self.lbl_pwd_match.visible = False
+			self.page.update()
+
+		if self.lbl_pwd_match.visible == False and all([
 			self.txt_username.value,
 			match(pattern=RGX_EMAIL, string=self.txt_email.value),
 			self.txt_password.value,
@@ -209,36 +256,46 @@ class SignUpView:
 			self.btn_submit.disabled = True
 		self.page.update()
 
+	def dlg_handle_dismiss(self, event: ControlEvent) -> None:
+		self.page.close(self.dlg_success)
+		go_to_view(
+				page=self.page,
+				logger=logger,
+				route=""  # '/'
+			),
+
+	def bnr_handle_dismiss(self, event: ControlEvent) -> None:
+		self.bnr_error.content = Text(value="")
+		self.page.close(self.bnr_error)
+
 	def btn_submit_clicked(self, event: ControlEvent) -> None:
-		info("Creando cuenta...")
-	# 	logger.info("Creando conexión a la base de datos...")
-	# 	connection = db.connect_to_db()
-	#
-	# 	logger.info("Verificando que el registro exista...")
-	# 	conditions: dict = {
-	# 		"username": self.txt_email.value,
-	# 		"password": self.txt_password.value
-	# 	}
-	# 	record: list = db.get_record(connection, "users", conditions)
-	#
-	# 	if record is not None:
-	# 		load_user_to_basket(self.basket, record)
-	#
-	# 		logger.info(
-	# 			"Inicio de sesión correcto con credenciales: {}|{}"
-	# 			.format(conditions["username"], conditions["password"])
-	# 		)
-	#
-	# 		logger.info("Cerrando conexión con la base de datos...")
-	# 		db.close_connection_to_db(connection)
-	#
-	# 		logger.info("Redirigiendo a la vista \"Inicio\" (\"/home\")...")
-	# 		self.page.banner.close_banner(event)
-	# 		self.page.go(f"/home/{self.txt_email.value}")
-	#
-	# 	else:
-	# 		logger.info("Cerrando conexión con la base de datos...")
-	# 		db.close_connection_to_db(connection)
-	#
-	# 		self.page.banner.set_content("Usuario y/o contraseña incorrectos")
-	# 		self.page.banner.open_banner()
+		logger.info("Creando cuenta...")
+		response: Response = post(
+			url=f"{BACK_END_URL}/{ADD_USER_ENDPOINT}",
+			headers={"Content-Type": "application/json"},
+			json={
+				"username": self.txt_username.value,
+				"email": self.txt_email.value,
+				"password": self.txt_password.value,
+				"role": None,
+				"image_path": None,
+			}
+		)
+
+		if response.status_code == 201:
+			self.page.open(self.dlg_success)
+		elif response.status_code == 409:
+			self.bnr_error.content = Text(
+				value="El correo electrónico proporcionado ya fue usado.",
+				style=TextStyle(color=colors.RED)
+			)
+			self.page.open(self.bnr_error)
+		else:
+			self.bnr_error.content = Text(
+				value=(
+					"Ocurrió un error al crear el usuario. "
+					"Favor de intentarlo de nuevo más tarde."
+				),
+				style=TextStyle(color=colors.RED)
+			)
+			self.page.open(self.bnr_error)

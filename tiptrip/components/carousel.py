@@ -22,29 +22,29 @@ class Carousel(Container):
 
 		self.width = self.page.width
 		self.content = Row(
-				alignment=MainAxisAlignment.SPACE_BETWEEN,
-				vertical_alignment=CrossAxisAlignment.CENTER,
-				spacing=10,
-				controls=[
-					Container(
-						content=Icon(
-							name=icons.ARROW_BACK_IOS_SHARP,
-							size=25,
-							color=colors.BLACK
-						),
-						on_click=self.previus_item
+			alignment=MainAxisAlignment.SPACE_BETWEEN,
+			vertical_alignment=CrossAxisAlignment.CENTER,
+			spacing=10,
+			controls=[
+				Container(
+					content=Icon(
+						name=icons.ARROW_BACK_IOS_SHARP,
+						size=25,
+						color=colors.BLACK
 					),
-					self.current_container,
-					Container(
-						content=Icon(
-							name=icons.ARROW_FORWARD_IOS_SHARP,
-							size=25,
-							color=colors.BLACK
-						),
-						on_click=self.next_item
+					on_click=self.previus_item
+				),
+				self.current_container,
+				Container(
+					content=Icon(
+						name=icons.ARROW_FORWARD_IOS_SHARP,
+						size=25,
+						color=colors.BLACK
 					),
-				]
-			)
+					on_click=self.next_item
+				),
+			]
+		)
 
 	def format_items(self, items: list) -> list:
 		return [
@@ -58,7 +58,7 @@ class Carousel(Container):
 			for item in items
 		]
 
-	def previus_item(self, event: ControlEvent):
+	def previus_item(self, event: ControlEvent) -> None:
 		print("PREVIUS ITEM")
 		if self.current_item == 0:
 			self.current_item = self.total_items - 1
@@ -68,7 +68,7 @@ class Carousel(Container):
 		self.current_container.content = self.items[self.current_item]
 		self.page.update()
 
-	def next_item(self, event: ControlEvent):
+	def next_item(self, event: ControlEvent) -> None:
 		print("NEXT ITEM")
 		if self.current_item == self.total_items - 1:
 			self.current_item = 0

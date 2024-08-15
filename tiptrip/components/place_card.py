@@ -60,7 +60,6 @@ class PlaceCard(Container):
 									expand=1,
 									content=Image(
 										src=image_link,
-										# src=f"/places/{image_link}",
 										fit=ImageFit.FILL,
 										repeat=ImageRepeat.NO_REPEAT,
 										border_radius=border_radius.all(RADIUS)

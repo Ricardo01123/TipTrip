@@ -1,11 +1,11 @@
-from re import match
-from logging import getLogger, info
+from logging import getLogger
+from requests import post, Response
 from flet_route import Params, Basket
 
 from flet import (
 	Page, View, Container, Column, Text, TextField, TextButton, ElevatedButton,
 	Divider, Markdown, padding, margin, colors, icons, TextStyle, ScrollMode,
-	ControlEvent
+	ControlEvent, Banner, ButtonStyle, Icon
 )
 
 from resources.config import *
@@ -62,7 +62,23 @@ class SignInView:
 			**btn_secondary_style,
 		)
 
-		# self.page.banner = ErrorBanner(page)
+		self.bnr_error: Banner = Banner(
+			bgcolor=colors.RED_50,
+			leading=Icon(
+				icons.ERROR_OUTLINE_ROUNDED,
+				color=colors.RED,
+				size=40
+			),
+			content=Text(value=""),
+			actions=[
+				TextButton(
+					text="Aceptar",
+					style=ButtonStyle(color=colors.BLUE),
+					on_click=self.bnr_handle_dismiss
+				)
+			],
+			force_actions_below=True
+		)
 
 		return View(
 			route="/",
@@ -143,36 +159,37 @@ class SignInView:
 			]
 		)
 
-	def btn_submit_clicked(self, event: ControlEvent) -> None:
-		info("Creando conexión a la base de datos...")
-	# 	connection = db.connect_to_db()
+	def bnr_handle_dismiss(self, event: ControlEvent) -> None:
+		self.bnr_error.content = Text(value="")
+		self.page.close(self.bnr_error)
 
-		info("Verificando que el registro exista...")
-	# 	conditions: dict = {
-	# 		"username": self.txt_email.value,
-	# 		"password": self.txt_password.value
-	# 	}
-	# 	record: list = db.get_record(connection, "users", conditions)
-	#
-	# 	if record is not None:
-	# 		load_user_to_basket(self.basket, record)
-	#
-	# 		logger.info(
-	# 			"Inicio de sesión correcto con credenciales: {}|{}"
-	# 			.format(conditions["username"], conditions["password"])
-	# 		)
-	#
-	# 		logger.info("Cerrando conexión con la base de datos...")
-	# 		db.close_connection_to_db(connection)
-	#
-	# 		logger.info("Redirigiendo a la vista \"Inicio\" (\"/home\")...")
-	# 		self.page.banner.close_banner(event)
-	# 		self.page.go(f"/home/{self.txt_email.value}")
-	#
-	# 	else:
-	# 		logger.info("Cerrando conexión con la base de datos...")
-	# 		db.close_connection_to_db(connection)
-	#
-	# 		self.page.banner.set_content("Usuario y/o contraseña incorrectos")
-	# 		self.page.banner.open_banner()
-		go_to_view(page=self.page, logger=logger, route="home"),
+	def btn_submit_clicked(self, event: ControlEvent) -> None:
+		logger.info("Verificando que el registro exista...")
+		response: Response = post(
+			url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
+			headers={"Content-Type": "application/json"},
+			json={
+				"email": self.txt_email.value,
+				"password": self.txt_password.value
+			}
+		)
+
+		if response.status_code == 200:
+			token = response.json()["token"]
+			self.basket.session_token = token
+			go_to_view(page=self.page, logger=logger, route="home")
+		elif response.status_code == 401:
+			self.bnr_error.content = Text(
+				value="Usuario y/o contraseña incorrectos.",
+				style=TextStyle(color=colors.RED)
+			)
+			self.page.open(self.bnr_error)
+		else:
+			self.bnr_error.content = Text(
+				value=(
+					"Ocurrió un error al iniciar sesión. "
+					"Favor de intentarlo de nuevo más tarde."
+				),
+				style=TextStyle(color=colors.RED)
+			)
+			self.page.open(self.bnr_error)

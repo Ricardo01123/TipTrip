@@ -222,10 +222,12 @@ class PlaceDetailsView:
 
 	def get_place_data(self, name: str) -> dict:
 		response: Response = get(
-			f"{BACK_END_URL}{GET_RECORD_ENDPOINT}",
-			json={"place_name": name},
-			headers=REQUEST_HEADERS,
-			auth=HTTPBasicAuth("admin", "admin")
+			url=f"{BACK_END_URL}/{GET_RECORD_ENDPOINT}",
+			headers={
+				"Content-Type": "application/json",
+				"Authorization": f"Bearer {self.basket.get('session_token')}"
+			},
+			json={"place_name": name}
 		)
 
 		if response.status_code == 200:
