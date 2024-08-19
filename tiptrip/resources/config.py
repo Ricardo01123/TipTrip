@@ -1,4 +1,5 @@
 import os
+from pyaudio import paInt16
 
 
 # Names
@@ -44,16 +45,17 @@ GET_DEMO_DATA_ENDPOINT: str = "get_demo_data"
 GET_RECORD_ENDPOINT: str = "get_record"
 ADD_USER_ENDPOINT: str = "add_user"
 AUTH_USER_ENDPOINT: str = "auth_user"
+SPEECH_RECOGNITION_ENDPOINT: str = "speech_recognition"
 
-# Speech recognition
-SAMPLING_RATE: int = 16_000
+# Chatbot audio file
+FORMAT: int = paInt16
 CHANNELS: int = 1
-FRAMES_PER_BUFFER: int = 8_192
-FRAMES_FLOW: int = 4_096
-CUTOFF: int = 3_000
-ORDER: int = 6
+CHUNK: int = 1_024
+SAMPLING_RATE: int = 16_000
+TEMP_FILE_NAME: str = "temp_audio.wav"
 
+# Project paths
 PROJECT_DIR_ABSPATH: str = os.getcwd()
+TEMP_ABSPATH: str = os.path.join(PROJECT_DIR_ABSPATH, "temp")
 MODELS_ABSPATH: str = os.path.join(PROJECT_DIR_ABSPATH, "models")
 VOSK_ABSPATH: str = os.path.join(MODELS_ABSPATH, "vosk-model-small-es-0.42")
-# MODEL_ABS_PATH: str = r"D:\Todo\ESCOM\Clases\TT\tt_codes\TipTrip\tiptrip\models\vosk-model-small-es-0.42"

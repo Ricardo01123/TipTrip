@@ -1,6 +1,5 @@
-from logging import Logger
-
 from flet import Page
+from logging import Logger
 from flet_route import Basket
 
 

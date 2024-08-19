@@ -1,4 +1,10 @@
-from logging import getLogger, info
+import wave
+from os import remove
+from os.path import join
+from pyaudio import PyAudio
+from base64 import b64encode
+from logging import getLogger
+from requests import post, Response
 from flet_route import Params, Basket
 
 from flet import (
@@ -17,12 +23,12 @@ logger = getLogger(f"{PROJECT_NAME}.{__name__}")
 
 
 class ChatbotView:
-	_record_flag: bool = False
-
 	def __init__(self) -> None:
 		self.page = None
 		self.params = None
 		self.basket = None
+
+		self.record_flag: bool = False
 
 		self.txt_message: TextField = TextField(
 			hint_text="Escribe un mensaje",
@@ -184,34 +190,67 @@ class ChatbotView:
 
 
 	def cca_mic_clicked(self, event: ControlEvent) -> None:
-		if self.get_record_flag():
-			self.end_recording_auth()
+		if self.record_flag:
+			logger.info("Disabling authorization for audio recording...")
+			self.record_flag = False
 		else:
-			from models.vosk_main import speech_recognition
+			logger.info("Establishing audio configuration...")
+			audio: PyAudio = PyAudio()
+			stream = audio.open(
+				format=FORMAT,
+				channels=CHANNELS,
+				rate=SAMPLING_RATE,
+				input=True,
+				frames_per_buffer=CHUNK
+			)
 
-			logger.info("Starting authorization for audio recording...")
-			self.set_record_flag(True)
+			logger.info("Establishing authorization for audio recording...")
+			self.record_flag = True
+
+			logger.info("Starting audio recording...")
+			frames: list = []
+			while self.record_flag:
+				logger.info("Listening...")
+				data = stream.read(CHUNK)
+				frames.append(data)
+
+			logger.info("Ending audio recording...")
+			stream.stop_stream()
+			stream.close()
+			audio.terminate()
+
+			logger.info("Saving audio file...")
+			with wave.open(join(TEMP_ABSPATH, TEMP_FILE_NAME), "wb") as file:
+				file.setnchannels(CHANNELS)
+				file.setsampwidth(audio.get_sample_size(FORMAT))
+				file.setframerate(SAMPLING_RATE)
+				file.writeframes(b"".join(frames))
+
+			logger.info("Encoding audio file...")
+			with open(join(TEMP_ABSPATH, TEMP_FILE_NAME), "rb") as audio_file:
+				encoded_audio_data = b64encode(audio_file.read()).decode("utf-8")
 
 			logger.info("Starting speech recognition...")
-			self.txt_message.value = "Grabando audio..."
-			self.page.update()
-			user_message: str | None = speech_recognition(logger=logger)
-			self.end_recording_auth()
+			response: Response = post(
+				url=f"{BACK_END_URL}/{SPEECH_RECOGNITION_ENDPOINT}",
+				headers={
+					"Content-Type": "application/json",
+					"Authorization": f"Bearer {self.basket.get('session_token')}"
+				},
+				json={
+					"audio_data": encoded_audio_data
+				}
+			)
 
-			logger.info(f"Speech captured: {user_message}")
-
-			if not user_message:
-				self.add_message(is_bot=False, message="ERROR")
-			else:
+			if response.status_code == 200:
+				user_message: str = response.json()["text"]
+				logger.info(f"Speech captured: {user_message}")
 				self.add_message(is_bot=False, message=user_message.capitalize())
+			else:
+				self.add_message(is_bot=False, message="ERROR")
 
 			self.add_message(is_bot=True, message="Buscando respuesta...")
 			self.page.update()
 
-	@classmethod
-	def get_record_flag(cls) -> bool:
-		return cls._record_flag
-
-	@classmethod
-	def set_record_flag(cls, value: bool) -> None:
-		cls._record_flag =  value
+			logger.info("Deleting audio file...")
+			remove(join(TEMP_ABSPATH, TEMP_FILE_NAME))
