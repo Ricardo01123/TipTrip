@@ -35,7 +35,7 @@ class PlaceDetailsView:
 		self.basket = basket
 
 		self.route: str = "/place_details/:place_name"
-		self.place_data: str = self.get_place_data(self.params.get("place_name"))
+		self.place_data: dict | Container = self.get_place_data(self.params.get("place_name"))
 		self.data_tabs: Tabs = Tabs(
 			selected_index=0,
 			animation_duration=300,
@@ -87,87 +87,94 @@ class PlaceDetailsView:
 							blur_radius=LOW_BLUR,
 							color=colors.GREY_500
 						),
-						content=Column(
-							alignment=MainAxisAlignment.CENTER,
-							spacing=10,
-							controls=[
-								Container(
-									width=self.page.width,
-									alignment=alignment.bottom_left,
-									content=Row(
-										scroll=ScrollMode.HIDDEN,
-										controls=[
-											Text(
-												value=self.place_data["nombre"],
-												color=MAIN_COLOR,
-												weight=FontWeight.BOLD,
-												size=25,
-											)
-										]
-									)
-								),
-								Container(
-									width=self.page.width,
-									content=Row(
-										spacing=0,
-										alignment=MainAxisAlignment.SPACE_BETWEEN,
-										controls=[
-											Container(
-												content=Row(
-													spacing=10,
-													controls=[
-														Container(
-															content=Icon(
-																name=icons.MUSEUM_SHARP,
-																color=SECONDARY_COLOR,
-																size=18
-															)
-														),
-														Container(
-															content=Text(
-																value=self.place_data["clasificacion_sitio"],
-																color=SECONDARY_COLOR,
-																size=18
-															)
-														)
-													]
+						content=(
+							self.place_data
+							if isinstance(self.place_data, Container)
+							else Column(
+								alignment=MainAxisAlignment.CENTER,
+								spacing=10,
+								controls=[
+									Container(
+										width=self.page.width,
+										alignment=alignment.bottom_left,
+										content=Row(
+											scroll=ScrollMode.HIDDEN,
+											controls=[
+												Text(
+													value=self.place_data["nombre"],
+													color=MAIN_COLOR,
+													weight=FontWeight.BOLD,
+													size=25,
 												)
-											),
-											Container(
-												width=70,
-												bgcolor=SECONDARY_COLOR,
-												border_radius=border_radius.all(
-													value=15
+											]
+										)
+									),
+									Container(
+										width=self.page.width,
+										content=Row(
+											spacing=0,
+											alignment=MainAxisAlignment.SPACE_BETWEEN,
+											controls=[
+												Container(
+													content=Row(
+														spacing=10,
+														controls=[
+															Container(
+																content=Icon(
+																	name=icons.MUSEUM_SHARP,
+																	color=SECONDARY_COLOR,
+																	size=18
+																)
+															),
+															Container(
+																content=Text(
+																	value=self.place_data["clasificacion_sitio"],
+																	color=SECONDARY_COLOR,
+																	size=18
+																)
+															)
+														]
+													)
 												),
-												content=Row(
-													spacing=10,
-													alignment=MainAxisAlignment.CENTER,
-													controls=[
-														Container(
-															expand=1,
-															alignment=alignment.center_right,
-															content=Icon(
-																name=icons.STAR_BORDER,
-																color=colors.WHITE,
-																size=18
+												Container(
+													width=70,
+													bgcolor=SECONDARY_COLOR,
+													border_radius=border_radius.all(
+														value=15
+													),
+													padding=padding.only(
+														right=5
+													),
+													content=Row(
+														spacing=5,
+														alignment=MainAxisAlignment.CENTER,
+														controls=[
+															Container(
+																expand=1,
+																alignment=alignment.center_right,
+																content=Icon(
+																	name=icons.STAR_BORDER,
+																	color=colors.WHITE,
+																	size=18
+																)
+															),
+															Container(
+																expand=1,
+																alignment=alignment.center_left,
+																content=Text(
+																	value=self.place_data["puntuacion"],
+																	color=colors.WHITE,
+																	size=18
+																)
 															)
-														),
-														Container(
-															expand=1,
-															alignment=alignment.center_left,
-															content=Text(
-																value=self.place_data["puntuacion"],
-																color=colors.WHITE,
-																size=18
-															)
-														)
-													]
+														]
+													)
 												)
-											)
-										]
+											]
+										)
 									)
-								)
-							]
+								]
+							)
 						)
 					)
 				),
@@ -181,13 +188,7 @@ class PlaceDetailsView:
 					alignment=alignment.center,
 					content=Carousel(
 						page=self.page,
-						items=[
-							"bellas_artes.jpg",
-							"castillo.jpg",
-							"monumento.jpg"
-							# self.place_data["ruta1"],
-							# self.place_data["ruta2"]
-						]
+						items=self.get_items()
 					)
 				),
 				Container(
@@ -220,7 +221,7 @@ class PlaceDetailsView:
 			]
 		)
 
-	def get_place_data(self, name: str) -> dict:
+	def get_place_data(self, name: str) -> dict | Container:
 		response: Response = get(
 			url=f"{BACK_END_URL}/{GET_RECORD_ENDPOINT}",
 			headers={
@@ -233,8 +234,7 @@ class PlaceDetailsView:
 		if response.status_code == 200:
 			return response.json()["data"]
 		else:
-			return [
-				Container(
+			return Container(
 					alignment=alignment.center,
 					content=Text(
 						value="No se encontró información del lugar.",
@@ -242,7 +242,6 @@ class PlaceDetailsView:
 						size=35
 					)
 				)
-			]
 
 	def fill_data_tabs(self) -> list:
 		result: list = []
@@ -582,3 +581,23 @@ class PlaceDetailsView:
 			)
 
 		return result
+
+	def get_items(self) -> list:
+		items: list = []
+
+		if self.place_data["ruta1"] is not None:
+			items.append(self.place_data["ruta1"])
+
+		if self.place_data["ruta2"] is not None:
+			items.append(self.place_data["ruta2"])
+
+		if self.place_data["ruta3"] is not None:
+			items.append(self.place_data["ruta3"])
+
+		if self.place_data["ruta4"] is not None:
+			items.append(self.place_data["ruta4"])
+
+		if self.place_data["ruta5"] is not None:
+			items.append(self.place_data["ruta5"])
+
+		return items

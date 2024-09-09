@@ -19,27 +19,27 @@ class Message(Container):
 			),
 			padding=padding.all(value=(SPACING / 2)),
 			bgcolor=(
-				colors.WHITE
-				if is_bot
+				colors.RED
+				if "ERROR" in message
 				else (
-					colors.RED
-					if message == "ERROR"
+					colors.WHITE
+					if is_bot
 					else SECONDARY_COLOR
 				)
 			),
 			content=Text(
 				value=(
 					message
-					if message != "ERROR"
+					if "ERROR" not in message
 					else (
-						f"{message}\n"
-						"Ocurrió un error al transcribir voz a texto. "
-						"Favor de intentarlo de nuevo más tarde."
+						SPEECH_RECOGNITION_ERROR_MESSAGE
+						if message == "SPEECH_RECOGNITION_ERROR"
+						else AGENT_ERROR_MESSAGE
 					)
 				),
 				color=(
 					colors.BLACK
-					if is_bot
+					if is_bot and "ERROR" not in message
 					else colors.WHITE
 				),
 				size=MESSAGE_TEXT_SIZE

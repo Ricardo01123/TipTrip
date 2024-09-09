@@ -107,8 +107,11 @@ class PlaceCard(Container):
 															color=colors.AMBER,
 															size=20
 														)
-														for _ in range(punctuation)
+														for _ in range(int(punctuation))
 													]
+												) if punctuation is not None else Text(
+													value="Sin puntuación",
+													color=colors.RED
 												)
 											)
 										]

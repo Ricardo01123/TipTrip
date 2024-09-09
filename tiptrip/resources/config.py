@@ -39,6 +39,17 @@ PLACE_DETAILS_CONT_TITLE_HEIGHT: int = 80
 LOGGING_FORMAT: str = "[%(asctime)s] %(levelname)s in %(name)s: %(message)s"
 RGX_EMAIL: str = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
+SPEECH_RECOGNITION_ERROR_MESSAGE: str = (
+	"ERROR.\n"
+	"Ocurrió un error al transcribir voz a texto. "
+	"Favor de intentarlo de nuevo más tarde."
+)
+AGENT_ERROR_MESSAGE: str = (
+	"ERROR.\n"
+	"Ocurrió un error al obtener información del agente. "
+	"Favor de intentarlo de nuevo más tarde."
+)
+
 # Back-End API
 BACK_END_URL: str = "http://127.0.0.1:5000"
 GET_DEMO_DATA_ENDPOINT: str = "get_demo_data"
@@ -46,6 +57,7 @@ GET_RECORD_ENDPOINT: str = "get_record"
 ADD_USER_ENDPOINT: str = "add_user"
 AUTH_USER_ENDPOINT: str = "auth_user"
 SPEECH_RECOGNITION_ENDPOINT: str = "speech_recognition"
+AGENT_ENDPOINT: str = "agent"
 
 # Chatbot audio file
 FORMAT: int = paInt16
@@ -57,5 +69,3 @@ TEMP_FILE_NAME: str = "temp_audio.wav"
 # Project paths
 PROJECT_DIR_ABSPATH: str = os.getcwd()
 TEMP_ABSPATH: str = os.path.join(PROJECT_DIR_ABSPATH, "temp")
-MODELS_ABSPATH: str = os.path.join(PROJECT_DIR_ABSPATH, "models")
-VOSK_ABSPATH: str = os.path.join(MODELS_ABSPATH, "vosk-model-small-es-0.42")

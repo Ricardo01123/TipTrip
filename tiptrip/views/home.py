@@ -28,9 +28,10 @@ class HomeView:
 		self.params = params
 		self.basket = basket
 
-		self.txt_place: TextField = TextField(
+		self.txt_place_searcher: TextField = TextField(
 			prefix_icon=icons.SEARCH,
 			hint_text="Busca un lugar",
+			on_change=self.search_place,
 			**txt_messages_style
 		)
 
@@ -103,7 +104,7 @@ class HomeView:
 		)
 
 		# Places and pagination variables
-		self.items: list = self.get_places()
+		self.items: list | Container = self.get_places()
 
 		self.current_page: int = 0
 		self.items_per_page: int = 10
@@ -116,7 +117,11 @@ class HomeView:
 				horizontal=SPACING
 			),
 			spacing=(SPACING / 2),
-			controls=self.items[self.page_start_index:self.page_end_index]
+			controls=(
+				self.items
+				if isinstance(self.items, Container)
+				else self.items[self.page_start_index:self.page_end_index]
+			)
 		)
 
 		self.total_items: int = len(self.items)
@@ -205,7 +210,7 @@ class HomeView:
 									controls=[
 										Container(
 											expand=4,
-											content=self.txt_place,
+											content=self.txt_place_searcher,
 										),
 										Container(
 											expand=1,
@@ -241,7 +246,7 @@ class HomeView:
 			]
 		)
 
-	def get_places(self, category: str = None, municipality: str =  None) -> list:
+	def get_places(self, category: str = None, municipality: str =  None) -> list | Container:
 		logger.info("Calling Back-End API...")
 		response: Response = get(
 			url=f"{BACK_END_URL}/{GET_DEMO_DATA_ENDPOINT}",
@@ -254,8 +259,7 @@ class HomeView:
 
 		logger.info("Evaluating response...")
 		if response.status_code != 200:
-			return [
-				Container(
+			return Container(
 					alignment=alignment.center,
 					content=Text(
 						value=(
@@ -266,7 +270,6 @@ class HomeView:
 						size=35
 					)
 				)
-			]
 		else:
 			places_data: dict = response.json()["data"]
 			if places_data == []:
@@ -303,12 +306,28 @@ class HomeView:
 					for place in places_data
 				]
 
-	def update_pagination_data(self) -> None:
+	def update_pagination_data(self, items: list) -> None:
 		self.current_page = 0
-		self.total_items = len(self.items)
+		self.total_items = len(items)
 		self.total_pages = (self.total_items + self.items_per_page - 1) // self.items_per_page
 		self.lbl_actual_page.value = f"Página {self.current_page + 1} de {self.total_pages}"
 		self.page.update()
+
+	def search_place(self, event: ControlEvent) -> None:
+		if self.txt_place_searcher.value == "":
+			logger.info("Cleaning 'searching place' filter...")
+			self.lv_places_list.controls = self.items[0:self.items_per_page]
+			self.update_pagination_data(self.items)
+		else:
+			value = self.txt_place_searcher.value.lower()
+			logger.info(f"Searching place... Searching for value {value}")
+			items = [
+				place for place in self.items if value in
+				# Searching in the structure of the PlaceCard component in place_card.py
+				place.content.controls[0].content.controls[0].value.lower()
+			]
+			self.lv_places_list.controls = items[0:self.items_per_page]
+			self.update_pagination_data(items)
 
 	def clean_filters(self, event: ControlEvent) -> None:
 		logger.info("Cleaning filters...")
@@ -317,7 +336,7 @@ class HomeView:
 		self.drd_municipality.value = None
 		self.items: list = self.get_places()
 		self.lv_places_list.controls = self.items[0:self.items_per_page]
-		self.update_pagination_data()
+		self.update_pagination_data(self.items)
 		self.page.update()
 
 	def apply_filters(self, event: ControlEvent) -> None:
@@ -337,7 +356,7 @@ class HomeView:
 				),
 			)
 			self.lv_places_list.controls = self.items[0:self.items_per_page]
-			self.update_pagination_data()
+			self.update_pagination_data(self.items)
 			self.page.update()
 
 	def set_page_indexes(self) -> None:
