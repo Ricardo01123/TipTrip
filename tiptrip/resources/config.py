@@ -52,10 +52,15 @@ AGENT_ERROR_MESSAGE: str = (
 
 # Back-End API
 BACK_END_URL: str = "http://127.0.0.1:5000"
+
 GET_DEMO_DATA_ENDPOINT: str = "get_demo_data"
 GET_RECORD_ENDPOINT: str = "get_record"
-ADD_USER_ENDPOINT: str = "add_user"
+
 AUTH_USER_ENDPOINT: str = "auth_user"
+ADD_USER_ENDPOINT: str = "add_user"
+UPDATE_USER_ENDPOINT: str = "update_user"
+DELETE_USER_ENDPOINT: str = "delete_user"
+
 SPEECH_RECOGNITION_ENDPOINT: str = "speech_recognition"
 AGENT_ENDPOINT: str = "agent"
 
@@ -69,3 +74,4 @@ TEMP_FILE_NAME: str = "temp_audio.wav"
 # Project paths
 PROJECT_DIR_ABSPATH: str = os.getcwd()
 TEMP_ABSPATH: str = os.path.join(PROJECT_DIR_ABSPATH, "temp")
+ASSETS_ABSPATH: str = os.path.join(PROJECT_DIR_ABSPATH, "assets")

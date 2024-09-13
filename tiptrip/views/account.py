@@ -1,15 +1,18 @@
-from logging import getLogger, info
+from logging import getLogger
+from requests import Response, post, delete
 from flet_route import Params, Basket
 
 from flet import (
 	Page, View, Container, Column, Text, Stack, CircleAvatar, Image, ImageFit,
 	ImageRepeat, ElevatedButton, IconButton, MainAxisAlignment, alignment,
 	Offset, FontWeight, padding, margin, BoxShadow, border_radius, colors,
-	ControlEvent
+	ControlEvent, AlertDialog, TextButton, icons, TextStyle, Banner, ButtonStyle,
+	Icon
 )
 
 from components.bars import *
 from resources.config import *
+from resources.functions import clean_basket, go_to_view
 from resources.styles import btn_secondary_style, btn_danger_style
 
 
@@ -24,12 +27,78 @@ class AccountView:
 
 		self.route = None
 
+		self.btn_edit_data = None
+		self.btn_delete_user = None
+
+		self.dlg_confirm_delete_account: AlertDialog = AlertDialog(
+			modal=True,
+			title=Text("Eliminar cuenta"),
+			content=Text(
+				"¿Estás seguro de que deseas eliminar tu cuenta?\n"
+				"Esta acción no se puede deshacer."
+			),
+			actions=[
+				TextButton(
+					"Cancelar",
+					on_click=lambda _: self.page.close(self.dlg_confirm_delete_account)
+				),
+				TextButton("Aceptar", on_click=self.delete_account)
+			],
+			actions_alignment=MainAxisAlignment.END,
+			on_dismiss=lambda _: self.page.close(self.dlg_confirm_delete_account)
+		)
+
+		self.dlg_account_deleted: AlertDialog = AlertDialog(
+			modal=True,
+			title=Text("Cuenta eliminada"),
+			content=Text("Su cuenta ha sido eliminada exitosamente."),
+			actions=[
+				TextButton("Aceptar", on_click=self.handle_ok_account_deleted)
+			],
+			actions_alignment=MainAxisAlignment.END,
+			on_dismiss=self.handle_ok_account_deleted
+		)
+
+		self.bnr_error: Banner = Banner(
+			bgcolor=colors.RED_50,
+			leading=Icon(
+				icons.ERROR_OUTLINE_ROUNDED,
+				color=colors.RED,
+				size=40
+			),
+			content=Text(value=""),
+			actions=[
+				TextButton(
+					text="Aceptar",
+					style=ButtonStyle(color=colors.BLUE),
+					on_click=self.bnr_handle_dismiss
+				)
+			],
+			force_actions_below=True
+		)
+
 	def view(self, page: Page, params: Params, basket: Basket) -> View:
 		self.page = page
 		self.params = params
 		self.basket = basket
 
 		self.route = "/account"
+
+		self.btn_edit_data: ElevatedButton = ElevatedButton(
+			width=self.page.width,
+			icon=icons.EDIT,
+			text="Editar perfil",
+			on_click=self.btn_edit_data_clicked,
+			**btn_secondary_style
+		)
+
+		self.btn_delete_user: ElevatedButton = ElevatedButton(
+			width=self.page.width,
+			icon=icons.DELETE,
+			text="Eliminar cuenta",
+			on_click=self.btn_delete_user_clicked,
+			**btn_danger_style
+		)
 
 		return View(
 			route=self.route,
@@ -54,7 +123,7 @@ class AccountView:
 								radius=(SPACING * 4),
 								foreground_image_src="/user.jpg",
 								background_image_src="/user.jpg",
-								content=Text(value="FS"),
+								content=Text(value=self.basket.get("username")[:2].upper()),
 							),
 							Container(
 								alignment=alignment.bottom_right,
@@ -117,7 +186,7 @@ class AccountView:
 											width=self.page.width,
 											alignment=alignment.bottom_left,
 											content=Text(
-												value="Fernanda Sandoval",
+												value=self.basket.get("username").capitalize(),
 												color=colors.BLACK,
 												weight=FontWeight.BOLD,
 												size=20,
@@ -158,7 +227,7 @@ class AccountView:
 											width=self.page.width,
 											alignment=alignment.bottom_left,
 											content=Text(
-												value="01 de enero del 2021",
+												value=self.basket.get("created_at"),
 												color=colors.BLACK,
 												size=18,
 											),
@@ -179,24 +248,12 @@ class AccountView:
 								margin=margin.only(top=SPACING),
 								padding=padding.symmetric(horizontal=SPACING),
 								alignment=alignment.center,
-								content=ElevatedButton(
-									width=self.page.width,
-									icon=icons.EDIT,
-									text="Editar perfil",
-									# on_click=self.btn_submit_clicked,
-									**btn_secondary_style
-								)
+								content=self.btn_edit_data
 							),
 							Container(
 								padding=padding.symmetric(horizontal=SPACING),
 								alignment=alignment.center,
-								content=ElevatedButton(
-									width=self.page.width,
-									icon=icons.DELETE,
-									text="Eliminar cuenta",
-									# on_click=self.btn_submit_clicked,
-									**btn_danger_style
-								)
+								content=self.btn_delete_user
 							)
 						]
 					)
@@ -206,193 +263,54 @@ class AccountView:
 					logger=logger,
 					current_route=self.route
 				)
-				# Container(
-				# 	expand=True,
-				# 	# width=APP_WIDTH,
-				# 	content=Stack(
-				# 		controls=[
-				# 			Container(
-				# 				left=0,
-				# 				top=0,
-				# 				# width=(APP_WIDTH - 16),
-				# 				height=185,
-				# 				bgcolor=MAIN_COLOR,
-				# 				content=Text(value=""),
-				# 			),
-				# 			Container(
-				# 				left=0,
-				# 				top=0,
-				# 				# width=(APP_WIDTH - 16),
-				# 				height=150,
-				# 				alignment=alignment.center,
-				# 				content=Stack(
-				# 					width=(SPACING * 7),
-				# 					height=(SPACING * 7),
-				# 					controls=[
-				# 						# CircleAvatar(
-				# 						# 	radius=(SPACING * 4),
-				# 						# 	foreground_image_src="../assets/user.jpg",
-				# 						# 	background_image_src="../assets/user.jpg",
-				# 						# 	content=Text(value="FS"),
-				# 						# 	on_image_error=lambda e: print(e.data),
-				# 						# ),
-				# 						Image(
-				# 							src=f"../assets/user.jpg",
-				# 							width=(SPACING * 7),
-				# 							fit=ImageFit.CONTAIN,
-				# 							repeat=ImageRepeat.NO_REPEAT,
-				# 							border_radius=border_radius.all(
-				# 								value=(SPACING * 4)
-				# 							)
-				# 						),
-				# 						Container(
-				# 							alignment=alignment.bottom_right,
-				# 							content=CircleAvatar(
-				# 								bgcolor=SECONDARY_COLOR,
-				# 								radius=SPACING,
-				# 								content=IconButton(
-				# 									icon=icons.EDIT,
-				# 									icon_color=colors.WHITE
-				# 								)
-				# 							)
-				# 						)
-				# 					]
-				# 				)
-				# 			),
-				# 			Container(
-				# 				left=0,
-				# 				top=185 - RADIUS,
-				# 				bgcolor=colors.WHITE,
-				# 				# width=(APP_WIDTH - 16),
-				# 				height=514,
-				# 				border_radius=border_radius.all(value=RADIUS),
-				# 				shadow=BoxShadow(
-				# 					blur_radius=BLUR,
-				# 					offset=Offset(0, -2),
-				# 				),
-				# 				content=Text(value="")
-				# 			),
-				# 			Container(
-				# 				left=0,
-				# 				top=210,
-				# 				# width=(APP_WIDTH - 16),
-				# 				alignment=alignment.center,
-				# 				content=Column(
-				# 					# width=(APP_WIDTH - (SPACING * 2)),
-				# 					alignment=MainAxisAlignment.CENTER,
-				# 					spacing=SPACING,
-				# 					controls=[
-				# 						Container(
-				# 							height=80,
-				# 							bgcolor=colors.WHITE,
-				# 							padding=padding.symmetric(
-				# 								vertical=(SPACING / 2),
-				# 								horizontal=SPACING
-				# 							),
-				# 							border_radius=border_radius.all(
-				# 								value=RADIUS
-				# 							),
-				# 							shadow=BoxShadow(
-				# 								blur_radius=LOW_BLUR,
-				# 								color=colors.GREY_500
-				# 							),
-				# 							content=Column(
-				# 								alignment=MainAxisAlignment.CENTER,
-				# 								spacing=0,
-				# 								controls=[
-				# 									Container(
-				# 										expand=1,
-				# 										# width=(APP_WIDTH - (SPACING * 2)),
-				# 										alignment=alignment.bottom_left,
-				# 										content=Text(
-				# 											value="Fernanda Sandoval",
-				# 											weight=FontWeight.BOLD,
-				# 											size=20,
-				# 										),
-				# 									),
-				# 									Container(
-				# 										expand=1,
-				# 										# width=(APP_WIDTH - (SPACING * 2)),
-				# 										alignment=alignment.top_left,
-				# 										content=Text(
-				# 											value="Nombre de usuario"
-				# 										),
-				# 									)
-				# 								]
-				# 							)
-				# 						),
-				# 						Container(
-				# 							height=80,
-				# 							bgcolor=colors.WHITE,
-				# 							padding=padding.symmetric(
-				# 								vertical=(SPACING / 2),
-				# 								horizontal=SPACING
-				# 							),
-				# 							border_radius=border_radius.all(
-				# 								value=RADIUS
-				# 							),
-				# 							shadow=BoxShadow(
-				# 								blur_radius=LOW_BLUR,
-				# 								color=colors.GREY_500
-				# 							),
-				# 							content=Column(
-				# 								alignment=MainAxisAlignment.CENTER,
-				# 								spacing=0,
-				# 								controls=[
-				# 									Container(
-				# 										expand=1,
-				# 										# width=(APP_WIDTH - (SPACING * 2)),
-				# 										alignment=alignment.bottom_left,
-				# 										content=Text(
-				# 											value="01 de enero del 2021",
-				# 											size=18,
-				# 										),
-				# 									),
-				# 									Container(
-				# 										expand=1,
-				# 										# width=(APP_WIDTH - (SPACING * 2)),
-				# 										alignment=alignment.top_left,
-				# 										content=Text(
-				# 											value="Fecha de creación de la cuenta"
-				# 										),
-				# 									)
-				# 								]
-				# 							)
-				# 						),
-				# 						Container(
-				# 							margin=margin.only(top=SPACING),
-				# 							alignment=alignment.center,
-				# 							content=ElevatedButton(
-				# 								icon=icons.EDIT,
-				# 								text="Editar perfil",
-				# 								# on_click=self.btn_submit_clicked,
-				# 								**btn_secondary_style
-				# 							)
-				# 						),
-				# 						Container(
-				# 							alignment=alignment.center,
-				# 							content=ElevatedButton(
-				# 								icon=icons.DELETE,
-				# 								text="Eliminar cuenta",
-				# 								# on_click=self.btn_submit_clicked,
-				# 								**btn_danger_style
-				# 							)
-				# 						)
-				# 					]
-				# 				)
-				# 			),
-				# 			Container(
-				# 				left=0,
-				# 				bottom=0,
-				# 				# width=(APP_WIDTH - 16),
-				# 				content=BottomBar(
-				# 					page=self.page,
-				# 					logger=logger,
-				# 					current_route=self.route
-				# 				)
-				# 			)
-				# 		]
-				# 	)
-				# )
 			]
 		)
+
+	def bnr_handle_dismiss(self, event: ControlEvent) -> None:
+		self.bnr_error.content = Text(value="")
+		self.page.close(self.bnr_error)
+
+	def btn_edit_data_clicked(self, event: ControlEvent) -> None:
+		logger.info("Edit data button clicked")
+		pass
+
+	def btn_delete_user_clicked(self, event: ControlEvent) -> None:
+		logger.info("Delete user button clicked")
+		self.page.open(self.dlg_confirm_delete_account)
+
+	def handle_ok_account_deleted(self, event: ControlEvent) -> None:
+		self.page.close(self.dlg_account_deleted)
+		clean_basket(self.basket, logger=logger)
+		go_to_view(page=self.page, logger=logger, route="") # Redirect to sign in
+
+	def delete_account(self, event: ControlEvent) -> None:
+		logger.info("Making request to delete account...")
+		response: Response = delete(
+			url=f"{BACK_END_URL}/{DELETE_USER_ENDPOINT}",
+			headers={
+				"Content-Type": "application/json",
+				"Authorization": f"Bearer {self.basket.get('session_token')}"
+			},
+			json={
+				"email": self.basket.get("email"),
+			}
+		)
+
+		print(response)
+		print(response.status_code)
+
+		if response.status_code == 200:
+			logger.info("Account deleted successfully")
+			self.page.open(self.dlg_account_deleted)
+
+		else:
+			logger.error("Error deleting account")
+			self.page.close(self.dlg_confirm_delete_account)
+			self.bnr_error.content = Text(
+				value=(
+					"Ocurrió un error al eliminar la cuenta. "
+					"Favor de intentarlo de nuevo más tarde."
+				),
+				style=TextStyle(color=colors.RED)
+			)
+			self.page.open(self.bnr_error)

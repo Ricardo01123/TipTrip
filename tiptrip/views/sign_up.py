@@ -97,7 +97,7 @@ class SignUpView:
 			title=Text("Usuario creado"),
 			content=Text("El usuario ha sido creado correctamente."),
 			actions=[
-				TextButton("Aceptar", on_click=self.dlg_handle_dismiss),
+				TextButton("Aceptar", on_click=self.dlg_handle_ok_button),
 			],
 			actions_alignment=MainAxisAlignment.END,
 			on_dismiss=self.dlg_handle_dismiss
@@ -256,20 +256,55 @@ class SignUpView:
 			self.btn_submit.disabled = True
 		self.page.update()
 
+	def dlg_handle_ok_button(self, event: ControlEvent) -> None:
+		self.page.close(self.dlg_success)
+		logger.info("Authenticating user...")
+		response: Response = post(
+			url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
+			headers={"Content-Type": "application/json"},
+			json={
+				"email": self.txt_email.value,
+				"password": self.txt_password.value
+			}
+		)
+		if response.status_code == 200:
+			logger.info("User authenticated successfully")
+
+			logger.info("Adding user data to session data...")
+			data = response.json()
+			self.basket.email = self.txt_email.value
+			self.basket.username = data["username"]
+			self.basket.session_token = data["token"]
+			self.basket.created_at = data["created_at"]
+
+			logger.info("Cleaning text fields...")
+			self.txt_username.value = ""
+			self.txt_email.value = ""
+			self.txt_password.value = ""
+			self.txt_confirm_password.value = ""
+			self.chk_tyc.value = False
+
+			go_to_view(page=self.page, logger=logger, route="home")
+		else:
+			logger.error("An error occurred while trying to authenticate user")
+			self.bnr_error.content = Text(
+				value=(
+					"Ocurrió un error al iniciar sesión. "
+					"Favor de intentarlo de nuevo más tarde."
+				),
+				style=TextStyle(color=colors.RED)
+			)
+			self.page.open(self.bnr_error)
+
 	def dlg_handle_dismiss(self, event: ControlEvent) -> None:
 		self.page.close(self.dlg_success)
-		go_to_view(
-				page=self.page,
-				logger=logger,
-				route=""  # '/'
-			),
 
 	def bnr_handle_dismiss(self, event: ControlEvent) -> None:
 		self.bnr_error.content = Text(value="")
 		self.page.close(self.bnr_error)
 
 	def btn_submit_clicked(self, event: ControlEvent) -> None:
-		logger.info("Creando cuenta...")
+		logger.info("Creating new user...")
 		response: Response = post(
 			url=f"{BACK_END_URL}/{ADD_USER_ENDPOINT}",
 			headers={"Content-Type": "application/json"},
@@ -283,14 +318,17 @@ class SignUpView:
 		)
 
 		if response.status_code == 201:
+			logger.info("New user created successfully")
 			self.page.open(self.dlg_success)
 		elif response.status_code == 409:
+			logger.error("Email already exists")
 			self.bnr_error.content = Text(
 				value="El correo electrónico proporcionado ya fue usado.",
 				style=TextStyle(color=colors.RED)
 			)
 			self.page.open(self.bnr_error)
 		else:
+			logger.error("Error creating user")
 			self.bnr_error.content = Text(
 				value=(
 					"Ocurrió un error al crear el usuario. "

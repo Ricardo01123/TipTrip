@@ -1,3 +1,5 @@
+from os import listdir
+from os.path import join
 from logging import getLogger
 from requests import get, Response
 from flet_route import Params, Basket
@@ -295,6 +297,7 @@ class HomeView:
 						category=place["clasificacion_sitio"],
 						punctuation=place["puntuacion"],
 						image_link=place["ruta"],
+						# image_link=self.get_place_image(place["nombre"]),
 						address=(
 							f"{place['calle_numero']}, "
 							f"{place['colonia']}, "
@@ -305,6 +308,15 @@ class HomeView:
 					)
 					for place in places_data
 				]
+
+	# def get_place_image(self, place_name: str) -> str:
+	# 	dir: str = place_name.replace(' ', '_').replace(',', '_').lower()
+	# 	path: str = join(ASSETS_ABSPATH, "places", dir)
+	# 	if os.path.exists(path):
+	# 		images: list = listdir(path)
+	# 		result = join("places", dir, images[0])
+	# 		print(result)
+	# 		return result
 
 	def update_pagination_data(self, items: list) -> None:
 		self.current_page = 0

@@ -1,5 +1,6 @@
+from os import listdir
+from os.path import join
 from requests import get, Response
-from requests.auth import HTTPBasicAuth
 
 from logging import getLogger
 from flet_route import Params, Basket
@@ -601,3 +602,12 @@ class PlaceDetailsView:
 			items.append(self.place_data["ruta5"])
 
 		return items
+
+	# def get_items(self) -> list:
+	# 	place_name = self.params.get("place_name")
+	# 	dir: str = place_name.replace(' ', '_').replace(',', '_').lower()
+	# 	path: str = join(ASSETS_ABSPATH, "places", dir)
+	# 	images: list = listdir(path)
+	# 	result = [join("places", dir, image) for image in images]
+	# 	print(result)
+	# 	return result

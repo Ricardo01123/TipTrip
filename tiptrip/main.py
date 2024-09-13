@@ -16,7 +16,7 @@ logger = getLogger(PROJECT_NAME)
 
 
 def main(page: Page) -> None:
-	info(f"Iniciando configuraciones de navegación de la app...")
+	info(f"Starting app's navigation configurations...")
 	Routing(page=page, app_routes=routes)
 	# page.go("/loading")
 	# sleep(1)

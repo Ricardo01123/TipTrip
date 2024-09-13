@@ -164,7 +164,7 @@ class SignInView:
 		self.page.close(self.bnr_error)
 
 	def btn_submit_clicked(self, event: ControlEvent) -> None:
-		logger.info("Verificando que el registro exista...")
+		logger.info("Checking if credentials exists in DB...")
 		response: Response = post(
 			url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
 			headers={"Content-Type": "application/json"},
@@ -175,16 +175,26 @@ class SignInView:
 		)
 
 		if response.status_code == 200:
-			token = response.json()["token"]
-			self.basket.session_token = token
+			data: dict = response.json()
+			logger.info("User authenticated successfully")
+
+			logger.info("Adding user data to session data...")
+			self.basket.email = self.txt_email.value
+			self.basket.username = data["username"]
+			self.basket.session_token = data["token"]
+			self.basket.created_at = data["created_at"]
+
 			go_to_view(page=self.page, logger=logger, route="home")
+
 		elif response.status_code == 401:
+			logger.info("User and/or password are incorrect")
 			self.bnr_error.content = Text(
 				value="Usuario y/o contraseña incorrectos.",
 				style=TextStyle(color=colors.RED)
 			)
 			self.page.open(self.bnr_error)
 		else:
+			logger.error("An error occurred while trying to authenticate user")
 			self.bnr_error.content = Text(
 				value=(
 					"Ocurrió un error al iniciar sesión. "
