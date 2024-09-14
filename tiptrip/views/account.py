@@ -1,13 +1,12 @@
 from logging import getLogger
-from requests import Response, post, delete
+from requests import Response, delete
 from flet_route import Params, Basket
 
 from flet import (
-	Page, View, Container, Column, Text, Stack, CircleAvatar, Image, ImageFit,
-	ImageRepeat, ElevatedButton, IconButton, MainAxisAlignment, alignment,
-	Offset, FontWeight, padding, margin, BoxShadow, border_radius, colors,
-	ControlEvent, AlertDialog, TextButton, icons, TextStyle, Banner, ButtonStyle,
-	Icon
+	Page, View, Container, Column, Text, CircleAvatar, ElevatedButton,
+	MainAxisAlignment, alignment, Offset, FontWeight, padding, margin,
+	BoxShadow, border_radius, colors, ControlEvent, AlertDialog, TextButton,
+	Icon, icons, TextStyle, Banner, ButtonStyle,
 )
 
 from components.bars import *
@@ -24,10 +23,7 @@ class AccountView:
 		self.page = None
 		self.params = None
 		self.basket = None
-
 		self.route = None
-
-		self.btn_edit_data = None
 		self.btn_delete_user = None
 
 		self.dlg_confirm_delete_account: AlertDialog = AlertDialog(
@@ -84,14 +80,6 @@ class AccountView:
 
 		self.route = "/account"
 
-		self.btn_edit_data: ElevatedButton = ElevatedButton(
-			width=self.page.width,
-			icon=icons.EDIT,
-			text="Editar perfil",
-			on_click=self.btn_edit_data_clicked,
-			**btn_secondary_style
-		)
-
 		self.btn_delete_user: ElevatedButton = ElevatedButton(
 			width=self.page.width,
 			icon=icons.DELETE,
@@ -115,28 +103,13 @@ class AccountView:
 						right=SPACING,
 						bottom=SPACING,
 					),
-					content=Stack(
-						width=PROFILE_IMAGE_DIMENSIONS,
-						height=PROFILE_IMAGE_DIMENSIONS,
-						controls=[
-							CircleAvatar(
-								radius=(SPACING * 4),
-								foreground_image_src="/user.jpg",
-								background_image_src="/user.jpg",
-								content=Text(value=self.basket.get("username")[:2].upper()),
-							),
-							Container(
-								alignment=alignment.bottom_right,
-								content=CircleAvatar(
-									bgcolor=SECONDARY_COLOR,
-									radius=SPACING,
-									content=IconButton(
-										icon=icons.EDIT,
-										icon_color=colors.WHITE
-									)
-								)
-							)
-						]
+					content=CircleAvatar(
+						radius=(SPACING * 4),
+						foreground_image_src="/user.jpg",
+						background_image_src="/user.jpg",
+						content=Text(
+							value=self.format_image_name(self.basket.get("username"))
+						),
 					)
 				),
 				Container(
@@ -186,7 +159,7 @@ class AccountView:
 											width=self.page.width,
 											alignment=alignment.bottom_left,
 											content=Text(
-												value=self.basket.get("username").capitalize(),
+												value=self.basket.get("username"),
 												color=colors.BLACK,
 												weight=FontWeight.BOLD,
 												size=20,
@@ -248,7 +221,17 @@ class AccountView:
 								margin=margin.only(top=SPACING),
 								padding=padding.symmetric(horizontal=SPACING),
 								alignment=alignment.center,
-								content=self.btn_edit_data
+								content=ElevatedButton(
+									width=self.page.width,
+									icon=icons.EDIT,
+									text="Editar perfil",
+									on_click=lambda _: go_to_view(
+										page=self.page,
+										logger=logger,
+										route="edit_user"
+									),
+									**btn_secondary_style
+								)
 							),
 							Container(
 								padding=padding.symmetric(horizontal=SPACING),
@@ -266,13 +249,16 @@ class AccountView:
 			]
 		)
 
+	def format_image_name(self, name: str) -> str:
+		if " " in name:
+			name, last_name = name.split(" ")
+			return f"{name[0].upper()}{last_name[0].upper()}"
+		else:
+			return f"{name[:2].upper()}"
+
 	def bnr_handle_dismiss(self, event: ControlEvent) -> None:
 		self.bnr_error.content = Text(value="")
 		self.page.close(self.bnr_error)
-
-	def btn_edit_data_clicked(self, event: ControlEvent) -> None:
-		logger.info("Edit data button clicked")
-		pass
 
 	def btn_delete_user_clicked(self, event: ControlEvent) -> None:
 		logger.info("Delete user button clicked")

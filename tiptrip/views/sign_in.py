@@ -184,6 +184,10 @@ class SignInView:
 			self.basket.session_token = data["token"]
 			self.basket.created_at = data["created_at"]
 
+			logger.info("Cleaning text fields...")
+			self.txt_email.value = ""
+			self.txt_password.value = ""
+
 			go_to_view(page=self.page, logger=logger, route="home")
 
 		elif response.status_code == 401:

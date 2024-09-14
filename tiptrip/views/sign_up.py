@@ -259,6 +259,7 @@ class SignUpView:
 	def dlg_handle_ok_button(self, event: ControlEvent) -> None:
 		self.page.close(self.dlg_success)
 		logger.info("Authenticating user...")
+
 		response: Response = post(
 			url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
 			headers={"Content-Type": "application/json"},
@@ -267,6 +268,7 @@ class SignUpView:
 				"password": self.txt_password.value
 			}
 		)
+
 		if response.status_code == 200:
 			logger.info("User authenticated successfully")
 
