@@ -1,3 +1,4 @@
+from re import match
 from logging import getLogger
 from requests import post, Response
 from flet_route import Params, Basket
@@ -28,12 +29,14 @@ class SignInView:
 		self.txt_email: TextField = TextField(
 			prefix_icon=icons.EMAIL,
 			hint_text="Correo electrónico",
+			on_change=self.validate,
 			**txt_style
 		)
 
 		self.txt_password: TextField = TextField(
 			prefix_icon=icons.LOCK,
 			hint_text="Contraseña",
+			on_change=self.validate,
 			password=True,
 			can_reveal_password=True,
 			**txt_style
@@ -47,6 +50,7 @@ class SignInView:
 		self.btn_submit: ElevatedButton = ElevatedButton(
 			width=self.page.width,
 			content=Text(value="Iniciar sesión", size=BTN_TEXT_SIZE),
+			disabled=True,
 			on_click=self.btn_submit_clicked,
 			**btn_primary_style
 		)
@@ -92,7 +96,7 @@ class SignInView:
 							MainTitle(
 								subtitle="Iniciar sesión",
 								top_margin=(SPACING * 2),
-					   		),
+							),
 							Container(
 								margin=margin.only(top=(SPACING * 4)),
 								content=Column(
@@ -159,11 +163,18 @@ class SignInView:
 			]
 		)
 
-	def bnr_handle_dismiss(self, event: ControlEvent) -> None:
+	def validate(self, _: ControlEvent) -> None:
+		if match(pattern=RGX_EMAIL, string=self.txt_email.value) and self.txt_password.value:
+			self.btn_submit.disabled = False
+		else:
+			self.btn_submit.disabled = True
+		self.page.update()
+
+	def bnr_handle_dismiss(self, _: ControlEvent) -> None:
 		self.bnr_error.content = Text(value="")
 		self.page.close(self.bnr_error)
 
-	def btn_submit_clicked(self, event: ControlEvent) -> None:
+	def btn_submit_clicked(self, _: ControlEvent) -> None:
 		logger.info("Checking if credentials exists in DB...")
 		response: Response = post(
 			url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",

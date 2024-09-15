@@ -1,3 +1,4 @@
+from os import listdir
 from logging import getLogger
 from requests import Response, delete
 from flet_route import Params, Basket
@@ -25,6 +26,7 @@ class AccountView:
 		self.basket = None
 		self.route = None
 		self.btn_delete_user = None
+		self.user_image: str = self.get_user_image()
 
 		self.dlg_confirm_delete_account: AlertDialog = AlertDialog(
 			modal=True,
@@ -105,8 +107,8 @@ class AccountView:
 					),
 					content=CircleAvatar(
 						radius=(SPACING * 4),
-						foreground_image_src="/user.jpg",
-						background_image_src="/user.jpg",
+						background_image_src=self.user_image,
+						foreground_image_src=self.user_image,
 						content=Text(
 							value=self.format_image_name(self.basket.get("username"))
 						),
@@ -228,7 +230,7 @@ class AccountView:
 									on_click=lambda _: go_to_view(
 										page=self.page,
 										logger=logger,
-										route="edit_user"
+										route="update_user"
 									),
 									**btn_secondary_style
 								)
@@ -249,6 +251,15 @@ class AccountView:
 			]
 		)
 
+	def get_user_image(self) -> str:
+		files = listdir(ASSETS_ABSPATH)
+		for file in files:
+			if file.startswith("user"):
+				name: str = f"/{file}"
+				return name
+		else:
+			return ""
+
 	def format_image_name(self, name: str) -> str:
 		if " " in name:
 			name, last_name = name.split(" ")
@@ -256,20 +267,20 @@ class AccountView:
 		else:
 			return f"{name[:2].upper()}"
 
-	def bnr_handle_dismiss(self, event: ControlEvent) -> None:
+	def bnr_handle_dismiss(self, _: ControlEvent) -> None:
 		self.bnr_error.content = Text(value="")
 		self.page.close(self.bnr_error)
 
-	def btn_delete_user_clicked(self, event: ControlEvent) -> None:
+	def btn_delete_user_clicked(self, _: ControlEvent) -> None:
 		logger.info("Delete user button clicked")
 		self.page.open(self.dlg_confirm_delete_account)
 
-	def handle_ok_account_deleted(self, event: ControlEvent) -> None:
+	def handle_ok_account_deleted(self, _: ControlEvent) -> None:
 		self.page.close(self.dlg_account_deleted)
 		clean_basket(self.basket, logger=logger)
 		go_to_view(page=self.page, logger=logger, route="") # Redirect to sign in
 
-	def delete_account(self, event: ControlEvent) -> None:
+	def delete_account(self, _: ControlEvent) -> None:
 		logger.info("Making request to delete account...")
 		response: Response = delete(
 			url=f"{BACK_END_URL}/{DELETE_USER_ENDPOINT}",

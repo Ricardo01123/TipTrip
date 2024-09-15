@@ -6,7 +6,7 @@ from views.sign_up import SignUpView
 from views.loading import LoadingView
 from views.chatbot import ChatbotView
 from views.account import AccountView
-from views.edit_user import EditUserView
+from views.update_user import UpdateUserView
 from views.place_details import PlaceDetailsView
 from views.change_password import ChangePasswordView
 from views.privacy_politics import PrivacyPoliticsView
@@ -65,8 +65,8 @@ routes: list[path] = [
 		clear=True
 	),
 	path(
-		url="/edit_user",
-		view=EditUserView().view,
+		url="/update_user",
+		view=UpdateUserView().view,
 		clear=True
 	),
 ]

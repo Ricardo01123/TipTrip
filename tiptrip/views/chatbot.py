@@ -132,7 +132,7 @@ class ChatbotView:
 			]
 		)
 
-	def validate(self, event: ControlEvent) -> None:
+	def validate(self, _: ControlEvent) -> None:
 		if self.txt_message.value == "":
 			self.record_flag = True
 			self.cont_icon.content = self.cca_mic
@@ -208,7 +208,7 @@ class ChatbotView:
 
 		self.page.update()
 
-	def cca_send_clicked(self, event: ControlEvent) -> None:
+	def cca_send_clicked(self, _: ControlEvent) -> None:
 		logger.info("Send button clicked")
 		self.add_message(is_bot=False, message=self.txt_message.value)
 		self.add_message(is_bot=True, message="Buscando información...")
@@ -225,7 +225,7 @@ class ChatbotView:
 		self.txt_message.value = ""
 		self.page.update()
 
-	def cca_mic_clicked(self, event: ControlEvent) -> None:
+	def cca_mic_clicked(self, _: ControlEvent) -> None:
 		logger.info("Microphone button clicked")
 		if self.record_flag:
 			logger.info("Disabling authorization for audio recording...")

@@ -27,6 +27,6 @@ def main(page: Page) -> None:
 if __name__ == "__main__":
 	app(target=main, assets_dir="assets")
 
-	logger.info("Deleting temporal audio file if exists...")
+	logger.info("Ending app execution, deleting temporal audio file if exists...")
 	if exists(join(TEMP_ABSPATH, TEMP_FILE_NAME)):
 		remove(join(TEMP_ABSPATH, TEMP_FILE_NAME))

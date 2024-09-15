@@ -325,7 +325,7 @@ class HomeView:
 		self.lbl_actual_page.value = f"Página {self.current_page + 1} de {self.total_pages}"
 		self.page.update()
 
-	def search_place(self, event: ControlEvent) -> None:
+	def search_place(self, _: ControlEvent) -> None:
 		if self.txt_place_searcher.value == "":
 			logger.info("Cleaning 'searching place' filter...")
 			self.lv_places_list.controls = self.items[0:self.items_per_page]
@@ -341,7 +341,7 @@ class HomeView:
 			self.lv_places_list.controls = items[0:self.items_per_page]
 			self.update_pagination_data(items)
 
-	def clean_filters(self, event: ControlEvent) -> None:
+	def clean_filters(self, _: ControlEvent) -> None:
 		logger.info("Cleaning filters...")
 		self.page.close(self.dlg_sites_filter)
 		self.drd_categories.value = None
@@ -351,7 +351,7 @@ class HomeView:
 		self.update_pagination_data(self.items)
 		self.page.update()
 
-	def apply_filters(self, event: ControlEvent) -> None:
+	def apply_filters(self, _: ControlEvent) -> None:
 		self.page.close(self.dlg_sites_filter)
 		logger.info("Modifying db consult conditions...")
 		if self.drd_categories.value or self.drd_municipality.value:
@@ -376,7 +376,7 @@ class HomeView:
 		self.page_end_index = self.page_start_index + self.items_per_page
 		self.lv_places_list.controls = self.items[self.page_start_index:self.page_end_index]
 
-	def previous_page(self, event: ControlEvent) -> None:
+	def previous_page(self, _: ControlEvent) -> None:
 		logger.info(f"Going to previous page...")
 		if self.current_page > 0:
 			self.current_page -= 1
@@ -387,7 +387,7 @@ class HomeView:
 		self.set_page_indexes()
 		self.page.update()
 
-	def next_page(self, event: ControlEvent) -> None:
+	def next_page(self, _: ControlEvent) -> None:
 		logger.info(f"Going to next page...")
 		if self.current_page < self.total_pages - 1:
 			self.current_page += 1

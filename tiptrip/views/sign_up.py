@@ -236,7 +236,7 @@ class SignUpView:
 			]
 		)
 
-	def validate(self, event: ControlEvent) -> None:
+	def validate(self, _: ControlEvent) -> None:
 		if self.txt_password.value != self.txt_confirm_password.value:
 			self.lbl_pwd_match.visible = True
 			self.page.update()
@@ -256,7 +256,7 @@ class SignUpView:
 			self.btn_submit.disabled = True
 		self.page.update()
 
-	def dlg_handle_ok_button(self, event: ControlEvent) -> None:
+	def dlg_handle_ok_button(self, _: ControlEvent) -> None:
 		self.page.close(self.dlg_success)
 		logger.info("Authenticating user...")
 
@@ -298,14 +298,14 @@ class SignUpView:
 			)
 			self.page.open(self.bnr_error)
 
-	def dlg_handle_dismiss(self, event: ControlEvent) -> None:
+	def dlg_handle_dismiss(self, _: ControlEvent) -> None:
 		self.page.close(self.dlg_success)
 
-	def bnr_handle_dismiss(self, event: ControlEvent) -> None:
+	def bnr_handle_dismiss(self, _: ControlEvent) -> None:
 		self.bnr_error.content = Text(value="")
 		self.page.close(self.bnr_error)
 
-	def btn_submit_clicked(self, event: ControlEvent) -> None:
+	def btn_submit_clicked(self, _: ControlEvent) -> None:
 		logger.info("Creating new user...")
 		response: Response = post(
 			url=f"{BACK_END_URL}/{ADD_USER_ENDPOINT}",

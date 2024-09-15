@@ -62,7 +62,7 @@ class Carousel(Container):
 			for item in items
 		]
 
-	def previus_item(self, event: ControlEvent) -> None:
+	def previus_item(self, _: ControlEvent) -> None:
 		if self.current_item == 0:
 			self.current_item = self.total_items - 1
 		else:
@@ -74,7 +74,7 @@ class Carousel(Container):
 		logger.info(f"Current item src: {self.current_container.content.src}")
 		self.page.update()
 
-	def next_item(self, event: ControlEvent) -> None:
+	def next_item(self, _: ControlEvent) -> None:
 		if self.current_item == self.total_items - 1:
 			self.current_item = 0
 		else:

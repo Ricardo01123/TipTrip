@@ -1,5 +1,7 @@
 from re import match
 from time import sleep
+from os.path import join
+from shutil import copyfile
 from logging import getLogger
 from requests import Response, patch
 from flet_route import Params, Basket
@@ -8,7 +10,7 @@ from flet import (
 	Page, View, Container, Column, Text, Stack, CircleAvatar, ElevatedButton,
 	IconButton, alignment, Offset, padding, BoxShadow, border_radius, colors,
 	ControlEvent, AlertDialog, TextButton, icons, TextStyle, Banner, ButtonStyle,
-	Icon, Divider, TextField
+	Icon, Divider, TextField, FilePicker, FilePickerResultEvent, FilePickerFileType
 )
 
 from components.bars import *
@@ -20,7 +22,7 @@ from resources.styles import btn_primary_style, btn_secondary_style, txt_style
 logger = getLogger(f"{PROJECT_NAME}.{__name__}")
 
 
-class EditUserView:
+class UpdateUserView:
 	def __init__(self) -> None:
 		self.page = None
 		self.params = None
@@ -43,21 +45,32 @@ class EditUserView:
 				TextButton(
 					text="Aceptar",
 					style=ButtonStyle(color=colors.BLUE),
-					# on_click=self.bnr_handle_dismiss
+					on_click=self.bnr_handle_dismiss
 				)
 			],
 			force_actions_below=True
 		)
 
-		self.dlg_success: AlertDialog = AlertDialog(
+		self.dlg_updated_data: AlertDialog = AlertDialog(
 			modal=True,
-			title=Text("Datos actualizados"),
-			content=Text("Sus datos se han actualizado correctamente."),
+			title=Text("Datos actulizados"),
+			content=Text("Sus datos han sido actualizado correctamente."),
 			actions=[
-				TextButton("Aceptar", on_click=self.dlg_handle_ok_button),
+				TextButton("Aceptar", on_click=self.handle_dlg_updated_data),
 			],
 			actions_alignment=MainAxisAlignment.END,
-			on_dismiss=self.dlg_handle_dismiss
+			on_dismiss=self.handle_dlg_updated_data_dismiss
+		)
+
+		self.dlg_updated_image: AlertDialog = AlertDialog(
+			modal=True,
+			title=Text("Imagen actualizada"),
+			content=Text("Su imagen de perfil ha sido actualizada correctamente."),
+			actions=[
+				TextButton("Aceptar", on_click=self.handle_dlg_updated_image),
+			],
+			actions_alignment=MainAxisAlignment.END,
+			on_dismiss=self.handle_dlg_updated_image_dismiss
 		)
 
 	def view(self, page: Page, params: Params, basket: Basket) -> View:
@@ -65,7 +78,7 @@ class EditUserView:
 		self.params = params
 		self.basket = basket
 
-		self.route = "/edit_user"
+		self.route = "/update_user"
 
 		self.txt_username: TextField = TextField(
 			prefix_icon=icons.ACCOUNT_CIRCLE,
@@ -113,7 +126,6 @@ class EditUserView:
 				value="Confirmar cambios",
 				size=BTN_TEXT_SIZE
 			),
-			# disabled=True,
 			on_click=self.btn_submit_clicked,
 			**btn_primary_style
 		)
@@ -127,6 +139,11 @@ class EditUserView:
 			on_click=self.btn_back_clicked,
 			**btn_secondary_style
 		)
+
+		self.dlg_user_image: FilePicker = FilePicker(
+			on_result=self.save_new_user_image
+		)
+		self.page.overlay.append(self.dlg_user_image)
 
 		return View(
 			route=self.route,
@@ -162,7 +179,11 @@ class EditUserView:
 									radius=SPACING,
 									content=IconButton(
 										icon=icons.EDIT,
-										icon_color=colors.WHITE
+										icon_color=colors.WHITE,
+										on_click=lambda _: self.dlg_user_image.pick_files(
+											file_type=FilePickerFileType.IMAGE,
+											allowed_extensions=["jpg", "jpeg", "png"]
+										)
 									)
 								)
 							)
@@ -247,7 +268,7 @@ class EditUserView:
 		else:
 			return f"{name[:2].upper()}"
 
-	def validate(self, event: ControlEvent) -> None:
+	def validate(self, _: ControlEvent) -> None:
 		if self.txt_password.value != "" or self.txt_confirm_password.value != "":
 			if self.txt_password.value != self.txt_confirm_password.value:
 				self.lbl_pwd_match.visible = True
@@ -265,14 +286,7 @@ class EditUserView:
 			self.btn_submit.disabled = True
 		self.page.update()
 
-	def dlg_handle_ok_button(self, event: ControlEvent) -> None:
-		self.page.close(self.dlg_success)
-		go_to_view(page=self.page, logger=logger, route="account")
-
-	def dlg_handle_dismiss(self, event: ControlEvent) -> None:
-		self.page.close(self.dlg_success)
-
-	def btn_submit_clicked(self, event: ControlEvent) -> None:
+	def btn_submit_clicked(self, _: ControlEvent) -> None:
 		logger.info("Submit button clicked, initiating process to update user data...")
 
 		payload = {"email": self.basket.get("email")}
@@ -318,7 +332,7 @@ class EditUserView:
 				self.txt_password.value = ""
 				self.txt_confirm_password.value = ""
 
-				self.page.open(self.dlg_success)
+				self.page.open(self.dlg_updated_data)
 
 			else:
 				logger.error("Error updating user")
@@ -330,7 +344,7 @@ class EditUserView:
 				)
 				self.page.open(self.bnr_error)
 
-	def btn_back_clicked(self, event: ControlEvent) -> None:
+	def btn_back_clicked(self, _: ControlEvent) -> None:
 		logger.info("Back button clicked, discarding changes...")
 
 		logger.info("Cleaning fields...")
@@ -338,3 +352,45 @@ class EditUserView:
 		self.txt_confirm_password.value = ""
 
 		go_to_view(page=self.page, logger=logger, route="account")
+
+	def save_new_user_image(self, event: FilePickerResultEvent) -> None:
+		logger.info("Processing new image selected...")
+
+		if event.files:
+			if event.files[0].path:
+				logger.info("Saving new image...")
+				extension: str = event.files[0].name.split(".")[-1]
+				copyfile(event.files[0].path, join(ASSETS_ABSPATH, f"user.{extension}"))
+				logger.info("New image saved successfully.")
+
+				self.page.open(self.dlg_updated_image)
+
+			else:
+				logger.error("Error saving new image.")
+				self.bnr_error.content = Text(
+					value=(
+						"Ocurrió un error al intentar guardar la nueva imagen.\n"
+						"Favor de intentarlo de nuevo más tarde."
+					),
+					style=TextStyle(color=colors.RED)
+				)
+				self.page.open(self.bnr_error)
+		else:
+			logger.info("No image selected. Aborting...")
+
+	def handle_dlg_updated_data(self, _: ControlEvent) -> None:
+		self.page.close(self.dlg_updated_data)
+		go_to_view(page=self.page, logger=logger, route="account")
+
+	def handle_dlg_updated_data_dismiss(self, _: ControlEvent) -> None:
+		self.page.close(self.dlg_updated_data)
+
+	def handle_dlg_updated_image(self, _: ControlEvent) -> None:
+		self.page.close(self.dlg_updated_image)
+		go_to_view(page=self.page, logger=logger, route="account")
+
+	def handle_dlg_updated_image_dismiss(self, _: ControlEvent) -> None:
+		self.page.close(self.dlg_updated_image)
+
+	def bnr_handle_dismiss(self, _: ControlEvent) -> None:
+		self.page.close(self.bnr_error)

@@ -174,7 +174,7 @@ class ChangePasswordView:
 			]
 		)
 
-	def validate(self, event: ControlEvent) -> None:
+	def validate(self, _: ControlEvent) -> None:
 		# Case when only txt_email is displayed
 		if not self.cont_password.visible and not self.cont_confirm_password.visible \
 				and match(pattern=RGX_EMAIL, string=self.txt_email.value):
@@ -191,14 +191,14 @@ class ChangePasswordView:
 
 		self.page.update()
 
-	def btn_back_clicked(self, event: ControlEvent) -> None:
+	def btn_back_clicked(self, _: ControlEvent) -> None:
 		self.cont_password.visible = False
 		self.cont_confirm_password.visible = False
 		self.page.update()
 
 		go_to_view(page=self.page, logger=logger, route=""),  # '/'
 
-	def btn_submit_clicked(self, event: ControlEvent) -> None:
+	def btn_submit_clicked(self, _: ControlEvent) -> None:
 		if self.cont_password.visible and self.cont_confirm_password.visible:
 			logger.info("Changing password...")
 		else:
