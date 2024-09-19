@@ -14,6 +14,7 @@ from flet import (
 from components.bars import *
 from resources.config import *
 from components.carousel import Carousel
+from resources.functions import format_place_name
 
 
 logger = getLogger(f"{PROJECT_NAME}.{__name__}")
@@ -583,31 +584,31 @@ class PlaceDetailsView:
 
 		return result
 
-	def get_items(self) -> list:
-		items: list = []
-
-		if self.place_data["ruta1"] is not None:
-			items.append(self.place_data["ruta1"])
-
-		if self.place_data["ruta2"] is not None:
-			items.append(self.place_data["ruta2"])
-
-		if self.place_data["ruta3"] is not None:
-			items.append(self.place_data["ruta3"])
-
-		if self.place_data["ruta4"] is not None:
-			items.append(self.place_data["ruta4"])
-
-		if self.place_data["ruta5"] is not None:
-			items.append(self.place_data["ruta5"])
-
-		return items
-
 	# def get_items(self) -> list:
-	# 	place_name = self.params.get("place_name")
-	# 	dir: str = place_name.replace(' ', '_').replace(',', '_').lower()
-	# 	path: str = join(ASSETS_ABSPATH, "places", dir)
-	# 	images: list = listdir(path)
-	# 	result = [join("places", dir, image) for image in images]
-	# 	print(result)
-	# 	return result
+	# 	items: list = []
+
+	# 	if self.place_data["ruta1"] is not None:
+	# 		items.append(self.place_data["ruta1"])
+
+	# 	if self.place_data["ruta2"] is not None:
+	# 		items.append(self.place_data["ruta2"])
+
+	# 	if self.place_data["ruta3"] is not None:
+	# 		items.append(self.place_data["ruta3"])
+
+	# 	if self.place_data["ruta4"] is not None:
+	# 		items.append(self.place_data["ruta4"])
+
+	# 	if self.place_data["ruta5"] is not None:
+	# 		items.append(self.place_data["ruta5"])
+
+	# 	return items
+
+	def get_items(self) -> list:
+		dir: str = format_place_name(self.params.get("place_name"))
+		path: str = join(ASSETS_ABSPATH, "places", dir)
+		images: list = listdir(path)
+		if images:
+			return [join("places", dir, image) for image in images]
+		else:
+			return ["/default.png"]

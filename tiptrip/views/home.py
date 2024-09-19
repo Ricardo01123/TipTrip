@@ -296,8 +296,8 @@ class HomeView:
 						title=place["nombre"],
 						category=place["clasificacion_sitio"],
 						punctuation=place["puntuacion"],
-						image_link=place["ruta"],
-						# image_link=self.get_place_image(place["nombre"]),
+						# image_link=place["ruta"],
+						image_link=self.get_place_image(place["nombre"]),
 						address=(
 							f"{place['calle_numero']}, "
 							f"{place['colonia']}, "
@@ -309,14 +309,18 @@ class HomeView:
 					for place in places_data
 				]
 
-	# def get_place_image(self, place_name: str) -> str:
-	# 	dir: str = place_name.replace(' ', '_').replace(',', '_').lower()
-	# 	path: str = join(ASSETS_ABSPATH, "places", dir)
-	# 	if os.path.exists(path):
-	# 		images: list = listdir(path)
-	# 		result = join("places", dir, images[0])
-	# 		print(result)
-	# 		return result
+	def get_place_image(self, place_name: str) -> str:
+		dir: str = format_place_name(place_name)
+
+		path: str = join(ASSETS_ABSPATH, "places", dir)
+		if os.path.exists(path):
+			images: list = listdir(path)
+			if images:
+				return join("places", dir, images[0])
+			else:
+				return ["/default.png"]
+		else:
+			return ["/default.png"]
 
 	def update_pagination_data(self, items: list) -> None:
 		self.current_page = 0
