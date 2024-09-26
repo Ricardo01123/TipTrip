@@ -3,7 +3,7 @@ from time import sleep
 from os.path import join
 from shutil import copyfile
 from logging import getLogger
-from requests import Response, patch
+from requests import Response, put
 from flet_route import Params, Basket
 
 from flet import (
@@ -289,15 +289,15 @@ class UpdateUserView:
 	def btn_submit_clicked(self, _: ControlEvent) -> None:
 		logger.info("Submit button clicked, initiating process to update user data...")
 
-		payload = {"email": self.basket.get("email")}
+		payload = {"mail": self.basket.get("email")}
 
 		logger.info("Checking what fields have changed...")
 		if self.txt_email.value != self.basket.get("email"):
-			payload["new_email"] = self.txt_email.value
+			payload["new_mail"] = self.txt_email.value
 		if self.txt_username.value != self.basket.get("username"):
 			payload["new_username"] = self.txt_username.value
 		if self.txt_password.value != "":
-			payload["new_password"] = self.txt_password.value
+			payload["new_pwd"] = self.txt_password.value
 
 		if len(payload) == 1:
 			logger.info("No changes detected, aborting process...")
@@ -314,7 +314,7 @@ class UpdateUserView:
 
 		else:
 			logger.info("Making request to update user...")
-			response: Response = patch(
+			response: Response = put(
 				url=f"{BACK_END_URL}/{UPDATE_USER_ENDPOINT}",
 				headers={
 					"Content-Type": "application/json",

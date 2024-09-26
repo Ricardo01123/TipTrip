@@ -293,17 +293,16 @@ class HomeView:
 				return [
 					PlaceCard(
 						page=self.page,
-						title=place["nombre"],
-						category=place["clasificacion_sitio"],
-						punctuation=place["puntuacion"],
-						# image_link=place["ruta"],
-						image_link=self.get_place_image(place["nombre"]),
+						title=place["name"],
+						category=place["classification"],
+						punctuation=place["punctuation"],
+						image_link=self.get_place_image(place["name"]),
 						address=(
-							f"{place['calle_numero']}, "
-							f"{place['colonia']}, "
+							f"{place['street_number']}, "
+							f"{place['colony']}, "
 							f"{place['cp']}, "
-							f"{place['delegacion_municipio']}, "
-							f"{place['entidad_federativa']}."
+							f"{place['municipality']}, "
+							f"{place['state']}."
 						)
 					)
 					for place in places_data

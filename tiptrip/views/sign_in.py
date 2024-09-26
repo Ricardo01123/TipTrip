@@ -180,8 +180,8 @@ class SignInView:
 			url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
 			headers={"Content-Type": "application/json"},
 			json={
-				"email": self.txt_email.value,
-				"password": self.txt_password.value
+				"mail": self.txt_email.value,
+				"pwd": self.txt_password.value
 			}
 		)
 

@@ -70,6 +70,7 @@ CHANNELS: int = 1
 CHUNK: int = 1_024
 SAMPLING_RATE: int = 16_000
 TEMP_FILE_NAME: str = "temp_audio.wav"
+RECEIVED_TEMP_FILE_NAME: str = "received_temp_audio.wav"
 
 # Project paths
 PROJECT_DIR_ABSPATH: str = os.getcwd()

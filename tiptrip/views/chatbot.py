@@ -1,11 +1,11 @@
 import wave
 from os.path import join
 from pyaudio import PyAudio
-from base64 import b64encode
 from logging import getLogger
 from requests import post, Response
-from flet_route import Params, Basket
+from base64 import b64encode, b64decode
 
+from flet_route import Params, Basket
 from flet import (
 	Page, View, Container, ListView, Row, TextField, CircleAvatar, Icon,
 	MainAxisAlignment, CrossAxisAlignment, alignment, Offset, padding,
@@ -159,52 +159,63 @@ class ChatbotView:
 				)
 			)
 		else:
-			logger.info("Adding agent message while process the user message...")
-			self.lv_chat.controls.append(
-				Row(
-					alignment=MainAxisAlignment.START,
-					controls=[
-						Container(
-							expand=9,
-							expand_loose=True,
-							content=Message(is_bot=is_bot, message=message)
-						),
-						Container(expand=1)
-					]
+			if not "ERROR" in message:
+				logger.info("Adding agent message while process the user message...")
+				self.lv_chat.controls.append(
+					Row(
+						alignment=MainAxisAlignment.START,
+						controls=[
+							Container(
+								expand=9,
+								expand_loose=True,
+								content=Message(is_bot=is_bot, message=message)
+							),
+							Container(expand=1)
+						]
+					)
 				)
-			)
-			self.page.update()
+				self.page.update()
 
-			logger.info("Calling the back-end agent to process the user message...")
-			response: Response = post(
-				url=f"{BACK_END_URL}/{AGENT_ENDPOINT}",
-				headers={
-					"Content-Type": "application/json",
-					"Authorization": f"Bearer {self.basket.get('session_token')}"
-				},
-				json={
-					"prompt": self.lv_chat.controls[-2].controls[1].content.content.value
-				}
-			)
-
-			from time import sleep
-			sleep(3)
-
-			logger.info(f"Agent endpoint response received {response.status_code}: {response.json()}")
-			logger.info("Evaluating the agent response...")
-			if response.status_code == 200:
-				audio_data: str = response.json()["audio_data"]
-				logger.info("Agent response is OK. Replacing last agent message...")
-				self.lv_chat.controls[-1].controls[0].content = Message(
-					is_bot=True,
-					message="Respuesta del agente",
+				logger.info("Calling the back-end agent to process the user message...")
+				response: Response = post(
+					url=f"{BACK_END_URL}/{AGENT_ENDPOINT}",
+					headers={
+						"Content-Type": "application/json",
+						"Authorization": f"Bearer {self.basket.get('session_token')}"
+					},
+					json={
+						"prompt": self.lv_chat.controls[-2].controls[1].content.content.value
+					}
 				)
-			else:
-				logger.info("Agent response is NOT ok. Replacing last agent message with error message...")
-				self.lv_chat.controls[-1].controls[0].content = Message(
-					is_bot=True,
-					message="AGENT_ERROR",
-				)
+
+				from time import sleep
+				sleep(3)
+
+				logger.info(f"Agent endpoint response received {response.status_code}")
+				logger.info("Evaluating the agent response...")
+				if response.status_code == 200:
+					audio_data: str = response.json()["audio_data"]
+					logger.info("Agent response is OK. Decoding audio data...")
+					audio_binary = b64decode(audio_data)
+
+					logger.info("Saving as temporary audio file...")
+					with wave.open(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME), "wb") as file:
+						file.setnchannels(CHANNELS)
+						file.setsampwidth(2)
+						file.setframerate(SAMPLING_RATE)
+						file.writeframes(audio_binary)
+
+					logger.info("Replacing last agent message...")
+					self.lv_chat.controls[-1].controls[0].content = Message(
+						is_bot=True,
+						message="Respuesta del agente",
+					)
+				else:
+					logger.info("Agent response is NOT ok. Replacing last agent message with error message...")
+					self.lv_chat.controls[-1].controls[0].content = Message(
+						is_bot=True,
+						message="AGENT_ERROR",
+					)
 
 		self.page.update()
 

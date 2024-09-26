@@ -8,7 +8,9 @@ from flet import app, Page
 from flet_route import Routing
 
 from resources.router import routes
-from resources.config import LOGGING_FORMAT, PROJECT_NAME, TEMP_ABSPATH, TEMP_FILE_NAME
+from resources.config import (
+	LOGGING_FORMAT, PROJECT_NAME, TEMP_ABSPATH, TEMP_FILE_NAME, RECEIVED_TEMP_FILE_NAME
+)
 
 
 basicConfig(level=INFO, format=LOGGING_FORMAT)
@@ -30,3 +32,6 @@ if __name__ == "__main__":
 	logger.info("Ending app execution, deleting temporal audio file if exists...")
 	if exists(join(TEMP_ABSPATH, TEMP_FILE_NAME)):
 		remove(join(TEMP_ABSPATH, TEMP_FILE_NAME))
+
+	if exists(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME)):
+		remove(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME))

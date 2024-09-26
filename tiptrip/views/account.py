@@ -289,12 +289,9 @@ class AccountView:
 				"Authorization": f"Bearer {self.basket.get('session_token')}"
 			},
 			json={
-				"email": self.basket.get("email"),
+				"mail": self.basket.get("email"),
 			}
 		)
-
-		print(response)
-		print(response.status_code)
 
 		if response.status_code == 200:
 			logger.info("Account deleted successfully")
