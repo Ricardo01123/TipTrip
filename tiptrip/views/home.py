@@ -53,6 +53,7 @@ class HomeView:
 				dropdown.Option("La Magdalena Contreras"),
 				dropdown.Option("Miguel Hidalgo"),
 				dropdown.Option("Milpa Alta"),
+				dropdown.Option("San Ángel"),
 				dropdown.Option("Tláhuac"),
 				dropdown.Option("Tlalpan"),
 				dropdown.Option("Venustiano Carranza"),
@@ -62,14 +63,15 @@ class HomeView:
 		self.drd_categories: Dropdown = Dropdown(
 			label="Filtrar por categoría",
 			options=[
-				dropdown.Option("Monumento"),
 				dropdown.Option("Arquitectura"),
-				dropdown.Option("Centro Cultural"),
-				dropdown.Option("Catedral/Templo"),
+				dropdown.Option("Centro cultural"),
+				dropdown.Option("Centro religioso"),
+				dropdown.Option("Escultura"),
+				dropdown.Option("Experiencia"),
+				dropdown.Option("Monumento"),
+				dropdown.Option("Mural"),
 				dropdown.Option("Museo"),
-				dropdown.Option("Zona arqueológica"),
-				dropdown.Option("Plaza"),
-				dropdown.Option("Experiencia")
+				dropdown.Option("Zona arqueológica")
 			]
 		)
 		self.dlg_sites_filter: AlertDialog = AlertDialog(
@@ -260,53 +262,54 @@ class HomeView:
 		)
 
 		logger.info("Evaluating response...")
-		if response.status_code != 200:
-			return Container(
+		if response.status_code == 200:
+			places_data: dict = response.json()["data"]
+			logger.info(f"Obtained a total of {len(places_data)} places...")
+			return [
+				PlaceCard(
+					page=self.page,
+					title=place["name"],
+					category=place["classification"],
+					punctuation=place["punctuation"],
+					image_link=self.get_place_image(place["name"]),
+					address=(
+						f"{place['street_number']}, "
+						f"{place['colony']}, "
+						f"{place['cp']}, "
+						f"{place['municipality']}, "
+						f"{place['state']}."
+					)
+				)
+				for place in places_data
+			]
+
+		elif response.status_code == 204:
+			return [
+				Container(
 					alignment=alignment.center,
 					content=Text(
 						value=(
-							"Ocurrió un error al obtener la información de "
-							"los sitios turísticos."
+							"No se encontró ningún sitio turístico con "
+							"los filtros seleccionados."
 						),
 						color=colors.BLACK,
-						size=35
+						size=30
 					)
 				)
+			]
+
 		else:
-			places_data: dict = response.json()["data"]
-			if places_data == []:
-				return [
-					Container(
-						alignment=alignment.center,
-						content=Text(
-							value=(
-								"No se encontró ningún lugar con "
-								"los filtros seleccionados."
-							),
-							color=colors.BLACK,
-							size=35
-						)
-					)
-				]
-			else:
-				logger.info(f"Obtained a total of {len(places_data)} places...")
-				return [
-					PlaceCard(
-						page=self.page,
-						title=place["name"],
-						category=place["classification"],
-						punctuation=place["punctuation"],
-						image_link=self.get_place_image(place["name"]),
-						address=(
-							f"{place['street_number']}, "
-							f"{place['colony']}, "
-							f"{place['cp']}, "
-							f"{place['municipality']}, "
-							f"{place['state']}."
-						)
-					)
-					for place in places_data
-				]
+			return Container(
+				alignment=alignment.center,
+				content=Text(
+					value=(
+						"Ocurrió un error al obtener la información de "
+						"los sitios turísticos."
+					),
+					color=colors.BLACK,
+					size=30
+				)
+			)
 
 	def get_place_image(self, place_name: str) -> str:
 		dir: str = format_place_name(place_name)

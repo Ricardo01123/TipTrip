@@ -210,6 +210,7 @@ class ChatbotView:
 						is_bot=True,
 						message="Respuesta del agente",
 					)
+
 				else:
 					logger.info("Agent response is NOT ok. Replacing last agent message with error message...")
 					self.lv_chat.controls[-1].controls[0].content = Message(
@@ -295,6 +296,7 @@ class ChatbotView:
 				user_message: str = response.json()["text"]
 				logger.info(f"Speech captured: {user_message}")
 				self.add_message(is_bot=False, message=user_message.capitalize())
+
 			else:
 				self.add_message(is_bot=False, message="SPEECH_RECOGNITION_ERROR")
 

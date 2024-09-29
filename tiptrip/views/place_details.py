@@ -234,16 +234,34 @@ class PlaceDetailsView:
 		)
 
 		if response.status_code == 200:
+			logger.debug(f"Response 200 OK: {response.json()}")
 			return response.json()["data"]
-		else:
+
+		elif response.status_code == 204:
+			logger.debug(f"Response 204 No Content: {response.json()}")
 			return Container(
-					alignment=alignment.center,
-					content=Text(
-						value="No se encontró información del lugar.",
-						color=colors.BLACK,
-						size=35
-					)
+				alignment=alignment.center,
+				content=Text(
+					value="No se encontró información del sitio turístico seleccionado.",
+					color=colors.BLACK,
+					size=30
 				)
+			)
+
+		else:
+			logger.error(f"Response {response.status_code}: {response.json()}")
+			return Container(
+				alignment=alignment.center,
+				content=Text(
+					value=(
+						"Ocurrió un error al obtener información del sitio "
+						"turístico seleccionado.\n"
+						"Favor de intentarlo de nuevo más tarde."
+					),
+					color=colors.BLACK,
+					size=35
+				)
+			)
 
 	def fill_data_tabs(self) -> list:
 		result: list = []

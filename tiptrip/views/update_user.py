@@ -297,7 +297,7 @@ class UpdateUserView:
 		if self.txt_username.value != self.basket.get("username"):
 			payload["new_username"] = self.txt_username.value
 		if self.txt_password.value != "":
-			payload["new_pwd"] = self.txt_password.value
+			payload["new_password"] = self.txt_password.value
 
 		if len(payload) == 1:
 			logger.info("No changes detected, aborting process...")

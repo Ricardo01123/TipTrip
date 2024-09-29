@@ -265,7 +265,7 @@ class SignUpView:
 			headers={"Content-Type": "application/json"},
 			json={
 				"mail": self.txt_email.value,
-				"pwd": self.txt_password.value
+				"password": self.txt_password.value
 			}
 		)
 
@@ -287,6 +287,7 @@ class SignUpView:
 			self.chk_tyc.value = False
 
 			go_to_view(page=self.page, logger=logger, route="home")
+
 		else:
 			logger.error("An error occurred while trying to authenticate user")
 			self.bnr_error.content = Text(
@@ -313,20 +314,25 @@ class SignUpView:
 			json={
 				"username": self.txt_username.value,
 				"mail": self.txt_email.value,
-				"pwd": self.txt_password.value,
+				"password": self.txt_password.value,
 			}
 		)
 
 		if response.status_code == 201:
 			logger.info("New user created successfully")
 			self.page.open(self.dlg_success)
+
 		elif response.status_code == 409:
 			logger.error("Email already exists")
 			self.bnr_error.content = Text(
-				value="El correo electrónico proporcionado ya fue usado.",
+				value=(
+					"El correo electrónico proporcionado ya fue usado.\n"
+					"Favor de usar uno diferente."
+				),
 				style=TextStyle(color=colors.RED)
 			)
 			self.page.open(self.bnr_error)
+
 		else:
 			logger.error("Error creating user")
 			self.bnr_error.content = Text(

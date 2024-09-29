@@ -181,7 +181,7 @@ class SignInView:
 			headers={"Content-Type": "application/json"},
 			json={
 				"mail": self.txt_email.value,
-				"pwd": self.txt_password.value
+				"password": self.txt_password.value
 			}
 		)
 
@@ -208,7 +208,8 @@ class SignInView:
 				style=TextStyle(color=colors.RED)
 			)
 			self.page.open(self.bnr_error)
-		else:
+
+		elif response.status_code == 500:
 			logger.error("An error occurred while trying to authenticate user")
 			self.bnr_error.content = Text(
 				value=(
