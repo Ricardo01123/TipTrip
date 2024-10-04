@@ -38,7 +38,20 @@ class ChatbotView:
 		self.lv_chat: ListView = ListView(
 			padding=padding.all(value=SPACING),
 			spacing=(SPACING / 2),
-			auto_scroll=True
+			auto_scroll=True,
+			controls=[
+				Row(
+					alignment=MainAxisAlignment.START,
+					controls=[
+						Container(
+							expand=9,
+							expand_loose=True,
+							content=Message(is_bot=True, message=AGENT_WELCOME_MESSAGE)
+						),
+						Container(expand=1)
+					]
+				)
+			]
 		)
 
 		self.cca_mic: CircleAvatar = CircleAvatar(
@@ -236,17 +249,21 @@ class ChatbotView:
 		self.cont_icon.on_click = self.cca_mic_clicked
 		self.page.update()
 
-	def end_recording_auth(self) -> None:
-		logger.info("Ending authorization for audio recording...")
-		self.set_record_flag(False)
-		self.txt_message.value = ""
-		self.page.update()
-
 	def cca_mic_clicked(self, _: ControlEvent) -> None:
 		logger.info("Microphone button clicked")
 		if self.record_flag:
 			logger.info("Disabling authorization for audio recording...")
 			self.record_flag = False
+
+			logger.info("Changing UI components to initial state...")
+			self.txt_message.value = ""
+			self.cca_mic.bgcolor = MAIN_COLOR
+			self.cca_mic.content = Icon(
+				name=icons.MIC,
+				color=colors.WHITE,
+				size=25
+			)
+			self.page.update()
 		else:
 			logger.info("Establishing audio configuration...")
 			audio: PyAudio = PyAudio()
@@ -260,6 +277,16 @@ class ChatbotView:
 
 			logger.info("Establishing authorization for audio recording...")
 			self.record_flag = True
+
+			logger.info("Changing UI components to recording state...")
+			self.txt_message.value = "Grabando audio..."
+			self.cca_mic.bgcolor = colors.RED
+			self.cca_mic.content = Icon(
+				name=icons.STOP,
+				color=colors.WHITE,
+				size=25
+			)
+			self.page.update()
 
 			logger.info("Starting audio recording...")
 			frames: list = []
