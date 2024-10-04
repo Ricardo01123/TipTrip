@@ -194,15 +194,20 @@ class ChatbotView:
 				logger.info(f"Agent endpoint response received {response.status_code}")
 				logger.info("Evaluating the agent response...")
 				if response.status_code == 200:
-					audio_data: str = response.json()["audio_data"]
-					logger.info("Agent response is OK. Decoding audio data...")
-					audio_binary = b64decode(audio_data)
+					logger.info("Agent response is OK.")
+					audio_data: dict = response.json()["audio_data"]
+
+					logger.info("Decoding audio data...")
+					audio_binary = b64decode(audio_data["audio"])
 
 					logger.info("Saving as temporary audio file...")
 					with wave.open(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME), "wb") as file:
-						file.setnchannels(CHANNELS)
-						file.setsampwidth(2)
-						file.setframerate(SAMPLING_RATE)
+						file.setnchannels(audio_data["nchannels"])
+						file.setsampwidth(audio_data["sampwidth"])
+						file.setframerate(audio_data["framerate"])
+						file.setnframes(audio_data["nframes"])
+						# file.setcomptype(audio_data["comp_type"])
+						# file.setcompname(audio_data["comp_name"])
 						file.writeframes(audio_binary)
 
 					logger.info("Replacing last agent message...")
