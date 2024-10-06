@@ -1,9 +1,5 @@
+from flet import *
 from logging import getLogger
-from flet import (
-	Page, Container, Row, Icon, Image, ImageFit, ImageRepeat,
-	border_radius, colors, icons, MainAxisAlignment, CrossAxisAlignment,
-	ControlEvent
-)
 
 from resources.config import *
 

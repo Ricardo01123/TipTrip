@@ -1,20 +1,17 @@
 import wave
+from flet import *
 from os.path import join
 from pyaudio import PyAudio
 from logging import getLogger
 from requests import post, Response
 from base64 import b64encode, b64decode
-
 from flet_route import Params, Basket
-from flet import (
-	Page, View, Container, ListView, Row, TextField, CircleAvatar, Icon,
-	MainAxisAlignment, CrossAxisAlignment, alignment, Offset, padding,
-	BoxShadow, border_radius, colors, icons, ControlEvent
-)
 
+from resources.texts import *
 from resources.config import *
 from components.bars import TopBar
 from components.message import Message
+from components.audio_player import AudioPlayer
 from resources.styles import txt_messages_style
 
 
@@ -224,9 +221,13 @@ class ChatbotView:
 						file.writeframes(audio_binary)
 
 					logger.info("Replacing last agent message...")
-					self.lv_chat.controls[-1].controls[0].content = Message(
-						is_bot=True,
-						message="Respuesta del agente",
+					# self.lv_chat.controls[-1].controls[0].content = Message(
+					# 	is_bot=True,
+					# 	message="Respuesta del agente",
+					# )
+					self.lv_chat.controls[-1].controls[0].content = AudioPlayer(
+						page=self.page,
+						audio_base64=audio_data["audio"]
 					)
 
 				else:
@@ -236,7 +237,8 @@ class ChatbotView:
 						message="AGENT_ERROR",
 					)
 
-		self.page.update()
+		logger.info("Updating live view components...")
+		self.lv_chat.update()
 
 	def cca_send_clicked(self, _: ControlEvent) -> None:
 		logger.info("Send button clicked")

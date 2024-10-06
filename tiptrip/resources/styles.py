@@ -1,7 +1,5 @@
+from flet import *
 from typing import Any
-from flet import (
-	margin, padding, border_radius, BoxShadow, InputBorder, TextStyle, colors
-)
 
 from resources.config import *
 

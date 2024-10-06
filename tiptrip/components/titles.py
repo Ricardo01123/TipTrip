@@ -1,4 +1,4 @@
-from flet import Column, Container, Text, alignment, margin, colors
+from flet import *
 
 from resources.config import (
 	PROJECT_NAME, PROJECT_NAME_SIZE, PAGE_SUBTITLE_SIZE, SPACING

@@ -1,10 +1,6 @@
+from flet import *
 from logging import getLogger
 from flet_route import Params, Basket
-
-from flet import (
-	Page, View, Container, Column, Text, ElevatedButton, IconButton,
-	padding, margin, ScrollMode, colors, icons
-)
 
 from resources.config import *
 from components.titles import MainTitle

@@ -1,8 +1,6 @@
-from flet import (
-	Container, Column, Text, FontWeight, border, border_radius,
-	BoxShadow, Offset, padding, colors
-)
+from flet import *
 
+from resources.texts import *
 from resources.config import *
 
 

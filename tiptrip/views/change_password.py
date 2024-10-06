@@ -1,11 +1,7 @@
+from flet import *
 from re import match
 from logging import getLogger
 from flet_route import Params, Basket
-
-from flet import (
-	Page, View, Container, Column, Banner, Text, TextField, ElevatedButton,
-	IconButton, Divider, padding, margin, icons, ControlEvent
-)
 
 from resources.config import *
 from resources.styles import *

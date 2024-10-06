@@ -1,8 +1,5 @@
+from flet import *
 from logging import Logger
-from flet import (
-	AppBar, Page, Container, Row, Text, IconButton, padding, border_radius,
-	BoxShadow, colors, icons, Offset, MainAxisAlignment
-)
 
 from resources.config import *
 from resources.functions import go_to_view

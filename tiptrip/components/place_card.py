@@ -1,10 +1,5 @@
+from flet import *
 from logging import getLogger
-
-from flet import (
-	Page, Container, Row, Column, Text, Image, Icon,
-	ImageFit, ImageRepeat, padding, border_radius, BoxShadow, Offset,
-	ScrollMode, FontWeight, MainAxisAlignment, colors, icons,
-)
 
 from resources.config import *
 from resources.functions import go_to_view

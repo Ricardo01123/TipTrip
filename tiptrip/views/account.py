@@ -1,14 +1,9 @@
+from flet import *
 from os import listdir
 from logging import getLogger
 from requests import Response, delete
 from flet_route import Params, Basket
 
-from flet import (
-	Page, View, Container, Column, Text, CircleAvatar, ElevatedButton,
-	MainAxisAlignment, alignment, Offset, FontWeight, padding, margin,
-	BoxShadow, border_radius, colors, ControlEvent, AlertDialog, TextButton,
-	Icon, icons, TextStyle, Banner, ButtonStyle,
-)
 
 from components.bars import *
 from resources.config import *

@@ -6,23 +6,6 @@ from pyaudio import paInt16
 PROJECT_NAME: str = "TIP TRIP"
 BOT_NAME: str = "Bot"
 
-# Messages
-SPEECH_RECOGNITION_ERROR_MESSAGE: str = (
-	"ERROR.\n"
-	"Ocurrió un error al transcribir voz a texto. "
-	"Favor de intentarlo de nuevo más tarde."
-)
-AGENT_ERROR_MESSAGE: str = (
-	"ERROR.\n"
-	"Ocurrió un error al obtener información del agente. "
-	"Favor de intentarlo de nuevo más tarde."
-)
-AGENT_WELCOME_MESSAGE: str = (
-	"¡Hola! Soy el agente conversacional de TIP TRIP.\n"
-	"Estoy aquí para ayudarte con tus dudas y guiarte sobre los sitios turísticos cerca de tu ubicación.\n"
-	"¿En qué puedo ayudarte?"
-)
-
 # Text sizes
 PROJECT_NAME_SIZE: int = 40
 PAGE_SUBTITLE_SIZE: int = 20

@@ -1,3 +1,4 @@
+from flet import *
 from re import match
 from time import sleep
 from os.path import join
@@ -5,13 +6,6 @@ from shutil import copyfile
 from logging import getLogger
 from requests import Response, put
 from flet_route import Params, Basket
-
-from flet import (
-	Page, View, Container, Column, Text, Stack, CircleAvatar, ElevatedButton,
-	IconButton, alignment, Offset, padding, BoxShadow, border_radius, colors,
-	ControlEvent, AlertDialog, TextButton, icons, TextStyle, Banner, ButtonStyle,
-	Icon, Divider, TextField, FilePicker, FilePickerResultEvent, FilePickerFileType
-)
 
 from components.bars import *
 from resources.config import *

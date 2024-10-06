@@ -1,15 +1,9 @@
+from flet import *
 from os import listdir
 from os.path import join
 from logging import getLogger
 from requests import get, Response
 from flet_route import Params, Basket
-
-from flet import (
-	Page, View, Container, ListView, Column, Row, Text, TextField, CircleAvatar,
-	Icon, AlertDialog, MainAxisAlignment, Offset, alignment, padding, margin,
-	BoxShadow, border_radius, colors, icons, TextButton, Dropdown, dropdown,
-	ControlEvent
-)
 
 from components.bars import *
 from resources.config import *
@@ -60,6 +54,7 @@ class HomeView:
 				dropdown.Option("Xochimilco")
 			]
 		)
+
 		self.drd_categories: Dropdown = Dropdown(
 			label="Filtrar por categoría",
 			options=[
@@ -74,18 +69,31 @@ class HomeView:
 				dropdown.Option("Zona arqueológica")
 			]
 		)
+
+		self.sld_distance: Slider = Slider(
+			min=5,
+			max=15,
+			divisions=5,
+			label="{value} km",
+			disabled=True
+		)
+
+		self.chk_distance: Checkbox = Checkbox(
+			label="Filtrar por cercanía",
+			value=False,
+			on_change=self.hide_show_slider
+		)
+
 		self.dlg_sites_filter: AlertDialog = AlertDialog(
 			modal=True,
 			adaptive=True,
 			title=Text("Filtrar sitios turísticos"),
 			content=Column(
 				controls=[
-					Container(
-						content=self.drd_categories
-					),
-					Container(
-						content=self.drd_municipality
-					),
+					Container(content=self.drd_categories),
+					Container(content=self.drd_municipality),
+					Container(content=self.chk_distance),
+					Container(content=self.sld_distance),
 					Container(
 						content=TextButton(
 							text="Eliminar filtros",
@@ -250,6 +258,10 @@ class HomeView:
 			]
 		)
 
+	def hide_show_slider(self, _: ControlEvent) -> None:
+		self.sld_distance.disabled = not self.chk_distance.value
+		self.page.update()
+
 	def get_places(self, category: str = None, municipality: str =  None) -> list | Container:
 		logger.info("Calling Back-End API...")
 		response: Response = get(
@@ -354,6 +366,8 @@ class HomeView:
 		self.drd_municipality.value = None
 		self.items: list = self.get_places()
 		self.lv_places_list.controls = self.items[0:self.items_per_page]
+		self.chk_distance.value = False
+		self.sld_distance.value = 5
 		self.update_pagination_data(self.items)
 		self.page.update()
 

@@ -1,15 +1,9 @@
+from flet import *
 from os import listdir
 from os.path import join
-from requests import get, Response
-
 from logging import getLogger
+from requests import get, Response
 from flet_route import Params, Basket
-
-from flet import (
-	Page, View, Container, Column, Row, Tabs, Tab, Text, Icon,
-	MainAxisAlignment, alignment, Offset, ScrollMode, FontWeight, padding,
-	BoxShadow, border_radius, colors, icons,
-)
 
 from components.bars import *
 from resources.config import *

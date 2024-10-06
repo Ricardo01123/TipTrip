@@ -1,10 +1,6 @@
+from flet import *
 from random import choice
 from flet_route import Params, Basket
-
-from flet import (
-    Page, View, Container, Column, Text, Icon, padding, margin, border_radius,
-    BoxShadow, colors, icons, MainAxisAlignment, CrossAxisAlignment, TextAlign
-)
 
 from resources.config import *
 from resources.texts import ADVICES
