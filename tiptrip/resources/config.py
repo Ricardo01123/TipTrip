@@ -61,6 +61,12 @@ SAMPLING_RATE: int = 16_000
 TEMP_FILE_NAME: str = "temp_audio.wav"
 RECEIVED_TEMP_FILE_NAME: str = "received_temp_audio.wav"
 
+# Geolocation variables
+CDXM_MIN_LATITUDE: float = 19 + 3 / 60
+CDXM_MAX_LATITUDE: float = 19 + 36 / 60
+CDXM_MIN_LONGITUDE: float = -99 - 22 / 6
+CDXM_MAX_LONGITUDE: float = -98 - 57 / 60
+
 # Project paths
 PROJECT_DIR_ABSPATH: str = os.getcwd()
 TEMP_ABSPATH: str = os.path.join(PROJECT_DIR_ABSPATH, "temp")

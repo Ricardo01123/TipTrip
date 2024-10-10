@@ -94,7 +94,7 @@ class SignUpView:
 				TextButton("Aceptar", on_click=self.dlg_handle_ok_button),
 			],
 			actions_alignment=MainAxisAlignment.END,
-			on_dismiss=self.dlg_handle_dismiss
+			on_dismiss=lambda _: self.page.close(self.dlg_geolocator_info)
 		)
 
 		self.bnr_error: Banner = Banner(

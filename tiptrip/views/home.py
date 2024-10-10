@@ -73,7 +73,7 @@ class HomeView:
 		self.sld_distance: Slider = Slider(
 			min=5,
 			max=15,
-			divisions=5,
+			divisions=2,
 			label="{value} km",
 			disabled=True
 		)
@@ -113,6 +113,69 @@ class HomeView:
 				)
 			],
 			on_dismiss=lambda _: self.page.close(self.dlg_sites_filter)
+		)
+
+		self.gl: Geolocator = Geolocator(
+			location_settings=GeolocatorSettings(
+				accuracy=GeolocatorPositionAccuracy.LOW
+			),
+			on_error=lambda e: page.add(Text(f"Error: {e.data}")),
+		)
+		page.overlay.append(self.gl)
+
+		self.dlg_request_location_permission: AlertDialog = AlertDialog(
+			modal=True,
+			title=Text("Permisos de ubicación"),
+			content=Text(
+				"Para filtrar sitios turísticos por cercanía a tu posición actual, "
+				"necesitamos que permitas el acceso a tu ubicación."
+			),
+			actions=[
+				TextButton(
+					text="Cancelar",
+					on_click=self.handle_cancel_location_permission
+				),
+				TextButton(
+					text="Aceptar",
+					on_click=self.handle_accept_location_permission
+				)
+			],
+			actions_alignment=MainAxisAlignment.END,
+			on_dismiss=lambda _: self.page.close(self.dlg_request_location_permission)
+		)
+
+		self.dlg_location_permissions_failed: AlertDialog = AlertDialog(
+			modal=True,
+			title=Text("Permisos de ubicación"),
+			content=Text(
+				"No se han otorgado los permisos de ubicación, "
+				"se ha deshabilitado la opción de filtrado de sitios turísticos por cercanía."
+			),
+			actions_alignment=MainAxisAlignment.END,
+			actions=[
+				TextButton(
+					text="Aceptar",
+					on_click=lambda _: self.page.close(self.dlg_location_permissions_failed)
+				)
+			],
+			on_dismiss=lambda _: self.page.close(self.dlg_location_permissions_failed)
+		)
+
+		self.dlg_location_permissions_succeded: AlertDialog = AlertDialog(
+			modal=True,
+			title=Text("Permisos de ubicación"),
+			content=Text(
+				"Se han otorgado los permisos de ubicación, "
+				"Ahora puedes usar la opción de filtrado de sitios turísticos por cercanía."
+			),
+			actions_alignment=MainAxisAlignment.END,
+			actions=[
+				TextButton(
+					text="Aceptar",
+					on_click=lambda _: self.page.close(self.dlg_location_permissions_succeded)
+				)
+			],
+			on_dismiss=lambda _: self.page.close(self.dlg_location_permissions_succeded)
 		)
 
 		# Places and pagination variables
@@ -258,11 +321,13 @@ class HomeView:
 			]
 		)
 
-	def hide_show_slider(self, _: ControlEvent) -> None:
-		self.sld_distance.disabled = not self.chk_distance.value
-		self.page.update()
-
-	def get_places(self, category: str = None, municipality: str =  None) -> list | Container:
+	def get_places(
+		self,
+		category: str = None,
+		municipality: str =  None,
+		distance: int = None,
+		current_position: tuple[float, float] = None
+	) -> list | Container:
 		logger.info("Calling Back-End API...")
 		response: Response = get(
 			url=f"{BACK_END_URL}/{GET_DEMO_DATA_ENDPOINT}",
@@ -270,7 +335,12 @@ class HomeView:
 				"Content-Type": "application/json",
 				"Authorization": f"Bearer {self.basket.get('session_token')}"
 			},
-			json={"category": category, "municipality": municipality}
+			json={
+				"category": category,
+				"municipality": municipality,
+				"distance": distance,
+				"current_position": current_position
+			}
 		)
 
 		logger.info("Evaluating response...")
@@ -290,7 +360,8 @@ class HomeView:
 						f"{place['cp']}, "
 						f"{place['municipality']}, "
 						f"{place['state']}."
-					)
+					),
+					distance=place["distance"] if "distance" in place else None
 				)
 				for place in places_data
 			]
@@ -311,17 +382,19 @@ class HomeView:
 			]
 
 		else:
-			return Container(
-				alignment=alignment.center,
-				content=Text(
-					value=(
-						"Ocurrió un error al obtener la información de "
-						"los sitios turísticos."
-					),
-					color=colors.BLACK,
-					size=30
+			return [
+				Container(
+					alignment=alignment.center,
+					content=Text(
+						value=(
+							"Ocurrió un error al obtener la información de "
+							"los sitios turísticos."
+						),
+						color=colors.BLACK,
+						size=30
+					)
 				)
-			)
+			]
 
 	def get_place_image(self, place_name: str) -> str:
 		dir: str = format_place_name(place_name)
@@ -335,6 +408,51 @@ class HomeView:
 				return ["/default.png"]
 		else:
 			return ["/default.png"]
+
+	def hide_show_slider(self, _: ControlEvent) -> None:
+		logger.info("Checking location permissions...")
+		if not is_location_permission_enabled(self.gl, logger):
+			logger.warning("Location permissions are not granted...")
+			logger.info("Requesting location permissions...")
+			self.page.open(self.dlg_request_location_permission)
+
+		else:
+			logger.info("Location permissions are granted...")
+			logger.info("Updating slider status...")
+			self.sld_distance.disabled = not self.chk_distance.value
+			self.page.update()
+
+	def handle_accept_location_permission(self, _: ControlEvent) -> None:
+		if request_location_permissions(self.gl, logger):
+			logger.info("Location permissions granted...")
+			logger.info("Allowing distance filter...")
+			self.chk_distance.value = True
+			self.sld_distance.disabled = False
+			self.page.update()
+			self.page.open(self.dlg_location_permissions_succeded)
+
+		else:
+			logger.warning("Location permissions denied...")
+			logger.info("Opening location permissions failed dialog...")
+			self.chk_distance.value = False
+			self.sld_distance.disabled = True
+			self.page.update()
+			self.page.open(self.dlg_location_permissions_failed)
+			# self.open_location_permissions_failed_dialog()
+
+	# def open_location_permissions_failed_dialog(self) -> None:
+	# 	self.chk_distance.value = False
+	# 	self.sld_distance.disabled = True
+	# 	self.page.update()
+	# 	self.page.open(self.dlg_location_permissions_failed)
+
+	def handle_cancel_location_permission(self, _: ControlEvent) -> None:
+		logger.warning("User canceled location permission request...")
+		logger.info("Closing location permission alert dialog and cleaning filter...")
+		self.page.close(self.dlg_request_location_permission)
+		self.chk_distance.value = False
+		self.sld_distance.disabled = True
+		self.page.update()
 
 	def update_pagination_data(self, items: list) -> None:
 		self.current_page = 0
@@ -368,28 +486,69 @@ class HomeView:
 		self.lv_places_list.controls = self.items[0:self.items_per_page]
 		self.chk_distance.value = False
 		self.sld_distance.value = 5
+		self.sld_distance.disabled = True
 		self.update_pagination_data(self.items)
 		self.page.update()
 
 	def apply_filters(self, _: ControlEvent) -> None:
 		self.page.close(self.dlg_sites_filter)
+		logger.info("Applying filters...")
+
+		if self.chk_distance.value:
+			logger.info("Checking location permissions...")
+			if not self.gl.is_location_service_enabled():
+				logger.warning("Location services are not enabled...")
+				logger.info("Requesting location services...")
+				self.gl.open_location_settings()
+			else:
+				logger.info("Location services are enabled...")
+
+				logger.info("Checking if user's location is inside CDMX coordinates...")
+				position = self.gl.get_current_position()
+
+				# if is_inside_cdmx((position.latitude, position.longitude)):
+				# 	logger.info("User's location is inside CDMX coordinates...")
+				# 	distance: int = self.sld_distance.value
+				# 	current_position: tuple[float, float] = position.latitude, position.longitude
+
+				# else:
+				# 	logger.warning("User's location is not inside CDMX coordinates...")
+				# 	distance = None
+				# 	current_position = None
+				distance: int = int(self.sld_distance.value)
+				current_position: tuple[float, float] = position.latitude, position.longitude
+				logger.info(f"User's location: {current_position}")
+
+		else:
+			logger.info("User did not select the distance filter. Skipping...")
+			distance = None
+			current_position = None
+
 		logger.info("Modifying db consult conditions...")
-		if self.drd_categories.value or self.drd_municipality.value:
-			self.items: list = self.get_places(
-				category=(
-					self.drd_categories.value
-					if self.drd_categories.value != ""
-					else None
-				),
-				municipality=(
-					self.drd_municipality.value
-					if self.drd_municipality.value != ""
-					else None
-				),
-			)
+		#! if self.drd_categories.value or self.drd_municipality.value:
+
+		self.items: list = self.get_places(
+			category=(
+				self.drd_categories.value
+				if self.drd_categories.value != ""
+				else None
+			),
+			municipality=(
+				self.drd_municipality.value
+				if self.drd_municipality.value != ""
+				else None
+			),
+			distance=distance,
+			current_position=current_position
+		)
+
+		if isinstance(self.items[0], PlaceCard):
 			self.lv_places_list.controls = self.items[0:self.items_per_page]
-			self.update_pagination_data(self.items)
-			self.page.update()
+		else:
+			self.lv_places_list.controls = self.items
+
+		self.update_pagination_data(self.items)
+		self.page.update()
 
 	def set_page_indexes(self) -> None:
 		self.page_start_index = self.current_page * self.items_per_page

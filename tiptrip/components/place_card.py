@@ -10,8 +10,14 @@ logger = getLogger(f"{PROJECT_NAME}.{__name__}")
 
 class PlaceCard(Container):
 	def __init__(
-			self, page: Page, title: str, category: str, address: str,
-			punctuation: int, image_link: str
+			self,
+			page: Page,
+			title: str,
+			category: str,
+			address: str,
+			punctuation: int,
+			image_link: str,
+			distance: float = None
 		) -> None:
 
 		super().__init__(
@@ -91,29 +97,50 @@ class PlaceCard(Container):
 													value=address,
 													color=colors.BLACK
 												)
-											),
-											Container(
-												content=Row(
-													alignment=MainAxisAlignment.START,
-													spacing=3,
-													controls=[
-														Icon(
-															name=icons.STAR,
-															color=colors.AMBER,
-															size=20
-														)
-														for _ in range(int(punctuation))
-													]
-												) if punctuation is not None else Text(
-													value="Sin puntuación",
-													color=colors.RED
-												)
 											)
 										]
 									)
 								),
 							]
 						),
+					),
+					Container(
+						content=Row(
+							alignment=MainAxisAlignment.SPACE_BETWEEN,
+							controls=[
+								Container(
+									content=Text(
+										value=(
+											f"Distancia de mí: {distance:.2f} km"
+											if distance is not None
+											else "Distancia de mí: No disponible"
+										),
+										color=(
+											colors.BLACK
+											if distance is not None
+											else colors.RED
+										)
+									)
+								),
+								Container(
+									content=Row(
+										alignment=MainAxisAlignment.START,
+										spacing=3,
+										controls=[
+											Icon(
+												name=icons.STAR,
+												color=colors.AMBER,
+												size=20
+											)
+											for _ in range(int(punctuation))
+										]
+									) if punctuation is not None else Text(
+										value="Sin puntuación",
+										color=colors.RED
+									)
+								)
+							]
+						)
 					)
 				]
 			)

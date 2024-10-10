@@ -1,5 +1,5 @@
 from time import sleep
-from logging import basicConfig, getLogger, info, INFO
+from logging import basicConfig, getLogger, INFO
 
 from os import remove
 from os.path import exists, join
@@ -7,10 +7,8 @@ from os.path import exists, join
 from flet import app, Page
 from flet_route import Routing
 
+from resources.config import *
 from resources.router import routes
-from resources.config import (
-	LOGGING_FORMAT, PROJECT_NAME, TEMP_ABSPATH, TEMP_FILE_NAME, RECEIVED_TEMP_FILE_NAME
-)
 
 
 basicConfig(level=INFO, format=LOGGING_FORMAT)
@@ -18,7 +16,7 @@ logger = getLogger(PROJECT_NAME)
 
 
 def main(page: Page) -> None:
-	info(f"Starting app's navigation configurations...")
+	logger.info(f"Starting app's navigation configurations...")
 	Routing(page=page, app_routes=routes)
 	# page.go("/loading")
 	# sleep(1)
