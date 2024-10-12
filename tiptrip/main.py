@@ -17,6 +17,8 @@ logger = getLogger(PROJECT_NAME)
 
 def main(page: Page) -> None:
 	logger.info(f"Starting app's navigation configurations...")
+	page.window.width = 412
+	page.window.height = 915
 	Routing(page=page, app_routes=routes)
 	# page.go("/loading")
 	# sleep(1)

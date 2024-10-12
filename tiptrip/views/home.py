@@ -71,9 +71,9 @@ class HomeView:
 		)
 
 		self.sld_distance: Slider = Slider(
-			min=5,
+			min=1,
 			max=15,
-			divisions=2,
+			divisions=5,
 			label="{value} km",
 			disabled=True
 		)

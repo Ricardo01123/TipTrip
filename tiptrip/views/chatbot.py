@@ -25,6 +25,7 @@ class ChatbotView:
 		self.basket = None
 
 		self.record_flag: bool = False
+		self.audio_players: list = []
 
 		self.txt_message: TextField = TextField(
 			hint_text="Escribe un mensaje",
@@ -198,9 +199,6 @@ class ChatbotView:
 					}
 				)
 
-				from time import sleep
-				sleep(3)
-
 				logger.info(f"Agent endpoint response received {response.status_code}")
 				logger.info("Evaluating the agent response...")
 				if response.status_code == 200:
@@ -220,15 +218,17 @@ class ChatbotView:
 						# file.setcompname(audio_data["comp_name"])
 						file.writeframes(audio_binary)
 
-					logger.info("Replacing last agent message...")
-					# self.lv_chat.controls[-1].controls[0].content = Message(
-					# 	is_bot=True,
-					# 	message="Respuesta del agente",
-					# )
-					self.lv_chat.controls[-1].controls[0].content = AudioPlayer(
-						page=self.page,
-						audio_base64=audio_data["audio"]
+					logger.info("Creating new AudioPlayer component and waiting for audio to be loaded...")
+					self.audio_players.append(
+						AudioPlayer(
+							page=self.page,
+							src=join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME),
+							components_width=self.page.width
+						)
 					)
+
+					logger.info("Replacing last agent message...")
+					self.lv_chat.controls[-1].controls[0].content = self.audio_players[-1]
 
 				else:
 					logger.info("Agent response is NOT ok. Replacing last agent message with error message...")
