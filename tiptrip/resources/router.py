@@ -50,7 +50,7 @@ routes: list[path] = [
 		clear=True
 	),
 	path(
-		url="/place_details/:place_name/",
+		url="/place_details/:place_id/",
 		view=PlaceDetailsView().view,
 		clear=True
 	),

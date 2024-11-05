@@ -35,38 +35,16 @@ class HomeView:
 		self.drd_municipality: Dropdown = Dropdown(
 			label="Filtrar por delegación",
 			options=[
-				dropdown.Option("Álvaro Obregón"),
-				dropdown.Option("Azcapotzalco"),
-				dropdown.Option("Benito Juárez"),
-				dropdown.Option("Coyoacán"),
-				dropdown.Option("Cuajimalpa de Morelos"),
-				dropdown.Option("Cuauhtémoc"),
-				dropdown.Option("Gustavo A. Madero"),
-				dropdown.Option("Iztacalco"),
-				dropdown.Option("Iztapalapa"),
-				dropdown.Option("La Magdalena Contreras"),
-				dropdown.Option("Miguel Hidalgo"),
-				dropdown.Option("Milpa Alta"),
-				dropdown.Option("San Ángel"),
-				dropdown.Option("Tláhuac"),
-				dropdown.Option("Tlalpan"),
-				dropdown.Option("Venustiano Carranza"),
-				dropdown.Option("Xochimilco")
+				dropdown.Option(municipality)
+				for municipality in MUNICIPALITIES
 			]
 		)
 
 		self.drd_categories: Dropdown = Dropdown(
 			label="Filtrar por categoría",
 			options=[
-				dropdown.Option("Arquitectura"),
-				dropdown.Option("Centro cultural"),
-				dropdown.Option("Centro religioso"),
-				dropdown.Option("Escultura"),
-				dropdown.Option("Experiencia"),
-				dropdown.Option("Monumento"),
-				dropdown.Option("Mural"),
-				dropdown.Option("Museo"),
-				dropdown.Option("Zona arqueológica")
+				dropdown.Option(category)
+				for category in CATEGORIES
 			]
 		)
 
@@ -330,7 +308,7 @@ class HomeView:
 	) -> list | Container:
 		logger.info("Calling Back-End API...")
 		response: Response = get(
-			url=f"{BACK_END_URL}/{GET_DEMO_DATA_ENDPOINT}",
+			url=f"{BACK_END_URL}/{PLACES_ENDPOINT}",
 			headers={
 				"Content-Type": "application/json",
 				"Authorization": f"Bearer {self.basket.get('session_token')}"
@@ -345,25 +323,26 @@ class HomeView:
 
 		logger.info("Evaluating response...")
 		if response.status_code == 200:
-			places_data: dict = response.json()["data"]
-			logger.info(f"Obtained a total of {len(places_data)} places...")
+			places: dict = response.json()["places"]
+			logger.info(f"Obtained a total of {len(places)} places...")
 			return [
 				PlaceCard(
 					page=self.page,
-					title=place["name"],
-					category=place["classification"],
-					punctuation=place["punctuation"],
-					image_link=self.get_place_image(place["name"]),
+					id=place["id"],
+					title=place["info"]["name"],
+					category=place["info"]["classification"],
+					punctuation=place["info"]["punctuation"],
+					image_link=self.get_place_image(place["info"]["name"]),
 					address=(
-						f"{place['street_number']}, "
-						f"{place['colony']}, "
-						f"{place['cp']}, "
-						f"{place['municipality']}, "
-						f"{place['state']}."
+						f"{place['address']['street_number']}, "
+						f"{place['address']['colony']}, "
+						f"{place['address']['cp']}, "
+						f"{place['address']['municipality']}, "
+						f"{place['address']['state']}."
 					),
 					distance=place["distance"] if "distance" in place else None
 				)
-				for place in places_data
+				for place in places
 			]
 
 		elif response.status_code == 204:

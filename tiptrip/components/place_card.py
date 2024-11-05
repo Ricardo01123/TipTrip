@@ -12,6 +12,7 @@ class PlaceCard(Container):
 	def __init__(
 			self,
 			page: Page,
+			id: int,
 			title: str,
 			category: str,
 			address: str,
@@ -37,7 +38,7 @@ class PlaceCard(Container):
 			on_click = lambda _: go_to_view(
 				page=page,
 				logger=logger,
-				route=f"place_details/{title}"
+				route=f"place_details/{id}"
 			),
 			content=Column(
 				controls=[

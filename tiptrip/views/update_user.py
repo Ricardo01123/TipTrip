@@ -287,11 +287,11 @@ class UpdateUserView:
 
 		logger.info("Checking what fields have changed...")
 		if self.txt_email.value != self.basket.get("email"):
-			payload["new_mail"] = self.txt_email.value
+			payload["mail"] = self.txt_email.value
 		if self.txt_username.value != self.basket.get("username"):
-			payload["new_username"] = self.txt_username.value
+			payload["username"] = self.txt_username.value
 		if self.txt_password.value != "":
-			payload["new_password"] = self.txt_password.value
+			payload["password"] = self.txt_password.value
 
 		if len(payload) == 1:
 			logger.info("No changes detected, aborting process...")
@@ -309,7 +309,7 @@ class UpdateUserView:
 		else:
 			logger.info("Making request to update user...")
 			response: Response = put(
-				url=f"{BACK_END_URL}/{UPDATE_USER_ENDPOINT}",
+				url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.basket.get('id')}",
 				headers={
 					"Content-Type": "application/json",
 					"Authorization": f"Bearer {self.basket.get('session_token')}"

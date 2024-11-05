@@ -180,12 +180,13 @@ class SignInView:
 			}
 		)
 
-		if response.status_code == 200:
+		if response.status_code == 201:
 			data: dict = response.json()
 			logger.info("User authenticated successfully")
 
 			logger.info("Adding user data to session data...")
 			self.basket.email = self.txt_email.value
+			self.basket.id = data["id"]
 			self.basket.username = data["username"]
 			self.basket.session_token = data["token"]
 			self.basket.created_at = data["created_at"]
@@ -196,7 +197,7 @@ class SignInView:
 
 			go_to_view(page=self.page, logger=logger, route="home")
 
-		elif response.status_code == 401:
+		elif response.status_code == 401 or response.status_code == 404:
 			logger.info("User and/or password are incorrect")
 			self.bnr_error.content = Text(
 				value="Usuario y/o contraseña incorrectos.",
@@ -204,7 +205,7 @@ class SignInView:
 			)
 			self.page.open(self.bnr_error)
 
-		elif response.status_code == 500:
+		else:
 			logger.error("An error occurred while trying to authenticate user")
 			self.bnr_error.content = Text(
 				value=(

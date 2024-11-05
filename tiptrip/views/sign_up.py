@@ -263,12 +263,13 @@ class SignUpView:
 			}
 		)
 
-		if response.status_code == 200:
+		if response.status_code == 201:
 			logger.info("User authenticated successfully")
 
 			logger.info("Adding user data to session data...")
 			data = response.json()
 			self.basket.email = self.txt_email.value
+			self.basket.id = data["id"]
 			self.basket.username = data["username"]
 			self.basket.session_token = data["token"]
 			self.basket.created_at = data["created_at"]
@@ -303,7 +304,7 @@ class SignUpView:
 	def btn_submit_clicked(self, _: ControlEvent) -> None:
 		logger.info("Creating new user...")
 		response: Response = post(
-			url=f"{BACK_END_URL}/{ADD_USER_ENDPOINT}",
+			url=f"{BACK_END_URL}/{USERS_ENDPOINT}",
 			headers={"Content-Type": "application/json"},
 			json={
 				"username": self.txt_username.value,

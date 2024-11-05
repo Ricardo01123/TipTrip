@@ -188,6 +188,7 @@ class ChatbotView:
 				self.page.update()
 
 				logger.info("Calling the back-end agent to process the user message...")
+				# logger.info("User is asking for nearby places. Getting user location...")
 				response: Response = post(
 					url=f"{BACK_END_URL}/{AGENT_ENDPOINT}",
 					headers={
@@ -195,40 +196,47 @@ class ChatbotView:
 						"Authorization": f"Bearer {self.basket.get('session_token')}"
 					},
 					json={
-						"prompt": self.lv_chat.controls[-2].controls[1].content.content.value
+						"prompt": self.lv_chat.controls[-2].controls[1].content.content.value,
+						# "latitude": self.basket.get("latitude"),
+						# "longitude": self.basket.get("longitude")
 					}
 				)
 
 				logger.info(f"Agent endpoint response received {response.status_code}")
 				logger.info("Evaluating the agent response...")
-				if response.status_code == 200:
+				if response.status_code == 201:
 					logger.info("Agent response is OK.")
-					audio_data: dict = response.json()["audio_data"]
+					# audio_data: dict = response.json()["agent_response"]["audio_data"]
 
-					logger.info("Decoding audio data...")
-					audio_binary = b64decode(audio_data["audio"])
+					# logger.info("Decoding audio data...")
+					# audio_binary = b64decode(audio_data["audio"])
 
-					logger.info("Saving as temporary audio file...")
-					with wave.open(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME), "wb") as file:
-						file.setnchannels(audio_data["nchannels"])
-						file.setsampwidth(audio_data["sampwidth"])
-						file.setframerate(audio_data["framerate"])
-						file.setnframes(audio_data["nframes"])
-						# file.setcomptype(audio_data["comp_type"])
-						# file.setcompname(audio_data["comp_name"])
-						file.writeframes(audio_binary)
+					# logger.info("Saving as temporary audio file...")
+					# with wave.open(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME), "wb") as file:
+					# 	file.setnchannels(audio_data["nchannels"])
+					# 	file.setsampwidth(audio_data["sampwidth"])
+					# 	file.setframerate(audio_data["framerate"])
+					# 	file.setnframes(audio_data["nframes"])
+					# 	# file.setcomptype(audio_data["comp_type"])
+					# 	# file.setcompname(audio_data["comp_name"])
+					# 	file.writeframes(audio_binary)
 
-					logger.info("Creating new AudioPlayer component and waiting for audio to be loaded...")
-					self.audio_players.append(
-						AudioPlayer(
-							page=self.page,
-							src=join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME),
-							components_width=self.page.width
-						)
+					# logger.info("Creating new AudioPlayer component and waiting for audio to be loaded...")
+					# self.audio_players.append(
+					# 	AudioPlayer(
+					# 		page=self.page,
+					# 		src=join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME),
+					# 		components_width=self.page.width
+					# 	)
+					# )
+
+					# logger.info("Replacing last agent message...")
+					# self.lv_chat.controls[-1].controls[0].content = self.audio_players[-1]
+					logger.info("Replacing last agent message with agent response message...")
+					self.lv_chat.controls[-1].controls[0].content = Message(
+						is_bot=True,
+						message=response.json()["agent_response"]["response"],
 					)
-
-					logger.info("Replacing last agent message...")
-					self.lv_chat.controls[-1].controls[0].content = self.audio_players[-1]
 
 				else:
 					logger.info("Agent response is NOT ok. Replacing last agent message with error message...")
@@ -315,7 +323,7 @@ class ChatbotView:
 
 			logger.info("Starting speech recognition...")
 			response: Response = post(
-				url=f"{BACK_END_URL}/{SPEECH_RECOGNITION_ENDPOINT}",
+				url=f"{BACK_END_URL}/{ASR_ENDPOINT}",
 				headers={
 					"Content-Type": "application/json",
 					"Authorization": f"Bearer {self.basket.get('session_token')}"
@@ -325,7 +333,7 @@ class ChatbotView:
 				}
 			)
 
-			logger.info(f"Speech recognition endpoint response received {response.status_code}: {response.json()}")
+			logger.info(f"Speech recognition (ASR) endpoint response received {response.status_code}: {response.json()}")
 			if response.status_code == 200:
 				user_message: str = response.json()["text"]
 				logger.info(f"Speech captured: {user_message}")

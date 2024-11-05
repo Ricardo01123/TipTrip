@@ -40,18 +40,12 @@ LOGGING_FORMAT: str = "[%(asctime)s] %(levelname)s in %(name)s: %(message)s"
 RGX_EMAIL: str = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
 # Back-End API
-BACK_END_URL: str = "http://127.0.0.1:5000"
-
-GET_DEMO_DATA_ENDPOINT: str = "get_demo_data"
-GET_RECORD_ENDPOINT: str = "get_record"
-
-AUTH_USER_ENDPOINT: str = "auth_user"
-ADD_USER_ENDPOINT: str = "add_user"
-UPDATE_USER_ENDPOINT: str = "update_user"
-DELETE_USER_ENDPOINT: str = "delete_user"
-
-SPEECH_RECOGNITION_ENDPOINT: str = "speech_recognition"
-AGENT_ENDPOINT: str = "agent"
+BACK_END_URL: str = "http://145.223.74.225:5000"
+PLACES_ENDPOINT: str = "places"
+USERS_ENDPOINT: str = "users"
+AUTH_USER_ENDPOINT: str = "users/auth"
+AGENT_ENDPOINT: str = "models/agent"
+ASR_ENDPOINT: str = "models/asr"
 
 # Chatbot audio file
 FORMAT: int = paInt16
@@ -71,3 +65,36 @@ CDXM_MAX_LONGITUDE: float = -98 - 57 / 60
 PROJECT_DIR_ABSPATH: str = os.getcwd()
 TEMP_ABSPATH: str = os.path.join(PROJECT_DIR_ABSPATH, "temp")
 ASSETS_ABSPATH: str = os.path.join(PROJECT_DIR_ABSPATH, "assets")
+
+# Places filters variables
+MUNICIPALITIES: list[str] = [
+	"Álvaro Obregón",
+	"Azcapotzalco",
+	"Benito Juárez",
+	"Coyoacán",
+	"Cuajimalpa de Morelos",
+	"Cuauhtémoc",
+	"Gustavo A. Madero",
+	"Iztacalco",
+	"Iztapalapa",
+	"La Magdalena Contreras",
+	"Miguel Hidalgo",
+	"Milpa Alta",
+	"San Ángel",
+	"Tláhuac",
+	"Tlalpan",
+	"Venustiano Carranza",
+	"Xochimilco"
+]
+
+CATEGORIES: list[str] = [
+	"Arquitectura",
+	"Centro cultural",
+	"Centro religioso",
+	"Escultura",
+	"Experiencia",
+	"Monumento",
+	"Mural",
+	"Museo",
+	"Zona arqueológica"
+]

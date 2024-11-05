@@ -21,7 +21,6 @@ class PlaceDetailsView:
 		self.basket = None
 
 		self.route = None
-		self.place_name = None
 		self.place_data = None
 		self.data_tabs = None
 
@@ -31,7 +30,7 @@ class PlaceDetailsView:
 		self.basket = basket
 
 		self.route: str = "/place_details/:place_name"
-		self.place_data: dict | Container = self.get_place_data(self.params.get("place_name"))
+		self.place_data: dict | Container = self.get_place_data(self.params.get("place_id"))
 		self.data_tabs: Tabs = Tabs(
 			selected_index=0,
 			animation_duration=300,
@@ -97,7 +96,7 @@ class PlaceDetailsView:
 											scroll=ScrollMode.HIDDEN,
 											controls=[
 												Text(
-													value=self.place_data["name"],
+													value=self.place_data["info"]["name"],
 													color=MAIN_COLOR,
 													weight=FontWeight.BOLD,
 													size=25,
@@ -124,7 +123,7 @@ class PlaceDetailsView:
 															),
 															Container(
 																content=Text(
-																	value=self.place_data["classification"],
+																	value=self.place_data["info"]["classification"],
 																	color=SECONDARY_COLOR,
 																	size=18
 																)
@@ -158,7 +157,7 @@ class PlaceDetailsView:
 																expand=1,
 																alignment=alignment.center_left,
 																content=Text(
-																	value=self.place_data["punctuation"],
+																	value=self.place_data["info"]["punctuation"],
 																	color=colors.WHITE,
 																	size=18
 																)
@@ -217,19 +216,18 @@ class PlaceDetailsView:
 			]
 		)
 
-	def get_place_data(self, name: str) -> dict | Container:
+	def get_place_data(self, id: str) -> dict | Container:
 		response: Response = get(
-			url=f"{BACK_END_URL}/{GET_RECORD_ENDPOINT}",
+			url=f"{BACK_END_URL}/{PLACES_ENDPOINT}/{id}",
 			headers={
 				"Content-Type": "application/json",
 				"Authorization": f"Bearer {self.basket.get('session_token')}"
-			},
-			json={"place_name": name}
+			}
 		)
 
 		if response.status_code == 200:
 			logger.debug(f"Response 200 OK: {response.json()}")
-			return response.json()["data"]
+			return response.json()["place"]
 
 		elif response.status_code == 204:
 			logger.debug(f"Response 204 No Content: {response.json()}")
@@ -261,18 +259,18 @@ class PlaceDetailsView:
 		result: list = []
 
 		if any([
-			self.place_data["schedules"],
-			self.place_data["prices"],
-			self.place_data["street_number"],
-			self.place_data["colony"],
-			self.place_data["cp"],
-			self.place_data["municipality"],
-			self.place_data["state"],
-			self.place_data["how_to_arrive"],
+			self.place_data["info"]["schedules"],
+			self.place_data["info"]["prices"],
+			self.place_data["address"]["street_number"],
+			self.place_data["address"]["colony"],
+			self.place_data["address"]["cp"],
+			self.place_data["address"]["municipality"],
+			self.place_data["address"]["state"],
+			self.place_data["address"]["how_to_arrive"],
 		]):
 			info: Column = Column()
 
-			if self.place_data["schedules"]:
+			if self.place_data["info"]["schedules"]:
 				info.controls.append(
 					Container(
 						content=Column(
@@ -286,7 +284,7 @@ class PlaceDetailsView:
 								),
 								Container(
 									content=Text(
-										value=self.place_data["schedules"],
+										value=self.place_data["info"]["schedules"],
 										color=colors.BLACK
 									)
 								)
@@ -295,7 +293,7 @@ class PlaceDetailsView:
 					)
 				)
 
-			if self.place_data["prices"]:
+			if self.place_data["info"]["prices"]:
 				info.controls.append(
 					Container(
 						content=Column(
@@ -309,7 +307,7 @@ class PlaceDetailsView:
 								),
 								Container(
 									content=Text(
-										value=self.place_data["prices"],
+										value=self.place_data["info"]["prices"],
 										color=colors.BLACK
 									)
 								)
@@ -319,11 +317,11 @@ class PlaceDetailsView:
 				)
 
 			if any([
-				self.place_data["street_number"],
-				self.place_data["colony"],
-				self.place_data["cp"],
-				self.place_data["municipality"],
-				self.place_data["state"],
+				self.place_data["address"]["street_number"],
+				self.place_data["address"]["colony"],
+				self.place_data["address"]["cp"],
+				self.place_data["address"]["municipality"],
+				self.place_data["address"]["state"],
 			]):
 				info.controls.append(
 					Container(
@@ -339,11 +337,11 @@ class PlaceDetailsView:
 								Container(
 									content=Text(
 										value=(
-											f"{self.place_data['street_number']}, "
-											f"{self.place_data['colony']}, "
-											f"{self.place_data['cp']}, "
-											f"{self.place_data['municipality']}, "
-											f"{self.place_data['state']}."
+											f"{self.place_data['address']['street_number']}, "
+											f"{self.place_data['address']['colony']}, "
+											f"{self.place_data['address']['cp']}, "
+											f"{self.place_data['address']['municipality']}, "
+											f"{self.place_data['address']['state']}."
 										),
 										color=colors.BLACK
 									)
@@ -353,7 +351,7 @@ class PlaceDetailsView:
 					)
 				)
 
-			if self.place_data["how_to_arrive"]:
+			if self.place_data["address"]["how_to_arrive"]:
 				info.controls.append(
 					Container(
 						content=Column(
@@ -367,7 +365,7 @@ class PlaceDetailsView:
 								),
 								Container(
 									content=Text(
-										value=self.place_data["how_to_arrive"],
+										value=self.place_data["address"]["how_to_arrive"],
 										color=colors.BLACK
 									)
 								)
@@ -383,91 +381,91 @@ class PlaceDetailsView:
 				)
 			)
 
-		if self.place_data["description"]:
+		if self.place_data["info"]["description"]:
 			result.append(
 				Tab(
 					text="Descripción",
 					content=Container(
 						content=Text(
-							value=self.place_data["description"],
+							value=self.place_data["info"]["description"],
 							color=colors.BLACK
 						)
 					)
 				)
 			)
 
-		if self.place_data["historic_review"]:
+		if self.place_data["reviews"]["historic"]:
 			result.append(
 				Tab(
 					text="Reseña histórica",
 					content=Container(
 						content=Text(
-							value=self.place_data["historic_review"],
+							value=self.place_data["reviews"]["historic"],
 							color=colors.BLACK
 						)
 					)
 				)
 			)
 
-		if self.place_data["review"]:
+		if self.place_data["reviews"]["general"]:
 			result.append(
 				Tab(
 					text="Reseña general",
 					content=Container(
 						content=Text(
-							value=self.place_data["review"],
+							value=self.place_data["reviews"]["general"],
 							color=colors.BLACK
 						)
 					)
 				)
 			)
 
-		if self.place_data["services"]:
+		if self.place_data["info"]["services"]:
 			result.append(
 				Tab(
 					text="Servicios",
 					content=Container(
 						content=Text(
-							value=self.place_data["services"],
+							value=self.place_data["info"]["services"],
 							color=colors.BLACK
 						)
 					)
 				)
 			)
 
-		if self.place_data["activities"]:
+		if self.place_data["info"]["activities"]:
 			result.append(
 				Tab(
 					text="Actividades",
 					content=Container(
 						content=Text(
-							value=self.place_data["activities"],
+							value=self.place_data["info"]["activities"],
 							color=colors.BLACK
 						)
 					)
 				)
 			)
 
-		if self.place_data["permanent_exhibitions"]:
+		if self.place_data["info"]["permanent_exhibitions"]:
 			result.append(
 				Tab(
 					text="Salas permanentes",
 					content=Container(
 						content=Text(
-							value=self.place_data["permanent_exhibitions"],
+							value=self.place_data["info"]["permanent_exhibitions"],
 							color=colors.BLACK
 						)
 					)
 				)
 			)
 
-		if self.place_data["temporal_exhibitions"]:
+		if self.place_data["info"]["temporal_exhibitions"]:
 			result.append(
 				Tab(
 					text="Salas temporales",
 					content=Container(
 						content=Text(
-							value=self.place_data["temporal_exhibitions"],
+							value=self.place_data["info"]["temporal_exhibitions"],
 							color=colors.BLACK
 						)
 					)
@@ -475,14 +473,14 @@ class PlaceDetailsView:
 			)
 
 		if any([
-			self.place_data["mail"],
-			self.place_data["phone"],
-			self.place_data["website"],
-			self.place_data["sic_website"]
+			self.place_data["info"]["mail"],
+			self.place_data["info"]["phone"],
+			self.place_data["info"]["website"],
+			self.place_data["info"]["sic_website"]
 		]):
 			contact_info: Column = Column()
 
-			if self.place_data["mail"]:
+			if self.place_data["info"]["mail"]:
 				contact_info.controls.append(
 					Container(
 						content=Column(
@@ -496,7 +494,7 @@ class PlaceDetailsView:
 								),
 								Container(
 									content=Text(
-										value=self.place_data["mail"],
+										value=self.place_data["info"]["mail"],
 										color=colors.BLACK
 									)
 								)
@@ -505,7 +503,7 @@ class PlaceDetailsView:
 					)
 				)
 
-			if self.place_data["phone"]:
+			if self.place_data["info"]["phone"]:
 				contact_info.controls.append(
 					Container(
 						content=Column(
@@ -519,7 +517,7 @@ class PlaceDetailsView:
 								),
 								Container(
 									content=Text(
-										value=self.place_data["phone"],
+										value=self.place_data["info"]["phone"],
 										color=colors.BLACK
 									)
 								)
@@ -528,7 +526,7 @@ class PlaceDetailsView:
 					)
 				)
 
-			if self.place_data["website"]:
+			if self.place_data["info"]["website"]:
 				contact_info.controls.append(
 					Container(
 						content=Column(
@@ -542,7 +540,7 @@ class PlaceDetailsView:
 								),
 								Container(
 									content=Text(
-										value=self.place_data["website"],
+										value=self.place_data["info"]["website"],
 										color=colors.BLACK
 									)
 								)
@@ -551,7 +549,7 @@ class PlaceDetailsView:
 					)
 				)
 
-			if self.place_data["sic_website"]:
+			if self.place_data["info"]["sic_website"]:
 				contact_info.controls.append(
 					Container(
 						content=Column(
@@ -565,7 +563,7 @@ class PlaceDetailsView:
 								),
 								Container(
 									content=Text(
-										value=self.place_data["sic_website"],
+										value=self.place_data["info"]["sic_website"],
 										color=colors.BLACK
 									)
 								)
@@ -617,7 +615,7 @@ class PlaceDetailsView:
 	# 	return items
 
 	def get_items(self) -> list:
-		dir: str = format_place_name(self.params.get("place_name"))
+		dir: str = format_place_name(self.place_data["info"]["name"])
 		path: str = join(ASSETS_ABSPATH, "places", dir)
 		images: list = listdir(path)
 		if images:

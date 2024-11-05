@@ -278,13 +278,10 @@ class AccountView:
 	def delete_account(self, _: ControlEvent) -> None:
 		logger.info("Making request to delete account...")
 		response: Response = delete(
-			url=f"{BACK_END_URL}/{DELETE_USER_ENDPOINT}",
+			url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.basket.get('id')}",
 			headers={
 				"Content-Type": "application/json",
 				"Authorization": f"Bearer {self.basket.get('session_token')}"
-			},
-			json={
-				"mail": self.basket.get("email"),
 			}
 		)
 
