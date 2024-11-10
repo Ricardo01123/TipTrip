@@ -79,14 +79,18 @@ class BottomBar(Container):
 						)
 					),
 					IconButton(
-						icon=icons.FAVORITE,
-						icon_color=colors.BLACK,
+						icon=icons.BOOKMARK_BORDER,
+						icon_color=(
+							MAIN_COLOR
+							if current_route == "/favorites"
+							else colors.BLACK
+						),
 						icon_size=30,
-						# on_click=lambda _: go_to_view(
-						# 	page=page,
-						# 	logger=logger,
-						# 	route="chatbot"
-						# )
+						on_click=lambda _: go_to_view(
+							page=page,
+							logger=logger,
+							route="favorites"
+						)
 					),
 					IconButton(
 						icon=icons.ACCOUNT_CIRCLE,

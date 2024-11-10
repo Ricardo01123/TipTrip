@@ -1,11 +1,11 @@
 from flet import *
 from time import sleep
+from os import listdir
 from logging import Logger
 from flet_route import Basket
+from os.path import join, exists
 
-from resources.config import (
-	CDXM_MIN_LATITUDE, CDXM_MAX_LATITUDE, CDXM_MIN_LONGITUDE, CDXM_MAX_LONGITUDE
-)
+from resources.config import *
 
 
 # Navigation functions
@@ -25,6 +25,20 @@ def clean_basket(basket: Basket, logger: Logger) -> None:
 
 
 # Places functions
+def get_place_image(place_name: str) -> str:
+	dir: str = format_place_name(place_name)
+
+	path: str = join(ASSETS_ABSPATH, "places", dir)
+	if exists(path):
+		images: list = listdir(path)
+		if images:
+			return join("places", dir, images[0])
+		else:
+			return ["/default.png"]
+	else:
+		return ["/default.png"]
+
+
 def format_place_name(place_name: str) -> str:
 	return place_name\
 			.replace(' ', "_")\

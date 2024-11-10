@@ -35,13 +35,13 @@ class SignInView:
 		)
 
 		self.lbl_email_required: Text = Text(
-			value = "Campo \"Correo electrónico\" requerido *",
+			value = "Campo requerido *",
 			style=TextStyle(color=colors.RED),
 			visible=False
 		)
 
 		self.lbl_password_required: Text = Text(
-			value = "Campo \"Contraseña\" requerido *",
+			value = "Campo requerido *",
 			style=TextStyle(color=colors.RED),
 			visible=False
 		)

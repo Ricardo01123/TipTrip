@@ -1,6 +1,4 @@
 from flet import *
-from os import listdir
-from os.path import join
 from logging import getLogger
 from requests import get, Response
 from flet_route import Params, Basket
@@ -37,7 +35,7 @@ class HomeView:
 
 		self.txt_place_searcher: TextField = TextField(
 			prefix_icon=icons.SEARCH,
-			hint_text="Busca un lugar",
+			hint_text="Busca un sitio turístico",
 			on_change=self.search_place,
 			**txt_messages_style
 		)
@@ -249,7 +247,7 @@ class HomeView:
 					shadow=BoxShadow(
 						blur_radius=BLUR,
 						color=colors.GREY_800
-					),
+					)
 				),
 				Container(
 					width=self.page.width,
@@ -349,11 +347,10 @@ class HomeView:
 			return [
 				PlaceCard(
 					page=self.page,
+					basket=self.basket,
 					id=place["id"],
-					title=place["info"]["name"],
-					category=place["info"]["classification"],
-					punctuation=place["info"]["punctuation"],
-					image_link=self.get_place_image(place["info"]["name"]),
+					name=place["info"]["name"],
+					classification=place["info"]["classification"],
 					address=(
 						f"{place['address']['street_number']}, "
 						f"{place['address']['colony']}, "
@@ -361,6 +358,9 @@ class HomeView:
 						f"{place['address']['municipality']}, "
 						f"{place['address']['state']}."
 					),
+					image_link=get_place_image(place["info"]["name"]),
+					is_favorite=place["is_favorite"],
+					punctuation=place["info"]["punctuation"],
 					distance=place["distance"] if "distance" in place else None
 				)
 				for place in places
@@ -399,19 +399,6 @@ class HomeView:
 					)
 				)
 			]
-
-	def get_place_image(self, place_name: str) -> str:
-		dir: str = format_place_name(place_name)
-
-		path: str = join(ASSETS_ABSPATH, "places", dir)
-		if os.path.exists(path):
-			images: list = listdir(path)
-			if images:
-				return join("places", dir, images[0])
-			else:
-				return ["/default.png"]
-		else:
-			return ["/default.png"]
 
 	def hide_show_slider(self, _: ControlEvent) -> None:
 		logger.info("Checking location permissions...")
@@ -471,9 +458,9 @@ class HomeView:
 			self.lv_places_list.controls = self.items[0:self.items_per_page]
 			self.update_pagination_data(self.items)
 		else:
-			value = self.txt_place_searcher.value.lower()
+			value: str = self.txt_place_searcher.value.lower()
 			logger.info(f"Searching place... Searching for value {value}")
-			items = [
+			items: list = [
 				place for place in self.items if value in
 				# Searching in the structure of the PlaceCard component in place_card.py
 				place.content.controls[0].content.controls[0].value.lower()

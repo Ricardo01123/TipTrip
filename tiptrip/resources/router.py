@@ -6,6 +6,7 @@ from views.sign_up import SignUpView
 from views.loading import LoadingView
 from views.chatbot import ChatbotView
 from views.account import AccountView
+from views.favorites import FavoritesView
 from views.update_user import UpdateUserView
 from views.place_details import PlaceDetailsView
 from views.change_password import ChangePasswordView
@@ -69,4 +70,9 @@ routes: list[path] = [
 		view=UpdateUserView().view,
 		clear=True
 	),
+	path(
+		url="/favorites",
+		view=FavoritesView().view,
+		clear=True
+	)
 ]

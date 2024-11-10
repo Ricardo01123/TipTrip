@@ -4,6 +4,7 @@ from os.path import join
 from logging import getLogger
 from requests import get, Response
 from flet_route import Params, Basket
+from requests import post, delete, Response
 
 from components.bars import *
 from resources.config import *
@@ -31,6 +32,18 @@ class PlaceDetailsView:
 
 		self.route: str = "/place_details/:place_name"
 		self.place_data: dict | Container = self.get_place_data(self.params.get("place_id"))
+
+		self.saved_iconbutton: IconButton = IconButton(
+			icon=(
+				icons.BOOKMARK
+				if self.place_data["is_favorite"]
+				else icons.BOOKMARK_BORDER
+			),
+			icon_color=SECONDARY_COLOR,
+			icon_size=25,
+			on_click=self.handle_saved_iconbutton
+		)
+
 		self.data_tabs: Tabs = Tabs(
 			selected_index=0,
 			animation_duration=300,
@@ -87,7 +100,7 @@ class PlaceDetailsView:
 							if isinstance(self.place_data, Container)
 							else Column(
 								alignment=MainAxisAlignment.CENTER,
-								spacing=10,
+								spacing=0,
 								controls=[
 									Container(
 										width=self.page.width,
@@ -114,6 +127,7 @@ class PlaceDetailsView:
 													content=Row(
 														spacing=10,
 														controls=[
+															Container(content=self.saved_iconbutton),
 															Container(
 																content=Icon(
 																	name=icons.MUSEUM_SHARP,
@@ -622,3 +636,54 @@ class PlaceDetailsView:
 			return [join("places", dir, image) for image in images]
 		else:
 			return ["/default.png"]
+
+	def handle_saved_iconbutton(self, _) -> None:
+		if self.saved_iconbutton.icon == icons.BOOKMARK:
+			logger.info("Removing place from favorites...")
+			response: Response = delete(
+				url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}/{self.basket.get('id')}/{self.place_data['id']}",
+				headers={
+					"Content-Type": "application/json",
+					"Authorization": f"Bearer {self.basket.get('session_token')}"
+				}
+			)
+
+			if response.status_code == 200:
+				logger.info("Place removed from favorites successfully")
+				self.saved_iconbutton.icon = icons.BOOKMARK_BORDER
+				self.page.update()
+			else:
+				print("Error removing place from favorites")
+				self.dlg_error.title = Text("Error al eliminar")
+				self.dlg_error.content = Text(
+					"Ocurrió un error eliminando el sitio turístico de la lista de favoritos. "
+					"Favor de intentarlo de nuevo más tarde."
+				)
+				self.page.open(self.dlg_error)
+
+		else:
+			logger.info("Adding place to favorites...")
+			response: Response = post(
+				url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}",
+				headers={
+					"Content-Type": "application/json",
+					"Authorization": f"Bearer {self.basket.get('session_token')}"
+				},
+				json={
+					"user_id": self.basket.get("id"),
+					"place_id": self.place_data["id"]
+				}
+			)
+
+			if response.status_code == 201:
+				logger.info("Place added to favorites successfully")
+				self.saved_iconbutton.icon = icons.BOOKMARK
+				self.page.update()
+			else:
+				print("Error adding place to favorites")
+				self.dlg_error.title = Text("Error al agregar")
+				self.dlg_error.content = Text(
+					"Ocurrió un error agregando el sitio turístico a la lista de favoritos. "
+					"Favor de intentarlo de nuevo más tarde."
+				)
+				self.page.open(self.dlg_error)
