@@ -58,16 +58,19 @@ class TermsConditionsView:
 								)
 							),
 							MainTitle(
-								subtitle="Términos y condiciones",
-								top_margin=(SPACING / 2)
+								top_margin=(SPACING / 2),
+								subtitle="Términos y condiciones"
 							),
 							Container(
-								margin=margin.only(top=SPACING),
+								expand=True,
 								content=Column(
+									scroll=ScrollMode.HIDDEN,
 									controls=[
-										Text(
-											value=TERMS_CONDITIONS,
-											color=colors.BLACK
+										Container(
+											content=Text(
+												value=TERMS_CONDITIONS,
+												color=colors.BLACK
+											)
 										)
 									]
 								)

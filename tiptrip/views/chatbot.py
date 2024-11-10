@@ -206,20 +206,24 @@ class ChatbotView:
 				logger.info("Evaluating the agent response...")
 				if response.status_code == 201:
 					logger.info("Agent response is OK.")
-					# audio_data: dict = response.json()["agent_response"]["audio_data"]
+					data: dict = response.json()
+					logger.info(f"Agent text response: \"{data['agent_response']['text']}\"")
 
-					# logger.info("Decoding audio data...")
-					# audio_binary = b64decode(audio_data["audio"])
+					logger.info("Getting audio data from agent response...")
+					audio_data: dict = response.json()["agent_response"]["audio_data"]
 
-					# logger.info("Saving as temporary audio file...")
-					# with wave.open(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME), "wb") as file:
-					# 	file.setnchannels(audio_data["nchannels"])
-					# 	file.setsampwidth(audio_data["sampwidth"])
-					# 	file.setframerate(audio_data["framerate"])
-					# 	file.setnframes(audio_data["nframes"])
-					# 	# file.setcomptype(audio_data["comp_type"])
-					# 	# file.setcompname(audio_data["comp_name"])
-					# 	file.writeframes(audio_binary)
+					logger.info("Decoding audio data...")
+					audio_binary = b64decode(audio_data["audio"])
+
+					logger.info("Saving as temporary audio file...")
+					with wave.open(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME), "wb") as file:
+						file.setnchannels(audio_data["nchannels"])
+						file.setsampwidth(audio_data["sampwidth"])
+						file.setframerate(audio_data["framerate"])
+						file.setnframes(audio_data["nframes"])
+						# file.setcomptype(audio_data["comp_type"])
+						# file.setcompname(audio_data["comp_name"])
+						file.writeframes(audio_binary)
 
 					# logger.info("Creating new AudioPlayer component and waiting for audio to be loaded...")
 					# self.audio_players.append(
@@ -235,7 +239,7 @@ class ChatbotView:
 					logger.info("Replacing last agent message with agent response message...")
 					self.lv_chat.controls[-1].controls[0].content = Message(
 						is_bot=True,
-						message=response.json()["agent_response"]["response"],
+						message=response.json()["agent_response"]["text"],
 					)
 
 				else:
@@ -249,15 +253,16 @@ class ChatbotView:
 		self.lv_chat.update()
 
 	def cca_send_clicked(self, _: ControlEvent) -> None:
-		logger.info("Send button clicked")
-		self.add_message(is_bot=False, message=self.txt_message.value)
-		self.add_message(is_bot=True, message="Buscando información...")
-
 		logger.info("Changing components to initial state...")
+		aux_message: str = self.txt_message.value
 		self.txt_message.value = ""
 		self.cont_icon.content = self.cca_mic
 		self.cont_icon.on_click = self.cca_mic_clicked
 		self.page.update()
+
+		logger.info("Send button clicked")
+		self.add_message(is_bot=False, message=aux_message)
+		self.add_message(is_bot=True, message="Buscando información...")
 
 	def cca_mic_clicked(self, _: ControlEvent) -> None:
 		logger.info("Microphone button clicked")

@@ -17,6 +17,7 @@ def go_to_view(page: Page, logger: Logger, route: str) -> None:
 # Basket functions
 def clean_basket(basket: Basket, logger: Logger) -> None:
 	logger.info("Cleaning session basket...")
+	basket.delete("id")
 	basket.delete("email")
 	basket.delete("session_token")
 	basket.delete("username")
@@ -27,6 +28,7 @@ def clean_basket(basket: Basket, logger: Logger) -> None:
 def format_place_name(place_name: str) -> str:
 	return place_name\
 			.replace(' ', "_")\
+			.replace('-', "_")\
 			.replace(',', "")\
 			.replace('.', "")\
 			.replace(':', "")\
@@ -38,13 +40,13 @@ def format_place_name(place_name: str) -> str:
 			.replace('Í', 'I')\
 			.replace('Ó', 'O')\
 			.replace('Ú', 'U')\
-			.replace('Ñ', 'N')\
 			.replace('á', 'a')\
 			.replace('é', 'e')\
 			.replace('í', 'i')\
 			.replace('ó', 'o')\
 			.replace('ú', 'u')\
-			.replace('ñ', 'n')
+			# .replace('Ñ', 'N')\
+			# .replace('ñ', 'n')
 
 
 # Geolocation functions

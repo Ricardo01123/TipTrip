@@ -79,6 +79,16 @@ class BottomBar(Container):
 						)
 					),
 					IconButton(
+						icon=icons.FAVORITE,
+						icon_color=colors.BLACK,
+						icon_size=30,
+						# on_click=lambda _: go_to_view(
+						# 	page=page,
+						# 	logger=logger,
+						# 	route="chatbot"
+						# )
+					),
+					IconButton(
 						icon=icons.ACCOUNT_CIRCLE,
 						icon_color=(
 							MAIN_COLOR

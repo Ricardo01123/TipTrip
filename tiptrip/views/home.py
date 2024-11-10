@@ -18,6 +18,17 @@ logger = getLogger(f"{PROJECT_NAME}.{__name__}")
 class HomeView:
 	def __init__(self) -> None:
 		self.route = "/home"
+		# self.loading_ring: ProgressRing = ProgressRing(
+		# 	visible=False,
+		# 	stroke_align=-1,
+		# 	width=LOADING_RING_SIZE,
+		# 	height=LOADING_RING_SIZE,
+		# 	stroke_width=5,
+		# 	tooltip="Cargando...",
+		# 	color=SECONDARY_COLOR,
+		# 	left=(self.page.window.width // 2) - (LOADING_RING_SIZE // 2),
+		# 	top = (self.page.window.height // 2) - (LOADING_RING_SIZE // 2)
+		# )
 
 	def view(self, page: Page, params: Params, basket: Basket) -> View:
 		self.page = page
@@ -40,11 +51,11 @@ class HomeView:
 			]
 		)
 
-		self.drd_categories: Dropdown = Dropdown(
-			label="Filtrar por categoría",
+		self.drd_classification: Dropdown = Dropdown(
+			label="Filtrar por clasificación",
 			options=[
-				dropdown.Option(category)
-				for category in CATEGORIES
+				dropdown.Option(classification)
+				for classification in CLASSIFICATIONS
 			]
 		)
 
@@ -68,7 +79,7 @@ class HomeView:
 			title=Text("Filtrar sitios turísticos"),
 			content=Column(
 				controls=[
-					Container(content=self.drd_categories),
+					Container(content=self.drd_classification),
 					Container(content=self.drd_municipality),
 					Container(content=self.chk_distance),
 					Container(content=self.sld_distance),
@@ -216,6 +227,10 @@ class HomeView:
 			)
 		)
 
+		# self.loading_ring.left=(self.page.window.width // 2) - (LOADING_RING_SIZE // 2),
+		# self.loading_ring.top = (self.page.window.height // 2) - (LOADING_RING_SIZE // 2)
+		# self.page.overlay.append(self.loading_ring)
+
 		return View(
 			route=self.route,
 			bgcolor=colors.WHITE,
@@ -301,12 +316,15 @@ class HomeView:
 
 	def get_places(
 		self,
-		category: str = None,
+		classification: str = None,
 		municipality: str =  None,
 		distance: int = None,
-		current_position: tuple[float, float] = None
+		current_latitude: float = None,
+		current_longitude: float = None
 	) -> list | Container:
 		logger.info("Calling Back-End API...")
+		# self.loading_ring.visible = True
+		# self.page.splash = self.loading_ring
 		response: Response = get(
 			url=f"{BACK_END_URL}/{PLACES_ENDPOINT}",
 			headers={
@@ -314,10 +332,11 @@ class HomeView:
 				"Authorization": f"Bearer {self.basket.get('session_token')}"
 			},
 			json={
-				"category": category,
+				"classification": classification,
 				"municipality": municipality,
 				"distance": distance,
-				"current_position": current_position
+				"current_latitude": current_latitude,
+				"current_longitude": current_longitude
 			}
 		)
 
@@ -325,6 +344,8 @@ class HomeView:
 		if response.status_code == 200:
 			places: dict = response.json()["places"]
 			logger.info(f"Obtained a total of {len(places)} places...")
+			# self.loading_ring.visible = False
+			# self.page.splash = None
 			return [
 				PlaceCard(
 					page=self.page,
@@ -346,6 +367,8 @@ class HomeView:
 			]
 
 		elif response.status_code == 204:
+			# self.loading_ring.visible = False
+			# self.page.splash = None
 			return [
 				Container(
 					alignment=alignment.center,
@@ -361,6 +384,8 @@ class HomeView:
 			]
 
 		else:
+			# self.loading_ring.visible = False
+			# self.page.splash = None
 			return [
 				Container(
 					alignment=alignment.center,
@@ -459,7 +484,7 @@ class HomeView:
 	def clean_filters(self, _: ControlEvent) -> None:
 		logger.info("Cleaning filters...")
 		self.page.close(self.dlg_sites_filter)
-		self.drd_categories.value = None
+		self.drd_classification.value = None
 		self.drd_municipality.value = None
 		self.items: list = self.get_places()
 		self.lv_places_list.controls = self.items[0:self.items_per_page]
@@ -484,32 +509,31 @@ class HomeView:
 
 				logger.info("Checking if user's location is inside CDMX coordinates...")
 				position = self.gl.get_current_position()
+				current_latitude: float = position.latitude
+				current_longitude: float = position.longitude
 
-				# if is_inside_cdmx((position.latitude, position.longitude)):
+				# if is_inside_cdmx((position.current_latitude, position.current_longitude)):
 				# 	logger.info("User's location is inside CDMX coordinates...")
-				# 	distance: int = self.sld_distance.value
-				# 	current_position: tuple[float, float] = position.latitude, position.longitude
+				distance: int = int(self.sld_distance.value)
+				logger.info(f"User's location: ({current_latitude}, {current_longitude})")
 
 				# else:
 				# 	logger.warning("User's location is not inside CDMX coordinates...")
 				# 	distance = None
-				# 	current_position = None
-				distance: int = int(self.sld_distance.value)
-				current_position: tuple[float, float] = position.latitude, position.longitude
-				logger.info(f"User's location: {current_position}")
+				# 	current_latitude = None
+				# 	current_longitude = None
 
 		else:
 			logger.info("User did not select the distance filter. Skipping...")
 			distance = None
-			current_position = None
+			current_latitude = None
+			current_longitude = None
 
 		logger.info("Modifying db consult conditions...")
-		#! if self.drd_categories.value or self.drd_municipality.value:
-
 		self.items: list = self.get_places(
-			category=(
-				self.drd_categories.value
-				if self.drd_categories.value != ""
+			classification=(
+				self.drd_classification.value
+				if self.drd_classification.value != ""
 				else None
 			),
 			municipality=(
@@ -518,7 +542,8 @@ class HomeView:
 				else None
 			),
 			distance=distance,
-			current_position=current_position
+			current_latitude=current_latitude,
+			current_longitude=current_longitude
 		)
 
 		if isinstance(self.items[0], PlaceCard):

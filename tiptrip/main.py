@@ -4,11 +4,12 @@ from logging import basicConfig, getLogger, INFO
 from os import remove
 from os.path import exists, join
 
-from flet import app, Page
+from flet import *
 from flet_route import Routing
 
 from resources.config import *
 from resources.router import routes
+# from components.loading_ring import loading_ring
 
 
 basicConfig(level=INFO, format=LOGGING_FORMAT)
@@ -19,7 +20,12 @@ def main(page: Page) -> None:
 	logger.info(f"Starting app's navigation configurations...")
 	page.window.width = 412
 	page.window.height = 915
+	# loading_ring.left = (page.window.width // 2) - (LOADING_RING_SIZE // 2)
+	# loading_ring.top = (page.window.height // 2) - (LOADING_RING_SIZE // 2)
+	# page.overlay.append(loading_ring)
+
 	Routing(page=page, app_routes=routes)
+
 	# page.go("/loading")
 	# sleep(1)
 	# page.go("/sign_in")

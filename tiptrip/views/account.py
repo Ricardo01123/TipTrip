@@ -52,22 +52,20 @@ class AccountView:
 			on_dismiss=self.handle_ok_account_deleted
 		)
 
-		self.bnr_error: Banner = Banner(
-			bgcolor=colors.RED_50,
-			leading=Icon(
-				icons.ERROR_OUTLINE_ROUNDED,
-				color=colors.RED,
-				size=40
-			),
-			content=Text(value=""),
-			actions=[
-				TextButton(
-					text="Aceptar",
-					style=ButtonStyle(color=colors.BLUE),
-					on_click=self.bnr_handle_dismiss
+		self.dlg_error: AlertDialog = AlertDialog(
+			modal=True,
+			title=Text("Error al eliminar cuenta"),
+			content=Text(
+				value=(
+					"Ocurrió un error al eliminar la cuenta. "
+					"Favor de intentarlo de nuevo más tarde."
 				)
+			),
+			actions=[
+				TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
 			],
-			force_actions_below=True
+			actions_alignment=MainAxisAlignment.END,
+			on_dismiss=lambda _: self.page.close(self.dlg_error)
 		)
 
 	def view(self, page: Page, params: Params, basket: Basket) -> View:
@@ -262,10 +260,6 @@ class AccountView:
 		else:
 			return f"{name[:2].upper()}"
 
-	def bnr_handle_dismiss(self, _: ControlEvent) -> None:
-		self.bnr_error.content = Text(value="")
-		self.page.close(self.bnr_error)
-
 	def btn_delete_user_clicked(self, _: ControlEvent) -> None:
 		logger.info("Delete user button clicked")
 		self.page.open(self.dlg_confirm_delete_account)
@@ -292,11 +286,4 @@ class AccountView:
 		else:
 			logger.error("Error deleting account")
 			self.page.close(self.dlg_confirm_delete_account)
-			self.bnr_error.content = Text(
-				value=(
-					"Ocurrió un error al eliminar la cuenta. "
-					"Favor de intentarlo de nuevo más tarde."
-				),
-				style=TextStyle(color=colors.RED)
-			)
-			self.page.open(self.bnr_error)
+			self.page.open(self.dlg_error)

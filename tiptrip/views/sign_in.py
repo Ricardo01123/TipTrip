@@ -1,5 +1,4 @@
 from flet import *
-from re import match
 from logging import getLogger
 from requests import post, Response
 from flet_route import Params, Basket
@@ -24,17 +23,52 @@ class SignInView:
 		self.txt_email: TextField = TextField(
 			prefix_icon=icons.EMAIL,
 			hint_text="Correo electrónico",
-			on_change=self.validate,
 			**txt_style
 		)
 
 		self.txt_password: TextField = TextField(
 			prefix_icon=icons.LOCK,
 			hint_text="Contraseña",
-			on_change=self.validate,
 			password=True,
 			can_reveal_password=True,
 			**txt_style
+		)
+
+		self.lbl_email_required: Text = Text(
+			value = "Campo \"Correo electrónico\" requerido *",
+			style=TextStyle(color=colors.RED),
+			visible=False
+		)
+
+		self.lbl_password_required: Text = Text(
+			value = "Campo \"Contraseña\" requerido *",
+			style=TextStyle(color=colors.RED),
+			visible=False
+		)
+
+		self.dlg_not_found: AlertDialog = AlertDialog(
+			modal=True,
+			title=Text("Usuario no encontrado"),
+			content=Text("Usuario y/o contraseña incorrectos."),
+			actions=[
+				TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_not_found)),
+			],
+			actions_alignment=MainAxisAlignment.END,
+			on_dismiss=lambda _: self.page.close(self.dlg_not_found)
+		)
+
+		self.dlg_error: AlertDialog = AlertDialog(
+			modal=True,
+			title=Text("Error al iniciar sesión"),
+			content=Text(
+				"Ocurrió un error al intentar iniciar sesión. "
+				"Favor de intentarlo de nuevo más tarde."
+			),
+			actions=[
+				TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
+			],
+			actions_alignment=MainAxisAlignment.END,
+			on_dismiss=lambda _: self.page.close(self.dlg_error)
 		)
 
 	def view(self, page: Page, params: Params, basket: Basket) -> View:
@@ -45,7 +79,6 @@ class SignInView:
 		self.btn_submit: ElevatedButton = ElevatedButton(
 			width=self.page.width,
 			content=Text(value="Iniciar sesión", size=BTN_TEXT_SIZE),
-			disabled=True,
 			on_click=self.btn_submit_clicked,
 			**btn_primary_style
 		)
@@ -59,24 +92,6 @@ class SignInView:
 				route="sign_up"
 			),
 			**btn_secondary_style,
-		)
-
-		self.bnr_error: Banner = Banner(
-			bgcolor=colors.RED_50,
-			leading=Icon(
-				icons.ERROR_OUTLINE_ROUNDED,
-				color=colors.RED,
-				size=40
-			),
-			content=Text(value=""),
-			actions=[
-				TextButton(
-					text="Aceptar",
-					style=ButtonStyle(color=colors.BLUE),
-					on_click=self.bnr_handle_dismiss
-				)
-			],
-			force_actions_below=True
 		)
 
 		return View(
@@ -93,18 +108,20 @@ class SignInView:
 								top_margin=(SPACING * 2),
 							),
 							Container(
-								margin=margin.only(top=(SPACING * 4)),
+								margin=margin.only(top=(SPACING * 2)),
 								content=Column(
-									spacing=(SPACING * 1.5),
+									spacing=(SPACING / 2),
 									controls=[
 										Container(
 											height=TXT_CONT_SIZE,
 											content=self.txt_email
 										),
+										Container(content=self.lbl_email_required),
 										Container(
 											height=TXT_CONT_SIZE,
 											content=self.txt_password
 										),
+										Container(content=self.lbl_password_required),
 										Container(
 											content=TextButton(
 												content=Container(
@@ -141,14 +158,14 @@ class SignInView:
 										"Política de Privacidad da click "
 										"[aquí](https://www.google.com)."
 									),
-									code_style=TextStyle(
-										color=colors.BLACK
+									md_style_sheet=MarkdownStyleSheet(
+										p_text_style=TextStyle(color=colors.BLACK)
 									),
 									on_tap_link=lambda _: go_to_view(
 										page=self.page,
 										logger=logger,
 										route="privacy_politics"
-									),
+									)
 								)
 							)
 						]
@@ -158,60 +175,59 @@ class SignInView:
 			]
 		)
 
-	def validate(self, _: ControlEvent) -> None:
-		if match(pattern=RGX_EMAIL, string=self.txt_email.value) and self.txt_password.value:
-			self.btn_submit.disabled = False
+	def btn_submit_clicked(self, _: ControlEvent) -> None:
+		email_txt_filled: bool = False
+		password_txt_filled: bool = False
+
+		logger.info("Checking if login fields are filled...")
+		if not self.txt_email.value:
+			self.lbl_email_required.visible = True
+			email_txt_filled = False
 		else:
-			self.btn_submit.disabled = True
+			self.lbl_email_required.visible = False
+			email_txt_filled = True
+
+		if not self.txt_password.value:
+			self.lbl_password_required.visible = True
+			password_txt_filled = False
+		else:
+			self.lbl_password_required.visible = False
+			password_txt_filled = True
+
 		self.page.update()
 
-	def bnr_handle_dismiss(self, _: ControlEvent) -> None:
-		self.bnr_error.content = Text(value="")
-		self.page.close(self.bnr_error)
-
-	def btn_submit_clicked(self, _: ControlEvent) -> None:
-		logger.info("Checking if credentials exists in DB...")
-		response: Response = post(
-			url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
-			headers={"Content-Type": "application/json"},
-			json={
-				"mail": self.txt_email.value,
-				"password": self.txt_password.value
-			}
-		)
-
-		if response.status_code == 201:
-			data: dict = response.json()
-			logger.info("User authenticated successfully")
-
-			logger.info("Adding user data to session data...")
-			self.basket.email = self.txt_email.value
-			self.basket.id = data["id"]
-			self.basket.username = data["username"]
-			self.basket.session_token = data["token"]
-			self.basket.created_at = data["created_at"]
-
-			logger.info("Cleaning text fields...")
-			self.txt_email.value = ""
-			self.txt_password.value = ""
-
-			go_to_view(page=self.page, logger=logger, route="home")
-
-		elif response.status_code == 401 or response.status_code == 404:
-			logger.info("User and/or password are incorrect")
-			self.bnr_error.content = Text(
-				value="Usuario y/o contraseña incorrectos.",
-				style=TextStyle(color=colors.RED)
+		if email_txt_filled and password_txt_filled:
+			logger.info("Checking if credentials exists in DB...")
+			response: Response = post(
+				url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"mail": self.txt_email.value,
+					"password": self.txt_password.value
+				}
 			)
-			self.page.open(self.bnr_error)
 
-		else:
-			logger.error("An error occurred while trying to authenticate user")
-			self.bnr_error.content = Text(
-				value=(
-					"Ocurrió un error al iniciar sesión. "
-					"Favor de intentarlo de nuevo más tarde."
-				),
-				style=TextStyle(color=colors.RED)
-			)
-			self.page.open(self.bnr_error)
+			if response.status_code == 201:
+				data: dict = response.json()
+				logger.info("User authenticated successfully")
+
+				logger.info("Adding user data to session data...")
+				self.basket.id = data["id"]
+				self.basket.email = self.txt_email.value
+				self.basket.username = data["username"]
+				self.basket.session_token = data["token"]
+				self.basket.created_at = data["created_at"]
+
+				logger.info("Cleaning text fields...")
+				self.txt_email.value = ""
+				self.txt_password.value = ""
+
+				go_to_view(page=self.page, logger=logger, route="home")
+
+			elif response.status_code == 401 or response.status_code == 404:
+				logger.info("User and/or password are incorrect")
+				self.page.open(self.dlg_not_found)
+
+			else:
+				logger.error("An error occurred while authenticating the user")
+				self.page.open(self.dlg_error)

@@ -8,6 +8,7 @@ from resources.config import *
 from resources.styles import *
 from resources.functions import *
 from components.titles import MainTitle
+# from components.loading_ring import loading_ring
 
 
 logger = getLogger(f"{PROJECT_NAME}.{__name__}")
@@ -22,14 +23,12 @@ class SignUpView:
 		self.txt_username: TextField = TextField(
 			prefix_icon=icons.ACCOUNT_CIRCLE,
 			hint_text="Nombre de usuario",
-			on_change=self.validate,
 			**txt_style
 		)
 
 		self.txt_email: TextField = TextField(
 			prefix_icon=icons.EMAIL,
 			hint_text="Correo electrónico",
-			on_change=self.validate,
 			**txt_style
 		)
 
@@ -51,12 +50,6 @@ class SignUpView:
 			**txt_style
 		)
 
-		self.lbl_pwd_match: Text = Text(
-			value = "Las contraseñas no coinciden.",
-			style=TextStyle(color=colors.RED),
-			visible=False
-		)
-
 		self.chk_tyc: Checkbox = Checkbox(
 			label="",
 			value=False,
@@ -76,6 +69,9 @@ class SignUpView:
 							"Acepto los [Términos y Condiciones]"
 							"(https://www.google.com)."
 						),
+						md_style_sheet=MarkdownStyleSheet(
+							p_text_style=TextStyle(color=colors.BLACK)
+						),
 						on_tap_link=lambda _: go_to_view(
 							page=self.page,
 							logger=logger,
@@ -86,6 +82,42 @@ class SignUpView:
 			)
 		)
 
+		self.lbl_username_required: Text = Text(
+			value = "Campo requerido *",
+			style=TextStyle(color=colors.RED),
+			visible=False
+		)
+
+		self.lbl_email_required: Text = Text(
+			value = "Campo requerido *",
+			style=TextStyle(color=colors.RED),
+			visible=False
+		)
+
+		self.lbl_password_required: Text = Text(
+			value = "Campo requerido *",
+			style=TextStyle(color=colors.RED),
+			visible=False
+		)
+
+		self.lbl_confirm_password_required: Text = Text(
+			value = "Campo requerido *",
+			style=TextStyle(color=colors.RED),
+			visible=False
+		)
+
+		self.lbl_pwd_match: Text = Text(
+			value = "Las contraseñas no coinciden.",
+			style=TextStyle(color=colors.RED),
+			visible=False
+		)
+
+		self.lbl_tyc_required: Text = Text(
+			value = "Los términos y condiciones deben ser aceptados para continuar.",
+			style=TextStyle(color=colors.RED),
+			visible=False
+		)
+
 		self.dlg_success: AlertDialog = AlertDialog(
 			modal=True,
 			title=Text("Usuario creado"),
@@ -94,25 +126,18 @@ class SignUpView:
 				TextButton("Aceptar", on_click=self.dlg_handle_ok_button),
 			],
 			actions_alignment=MainAxisAlignment.END,
-			on_dismiss=lambda _: self.page.close(self.dlg_geolocator_info)
+			on_dismiss=self.dlg_handle_ok_button
 		)
 
-		self.bnr_error: Banner = Banner(
-			bgcolor=colors.RED_50,
-			leading=Icon(
-				icons.ERROR_OUTLINE_ROUNDED,
-				color=colors.RED,
-				size=40
-			),
-			content=Text(value=""),
+		self.dlg_error: AlertDialog = AlertDialog(
+			modal=True,
+			title=Text(""),
+			content=Text(""),
 			actions=[
-				TextButton(
-					text="Aceptar",
-					style=ButtonStyle(color=colors.BLUE),
-					on_click=self.bnr_handle_dismiss
-				)
+				TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
 			],
-			force_actions_below=True
+			actions_alignment=MainAxisAlignment.END,
+			on_dismiss=lambda _: self.page.close(self.dlg_error)
 		)
 
 	def view(self, page: Page, params: Params, basket: Basket) -> View:
@@ -126,7 +151,6 @@ class SignUpView:
 				value="Crear cuenta",
 				size=BTN_TEXT_SIZE
 			),
-			disabled=True,
 			on_click=self.btn_submit_clicked,
 			**btn_primary_style
 		)
@@ -137,13 +161,22 @@ class SignUpView:
 				value="Regresar a Iniciar sesión",
 				size=BTN_TEXT_SIZE
 			),
-			on_click=lambda _: go_to_view(
-				page=self.page,
-				logger=logger,
-				route=""  # '/'
-			),
+			on_click=self.handle_btn_back,
 			**btn_secondary_style
 		)
+
+		# self.loading_ring: ProgressRing = ProgressRing(
+		# 	visible=False,
+		# 	stroke_align=-1,
+		# 	width=LOADING_RING_SIZE,
+		# 	height=LOADING_RING_SIZE,
+		# 	stroke_width=5,
+		# 	tooltip="Cargando...",
+		# 	color=SECONDARY_COLOR,
+		# 	left=(self.page.window.width // 2) - (LOADING_RING_SIZE // 2),
+		# 	top = (self.page.window.height // 2) - (LOADING_RING_SIZE // 2)
+		# )
+		# self.page.overlay.append(self.loading_ring)
 
 		return View(
 			route="/sign_up",
@@ -166,12 +199,12 @@ class SignUpView:
 							),
 							MainTitle(
 								subtitle="Registrarse",
-								top_margin=SPACING
+								top_margin=(SPACING / 2)
 							),
 							Container(
-								margin=margin.only(top=SPACING),
+								margin=margin.only(top=(SPACING / 2)),
 								content=Column(
-									spacing=SPACING,
+									# spacing=(SPACING),
 									controls=[
 										Text(
 											value=(
@@ -183,30 +216,31 @@ class SignUpView:
 										),
 										Container(
 											content=Column(
-												spacing=SPACING,
+												# spacing=SPACING,
 												controls=[
 													Container(
 														height=TXT_CONT_SIZE,
 														content=self.txt_username,
 													),
+													Container(content=self.lbl_username_required),
 													Container(
 														height=TXT_CONT_SIZE,
 														content=self.txt_email,
 													),
+													Container(content=self.lbl_email_required),
 													Container(
 														height=TXT_CONT_SIZE,
 														content=self.txt_password,
 													),
+													Container(content=self.lbl_password_required),
 													Container(
 														height=TXT_CONT_SIZE,
 														content=self.txt_confirm_password,
 													),
-													Container(
-														content=self.lbl_pwd_match
-													),
-													Container(
-														content=self.cont_tyc
-													)
+													Container(content=self.lbl_confirm_password_required),
+													Container(content=self.lbl_pwd_match),
+													Container(content=self.cont_tyc),
+													Container(content=self.lbl_tyc_required)
 												]
 											)
 										)
@@ -214,7 +248,7 @@ class SignUpView:
 								)
 							),
 							Container(
-								margin=margin.only(top=SPACING),
+								margin=margin.only(top=(SPACING / 2)),
 								content=Column(
 									controls=[
 										self.btn_submit,
@@ -231,27 +265,27 @@ class SignUpView:
 		)
 
 	def validate(self, _: ControlEvent) -> None:
-		if self.txt_password.value != self.txt_confirm_password.value:
-			self.lbl_pwd_match.visible = True
-			self.page.update()
+		if self.txt_password.value != "" or self.txt_confirm_password.value != "":
+			if self.txt_password.value:
+				self.lbl_password_required.visible = False
+
+			if self.txt_confirm_password.value:
+				self.lbl_confirm_password_required.visible = False
+
+			if self.txt_password.value != self.txt_confirm_password.value:
+				self.lbl_pwd_match.visible = True
+			else:
+				self.lbl_pwd_match.visible = False
+
 		else:
 			self.lbl_pwd_match.visible = False
-			self.page.update()
 
-		if self.lbl_pwd_match.visible == False and all([
-			self.txt_username.value,
-			match(pattern=RGX_EMAIL, string=self.txt_email.value),
-			self.txt_password.value,
-			self.txt_confirm_password.value,
-			self.chk_tyc.value
-		]):
-			self.btn_submit.disabled = False
-		else:
-			self.btn_submit.disabled = True
 		self.page.update()
 
 	def dlg_handle_ok_button(self, _: ControlEvent) -> None:
 		self.page.close(self.dlg_success)
+		# self.page.splash = loading_ring
+		# self.loading_ring.visible = True
 		logger.info("Authenticating user...")
 
 		response: Response = post(
@@ -281,60 +315,155 @@ class SignUpView:
 			self.txt_confirm_password.value = ""
 			self.chk_tyc.value = False
 
+			# self.page.splash = None
+			# self.loading_ring.visible = False
 			go_to_view(page=self.page, logger=logger, route="home")
 
 		else:
 			logger.error("An error occurred while trying to authenticate user")
-			self.bnr_error.content = Text(
+			self.dlg_error.title = Text(value="Error al iniciar sesión")
+			self.dlg_error.content = Text(
 				value=(
 					"Ocurrió un error al iniciar sesión. "
 					"Favor de intentarlo de nuevo más tarde."
-				),
-				style=TextStyle(color=colors.RED)
+				)
 			)
-			self.page.open(self.bnr_error)
+			# self.page.splash = None
+			# self.loading_ring.visible = False
+			self.page.open(self.dlg_error)
 
-	def dlg_handle_dismiss(self, _: ControlEvent) -> None:
-		self.page.close(self.dlg_success)
+	def handle_btn_back(self, _: ControlEvent) -> None:
+		logger.info("Cleaning text fields...")
+		self.txt_username.value = ""
+		self.txt_email.value = ""
+		self.txt_password.value = ""
+		self.txt_confirm_password.value = ""
 
-	def bnr_handle_dismiss(self, _: ControlEvent) -> None:
-		self.bnr_error.content = Text(value="")
-		self.page.close(self.bnr_error)
+		logger.info("Cleaning required messages...")
+		self.lbl_username_required.visible = False
+		self.lbl_email_required.visible = False
+		self.lbl_password_required.visible = False
+		self.lbl_confirm_password_required.visible = False
+		self.lbl_pwd_match.visible = False
+		self.lbl_tyc_required.visible = False
+
+		go_to_view(page=self.page, logger=logger, route="") # '/'
 
 	def btn_submit_clicked(self, _: ControlEvent) -> None:
-		logger.info("Creating new user...")
-		response: Response = post(
-			url=f"{BACK_END_URL}/{USERS_ENDPOINT}",
-			headers={"Content-Type": "application/json"},
-			json={
-				"username": self.txt_username.value,
-				"mail": self.txt_email.value,
-				"password": self.txt_password.value,
-			}
-		)
+		username_txt_filled: bool = False
+		email_txt_filled: bool = False
+		password_txt_filled: bool = False
+		confirm_password_txt_filled: bool = False
 
-		if response.status_code == 201:
-			logger.info("New user created successfully")
-			self.page.open(self.dlg_success)
-
-		elif response.status_code == 409:
-			logger.error("Email already exists")
-			self.bnr_error.content = Text(
-				value=(
-					"El correo electrónico proporcionado ya fue usado.\n"
-					"Favor de usar uno diferente."
-				),
-				style=TextStyle(color=colors.RED)
-			)
-			self.page.open(self.bnr_error)
-
+		logger.info("Checking if sign up fields are filled...")
+		if not self.txt_username.value:
+			self.lbl_username_required.visible = True
+			username_txt_filled = False
 		else:
-			logger.error("Error creating user")
-			self.bnr_error.content = Text(
-				value=(
-					"Ocurrió un error al crear el usuario. "
-					"Favor de intentarlo de nuevo más tarde."
-				),
-				style=TextStyle(color=colors.RED)
-			)
-			self.page.open(self.bnr_error)
+			self.lbl_username_required.visible = False
+			username_txt_filled = True
+
+		if not self.txt_email.value:
+			self.lbl_email_required.visible = True
+			email_txt_filled = False
+		else:
+			self.lbl_email_required.visible = False
+			email_txt_filled = True
+
+		if not self.txt_password.value:
+			self.lbl_password_required.visible = True
+			password_txt_filled = False
+		else:
+			self.lbl_password_required.visible = False
+			password_txt_filled = True
+
+		if not self.txt_confirm_password.value:
+			self.lbl_confirm_password_required.visible = True
+			confirm_password_txt_filled = False
+		else:
+			self.lbl_confirm_password_required.visible = False
+			confirm_password_txt_filled = True
+
+		if not self.chk_tyc.value:
+			self.lbl_tyc_required.visible = True
+		else:
+			self.lbl_tyc_required.visible = False
+
+		self.page.update()
+
+		if all([
+			username_txt_filled,
+			email_txt_filled,
+			password_txt_filled,
+			confirm_password_txt_filled,
+			self.chk_tyc.value
+		]):
+			if self.lbl_pwd_match.visible:
+				logger.info("Passwords do not match. Aborting process...")
+				self.dlg_error.title = Text(value="Las contraseñas no coinciden")
+				self.dlg_error.content = Text(value="Las contraseñas no coinciden. Favor de verificarlas.")
+				self.page.open(self.dlg_error)
+
+			elif not match(pattern=RGX_EMAIL, string=self.txt_email.value):
+				logger.info("Invalid email format. Aborting process...")
+				self.dlg_error.title = Text(value="Formato de correo inválido")
+				self.dlg_error.content = Text(value="El correo electrónico ingresado no es válido. Favor de verificarlo.")
+				self.page.open(self.dlg_error)
+
+			# if self.lbl_pwd_match.visible == False and all([
+			# 	self.txt_username.value,
+			# 	match(pattern=RGX_EMAIL, string=self.txt_email.value),
+			# 	self.txt_password.value,
+			# 	self.txt_confirm_password.value,
+			# 	self.chk_tyc.value
+			# ]):
+			# 	self.btn_submit.disabled = False
+			# else:
+			# 	self.btn_submit.disabled = True
+			# self.page.update()
+
+			else:
+				logger.info("Creating new user...")
+				# self.page.splash = loading_ring
+				# self.loading_ring.visible = True
+				response: Response = post(
+					url=f"{BACK_END_URL}/{USERS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"username": self.txt_username.value,
+						"mail": self.txt_email.value,
+						"password": self.txt_password.value,
+					}
+				)
+
+				if response.status_code == 201:
+					logger.info("New user created successfully")
+					# self.page.splash = None
+					# self.loading_ring.visible = False
+					self.page.open(self.dlg_success)
+
+				elif response.status_code == 409:
+					logger.error("Email already exists")
+					# self.page.splash = None
+					# self.loading_ring.visible = False
+					self.dlg_error.title = Text(value="Error al crear usuario")
+					self.dlg_error.content = Text(
+						value=(
+							"El correo electrónico proporcionado ya fue usado.\n"
+							"Favor de usar uno diferente."
+						),
+					)
+					self.page.open(self.dlg_error)
+
+				else:
+					logger.error("Error creating user")
+					# self.page.splash = None
+					# self.loading_ring.visible = False
+					self.dlg_error.title = Text(value="Error al crear usuario")
+					self.dlg_error.content = Text(
+						value=(
+							"Ocurrió un error al crear el usuario. "
+							"Favor de intentarlo de nuevo más tarde."
+						)
+					)
+					self.page.open(self.dlg_error)

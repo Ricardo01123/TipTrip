@@ -43,13 +43,19 @@ class ChangePasswordView:
 			**txt_style
 		)
 
+		self.lbl_email_required: Text = Text(
+			value = "Campo \"Correo electrónico\" requerido *",
+			style=TextStyle(color=colors.RED),
+			visible=False
+		)
+
 		self.cont_email: Container = Container(
 			content=Column(
 				controls=[
 					Container(
 						content=Text(
 							value=(
-								"Ingresa tu correo electrónico "
+								"Verifica tu correo electrónico "
 								"para cambiar tu contraseña:"
 							),
 							color=colors.BLACK

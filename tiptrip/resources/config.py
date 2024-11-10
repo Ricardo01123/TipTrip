@@ -35,6 +35,8 @@ PLACE_DETAILS_IMAGE_WIDTH: int = 300
 PLACE_DETAILS_IMAGE_HEIGHT: int = 270
 PLACE_DETAILS_CONT_TITLE_HEIGHT: int = 80
 
+LOADING_RING_SIZE: int = 50
+
 # Other variables
 LOGGING_FORMAT: str = "[%(asctime)s] %(levelname)s in %(name)s: %(message)s"
 RGX_EMAIL: str = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
@@ -87,7 +89,7 @@ MUNICIPALITIES: list[str] = [
 	"Xochimilco"
 ]
 
-CATEGORIES: list[str] = [
+CLASSIFICATIONS: list[str] = [
 	"Arquitectura",
 	"Centro cultural",
 	"Centro religioso",

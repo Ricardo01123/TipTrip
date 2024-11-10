@@ -25,21 +25,33 @@ class Message(Container):
 					else SECONDARY_COLOR
 				)
 			),
-			content=Text(
-				value=(
-					message
-					if "ERROR" not in message
-					else (
-						SPEECH_RECOGNITION_ERROR_MESSAGE
-						if message == "SPEECH_RECOGNITION_ERROR"
-						else AGENT_ERROR_MESSAGE
+			content=(
+				Markdown(
+					value=message,
+					md_style_sheet=MarkdownStyleSheet(
+						p_text_style=TextStyle(
+							color=colors.BLACK,
+							size=MESSAGE_TEXT_SIZE
+						)
 					)
-				),
-				color=(
-					colors.BLACK
-					if is_bot and "ERROR" not in message
-					else colors.WHITE
-				),
-				size=MESSAGE_TEXT_SIZE
+				)
+				if is_bot else
+				Text(
+					value=(
+						message
+						if "ERROR" not in message
+						else (
+							SPEECH_RECOGNITION_ERROR_MESSAGE
+							if message == "SPEECH_RECOGNITION_ERROR"
+							else AGENT_ERROR_MESSAGE
+						)
+					),
+					color=(
+						colors.BLACK
+						if is_bot and "ERROR" not in message
+						else colors.WHITE
+					),
+					size=MESSAGE_TEXT_SIZE
+				)
 			)
 		)

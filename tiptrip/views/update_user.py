@@ -1,6 +1,6 @@
 from flet import *
 from re import match
-from time import sleep
+from typing import Any
 from os.path import join
 from shutil import copyfile
 from logging import getLogger
@@ -27,33 +27,15 @@ class UpdateUserView:
 		self.txt_password = None
 		self.txt_confirm_password = None
 
-		self.bnr_error: Banner = Banner(
-			bgcolor=colors.RED_50,
-			leading=Icon(
-				icons.ERROR_OUTLINE_ROUNDED,
-				color=colors.RED,
-				size=40
-			),
-			content=Text(value=""),
-			actions=[
-				TextButton(
-					text="Aceptar",
-					style=ButtonStyle(color=colors.BLUE),
-					on_click=self.bnr_handle_dismiss
-				)
-			],
-			force_actions_below=True
-		)
-
 		self.dlg_updated_data: AlertDialog = AlertDialog(
 			modal=True,
 			title=Text("Datos actulizados"),
-			content=Text("Sus datos han sido actualizado correctamente."),
+			content=Text("Sus datos han sido actualizados correctamente."),
 			actions=[
 				TextButton("Aceptar", on_click=self.handle_dlg_updated_data),
 			],
 			actions_alignment=MainAxisAlignment.END,
-			on_dismiss=self.handle_dlg_updated_data_dismiss
+			on_dismiss=self.handle_dlg_updated_data
 		)
 
 		self.dlg_updated_image: AlertDialog = AlertDialog(
@@ -64,7 +46,18 @@ class UpdateUserView:
 				TextButton("Aceptar", on_click=self.handle_dlg_updated_image),
 			],
 			actions_alignment=MainAxisAlignment.END,
-			on_dismiss=self.handle_dlg_updated_image_dismiss
+			on_dismiss=self.handle_dlg_updated_image
+		)
+
+		self.dlg_error: AlertDialog = AlertDialog(
+			modal=True,
+			title=Text(""),
+			content=Text(""),
+			actions=[
+				TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
+			],
+			actions_alignment=MainAxisAlignment.END,
+			on_dismiss=lambda _: self.page.close(self.dlg_error)
 		)
 
 	def view(self, page: Page, params: Params, basket: Basket) -> View:
@@ -78,7 +71,6 @@ class UpdateUserView:
 			prefix_icon=icons.ACCOUNT_CIRCLE,
 			hint_text="Nuevo nombre de usuario",
 			value=self.basket.get("username"),
-			on_change=self.validate,
 			**txt_style
 		)
 
@@ -86,7 +78,6 @@ class UpdateUserView:
 			prefix_icon=icons.EMAIL,
 			hint_text="Nuevo correo electrónico",
 			value=self.basket.get("email"),
-			on_change=self.validate,
 			**txt_style
 		)
 
@@ -211,7 +202,7 @@ class UpdateUserView:
 							),
 							Container(
 								content=Column(
-									spacing=SPACING,
+									spacing=(SPACING / 2),
 									controls=[
 										Container(
 											height=TXT_CONT_SIZE,
@@ -266,77 +257,82 @@ class UpdateUserView:
 		if self.txt_password.value != "" or self.txt_confirm_password.value != "":
 			if self.txt_password.value != self.txt_confirm_password.value:
 				self.lbl_pwd_match.visible = True
-				self.btn_submit.disabled = True
 			else:
 				self.lbl_pwd_match.visible = False
-				self.btn_submit.disabled = False
 
-		if self.lbl_pwd_match.visible == False and all([
-			self.txt_username.value,
-			match(pattern=RGX_EMAIL, string=self.txt_email.value)
-		]):
-			self.btn_submit.disabled = False
 		else:
-			self.btn_submit.disabled = True
+			self.lbl_pwd_match.visible = False
+
 		self.page.update()
 
 	def btn_submit_clicked(self, _: ControlEvent) -> None:
-		logger.info("Submit button clicked, initiating process to update user data...")
+		if self.lbl_pwd_match.visible:
+			logger.info("Passwords do not match. Aborting process...")
+			self.dlg_error.title = Text(value="Las contraseñas no coinciden")
+			self.dlg_error.content = Text(value="Las contraseñas no coinciden. Favor de verificarlas.")
+			self.page.open(self.dlg_error)
 
-		payload = {"mail": self.basket.get("email")}
-
-		logger.info("Checking what fields have changed...")
-		if self.txt_email.value != self.basket.get("email"):
-			payload["mail"] = self.txt_email.value
-		if self.txt_username.value != self.basket.get("username"):
-			payload["username"] = self.txt_username.value
-		if self.txt_password.value != "":
-			payload["password"] = self.txt_password.value
-
-		if len(payload) == 1:
-			logger.info("No changes detected, aborting process...")
-			self.bnr_error.content = Text(
-				value="No se detectaron cambios en tus datos.\nAbandonando proceso...",
-				style=TextStyle(color=colors.RED)
-			)
-
-			self.page.open(self.bnr_error)
-			sleep(3)
-			self.page.close(self.bnr_error)
-
-			go_to_view(page=self.page, logger=logger, route="account")
+		elif not match(pattern=RGX_EMAIL, string=self.txt_email.value):
+			logger.info("Invalid email format. Aborting process...")
+			self.dlg_error.title = Text(value="Formato de correo inválido")
+			self.dlg_error.content = Text(value="El correo electrónico ingresado no es válido. Favor de verificarlo.")
+			self.page.open(self.dlg_error)
 
 		else:
-			logger.info("Making request to update user...")
-			response: Response = put(
-				url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.basket.get('id')}",
-				headers={
-					"Content-Type": "application/json",
-					"Authorization": f"Bearer {self.basket.get('session_token')}"
-				},
-				json=payload
-			)
+			logger.info("Submit button clicked, initiating process to update user data...")
+			data_changed: bool = False
+			payload: dict[str, Any] = {"mail": self.basket.get("email")}
 
-			if response.status_code == 201:
-				logger.info("User updated successfully")
-				self.basket.email = self.txt_email.value
-				self.basket.username = self.txt_username.value
+			logger.info("Checking what fields have changed...")
+			if self.txt_email.value != self.basket.get("email"):
+				data_changed = True
+				payload["mail"] = self.txt_email.value
+			if self.txt_username.value != self.basket.get("username"):
+				data_changed = True
+				payload["username"] = self.txt_username.value
+			if self.txt_password.value != "":
+				data_changed = True
+				payload["password"] = self.txt_password.value
 
-				logger.info("Cleaning text fields...")
-				self.txt_password.value = ""
-				self.txt_confirm_password.value = ""
-
-				self.page.open(self.dlg_updated_data)
+			if not data_changed:
+				logger.info("No changes detected, aborting process...")
+				self.dlg_error.title = Text(value="Sin cambios detectados")
+				self.dlg_error.content = Text(value="No se detectaron cambios en tus datos. Abortando...")
+				self.page.open(self.dlg_error)
+				# go_to_view(page=self.page, logger=logger, route="account")
 
 			else:
-				logger.error("Error updating user")
-				self.bnr_error.content = Text(
-					value=(
-						"Ocurrió un error al intentar actualizar tus datos. "
-						"Favor de intentarlo de nuevo más tarde."
-					)
+				logger.info("Making request to update user...")
+				response: Response = put(
+					url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.basket.get('id')}",
+					headers={
+						"Content-Type": "application/json",
+						"Authorization": f"Bearer {self.basket.get('session_token')}"
+					},
+					json=payload
 				)
-				self.page.open(self.bnr_error)
+
+				if response.status_code == 201:
+					logger.info("User updated successfully")
+					self.basket.email = self.txt_email.value
+					self.basket.username = self.txt_username.value
+
+					logger.info("Cleaning text fields...")
+					self.txt_password.value = ""
+					self.txt_confirm_password.value = ""
+
+					self.page.open(self.dlg_updated_data)
+
+				else:
+					logger.error("Error updating user")
+					self.dlg_error.title = Text(value="Error al actualizar datos")
+					self.dlg_error.content = Text(
+						value=(
+							"Ocurrió un error al intentar actualizar tus datos. "
+							"Favor de intentarlo de nuevo más tarde."
+						)
+					)
+					self.page.open(self.dlg_error)
 
 	def btn_back_clicked(self, _: ControlEvent) -> None:
 		logger.info("Back button clicked, discarding changes...")
@@ -361,14 +357,14 @@ class UpdateUserView:
 
 			else:
 				logger.error("Error saving new image.")
-				self.bnr_error.content = Text(
+				self.dlg_error.title = Text(value="Error al guardar la nueva imagen")
+				self.dlg_error.content = Text(
 					value=(
-						"Ocurrió un error al intentar guardar la nueva imagen.\n"
+						"Ocurrió un error al intentar guardar la nueva imagen. "
 						"Favor de intentarlo de nuevo más tarde."
-					),
-					style=TextStyle(color=colors.RED)
+					)
 				)
-				self.page.open(self.bnr_error)
+				self.page.open(self.dlg_error)
 		else:
 			logger.info("No image selected. Aborting...")
 
@@ -376,15 +372,6 @@ class UpdateUserView:
 		self.page.close(self.dlg_updated_data)
 		go_to_view(page=self.page, logger=logger, route="account")
 
-	def handle_dlg_updated_data_dismiss(self, _: ControlEvent) -> None:
-		self.page.close(self.dlg_updated_data)
-
 	def handle_dlg_updated_image(self, _: ControlEvent) -> None:
 		self.page.close(self.dlg_updated_image)
 		go_to_view(page=self.page, logger=logger, route="account")
-
-	def handle_dlg_updated_image_dismiss(self, _: ControlEvent) -> None:
-		self.page.close(self.dlg_updated_image)
-
-	def bnr_handle_dismiss(self, _: ControlEvent) -> None:
-		self.page.close(self.bnr_error)
