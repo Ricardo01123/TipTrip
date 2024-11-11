@@ -165,6 +165,23 @@ class HomeView:
 			on_dismiss=lambda _: self.page.close(self.dlg_location_permissions_succeded)
 		)
 
+		self.dlg_location_outside_cdmx: AlertDialog = AlertDialog(
+			modal=True,
+			title=Text("Ubicación fuera de CDMX"),
+			content=Text(
+				"Tu ubicación actual no se encuentra dentro de los límites de la Ciudad de México, "
+				"por lo que no se puede aplicar el filtro de cercanía."
+			),
+			actions_alignment=MainAxisAlignment.END,
+			actions=[
+				TextButton(
+					text="Aceptar",
+					on_click=lambda _: self.page.close(self.dlg_location_outside_cdmx)
+				)
+			],
+			on_dismiss=lambda _: self.page.close(self.dlg_location_outside_cdmx)
+		)
+
 		# Places and pagination variables
 		self.items: list | Container = self.get_places()
 
@@ -402,16 +419,16 @@ class HomeView:
 
 	def hide_show_slider(self, _: ControlEvent) -> None:
 		logger.info("Checking location permissions...")
-		if not is_location_permission_enabled(self.gl, logger):
-			logger.warning("Location permissions are not granted...")
-			logger.info("Requesting location permissions...")
-			self.page.open(self.dlg_request_location_permission)
-
-		else:
+		if is_location_permission_enabled(self.gl, logger):
 			logger.info("Location permissions are granted...")
 			logger.info("Updating slider status...")
 			self.sld_distance.disabled = not self.chk_distance.value
 			self.page.update()
+
+		else:
+			logger.warning("Location permissions are not granted...")
+			logger.info("Requesting location permissions...")
+			self.page.open(self.dlg_request_location_permission)
 
 	def handle_accept_location_permission(self, _: ControlEvent) -> None:
 		if request_location_permissions(self.gl, logger):
@@ -429,13 +446,6 @@ class HomeView:
 			self.sld_distance.disabled = True
 			self.page.update()
 			self.page.open(self.dlg_location_permissions_failed)
-			# self.open_location_permissions_failed_dialog()
-
-	# def open_location_permissions_failed_dialog(self) -> None:
-	# 	self.chk_distance.value = False
-	# 	self.sld_distance.disabled = True
-	# 	self.page.update()
-	# 	self.page.open(self.dlg_location_permissions_failed)
 
 	def handle_cancel_location_permission(self, _: ControlEvent) -> None:
 		logger.warning("User canceled location permission request...")
@@ -487,28 +497,30 @@ class HomeView:
 
 		if self.chk_distance.value:
 			logger.info("Checking location permissions...")
-			if not self.gl.is_location_service_enabled():
-				logger.warning("Location services are not enabled...")
-				logger.info("Requesting location services...")
-				self.gl.open_location_settings()
-			else:
-				logger.info("Location services are enabled...")
+			if not is_location_permission_enabled(self.gl, logger):
+				logger.warning("Location permissions are not granted...")
+				logger.info("Requesting location permissions...")
+				self.page.open(self.dlg_request_location_permission)
 
-				logger.info("Checking if user's location is inside CDMX coordinates...")
+			else:
+				logger.info("Location permissions are granted...")
+				logger.info("Getting user's location...")
 				position = self.gl.get_current_position()
 				current_latitude: float = position.latitude
 				current_longitude: float = position.longitude
-
-				# if is_inside_cdmx((position.current_latitude, position.current_longitude)):
-				# 	logger.info("User's location is inside CDMX coordinates...")
-				distance: int = int(self.sld_distance.value)
 				logger.info(f"User's location: ({current_latitude}, {current_longitude})")
 
-				# else:
-				# 	logger.warning("User's location is not inside CDMX coordinates...")
-				# 	distance = None
-				# 	current_latitude = None
-				# 	current_longitude = None
+				logger.info("Checking if user's location is inside CDMX coordinates...")
+				if is_inside_cdmx((current_latitude, current_longitude)):
+					logger.info("User's location is inside CDMX coordinates. Continuing...")
+					distance: int = int(self.sld_distance.value)
+
+				else:
+					logger.warning("User's location is not inside CDMX coordinates. Skipping...")
+					distance = None
+					current_latitude = None
+					current_longitude = None
+					self.page.open(self.dlg_location_outside_cdmx)
 
 		else:
 			logger.info("User did not select the distance filter. Skipping...")
