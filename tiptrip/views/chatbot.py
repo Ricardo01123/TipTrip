@@ -27,6 +27,115 @@ class ChatbotView:
 		self.record_flag: bool = False
 		self.audio_players: list = []
 
+		self.swt_audio_user: Switch = Switch(
+			value=True,
+			adaptive=True,
+			active_color=colors.WHITE,
+			active_track_color=SECONDARY_COLOR,
+			on_change=self.swt_audio_user_changed
+		)
+
+		self.swt_audio_agent: Switch = Switch(
+			value=True,
+			adaptive=True,
+			active_color=colors.WHITE,
+			active_track_color=SECONDARY_COLOR,
+			on_change=self.swt_audio_agent_changed
+		)
+
+		self.epl_settings: ExpansionTile = ExpansionTile(
+			trailing=Icon(
+				name=icons.KEYBOARD_ARROW_DOWN,
+				color=colors.BLACK,
+				size=22
+			),
+			title=Text(
+				value="Configuraciones de chat",
+				color=colors.BLACK,
+				size=16
+			),
+			tile_padding=padding.symmetric(horizontal=SPACING),
+			controls=[
+				Container(
+					padding=padding.symmetric(horizontal=SPACING),
+					content=Divider(color=colors.BLACK)
+				),
+				ListTile(
+					content_padding=padding.symmetric(horizontal=SPACING),
+					title=Text(
+						value="Preguntar al chatbot usando:",
+						color=colors.BLACK,
+						size=16
+					)
+				),
+				Container(
+					content=Row(
+						alignment=MainAxisAlignment.SPACE_EVENLY,
+						controls=[
+							Text(
+								value="Sólo texto",
+								color=colors.BLACK,
+								size=16
+							),
+							self.swt_audio_user,
+							Text(
+								value="Texto o audio",
+								color=colors.BLACK,
+								size=16
+							)
+						]
+					)
+				),
+				Container(
+					padding=padding.symmetric(horizontal=SPACING),
+					content=Divider(color=colors.BLACK)
+				),
+				ListTile(
+					content_padding=padding.symmetric(horizontal=SPACING),
+					title=Text(
+						value="Respuestas del chatbot usando:",
+						color=colors.BLACK,
+						size=16
+					)
+				),
+				Container(
+					content=Row(
+						alignment=MainAxisAlignment.SPACE_EVENLY,
+						controls=[
+							Text(
+								value="Texto",
+								color=colors.BLACK,
+								size=16
+							),
+							self.swt_audio_agent,
+							Text(
+								value="Audio",
+								color=colors.BLACK,
+								size=16
+							)
+						]
+					)
+				),
+				Container(
+					padding=padding.symmetric(horizontal=SPACING),
+					content=Divider(color=colors.BLACK)
+				),
+				ListTile(
+					content_padding=padding.only(
+						top=0,
+						right=SPACING,
+						bottom=SPACING,
+						left=SPACING
+					),
+					title=Text(
+						value="Consideraciones a tomar en cuenta:",
+						color=colors.BLACK,
+						size=16
+					)
+				)
+			]
+		)
+
 		self.txt_message: TextField = TextField(
 			hint_text="Escribe un mensaje",
 			on_change=self.validate,
@@ -93,7 +202,7 @@ class ChatbotView:
 				TopBar(page=self.page, leading=True, logger=logger),
 				Container(
 					width=self.page.width,
-					height=RADIUS,
+					# height=50,
 					bgcolor=MAIN_COLOR,
 					border_radius=border_radius.only(
 						bottom_left=RADIUS,
@@ -103,6 +212,25 @@ class ChatbotView:
 						blur_radius=BLUR,
 						color=colors.GREY_800
 					),
+					content=self.epl_settings
+					# content=Row(
+					# 	alignment=MainAxisAlignment.SPACE_EVENLY,
+					# 	controls=[
+					# 		Container(
+					# 			content=Text(
+					# 				value="Responder con texto",
+					# 				color=colors.BLACK,
+					# 			)
+					# 		),
+					# 		Container(content=self.swt_audio_agent),
+					# 		Container(
+					# 			content=Text(
+					# 				value="Responder con audio",
+					# 				color=colors.BLACK,
+					# 			)
+					# 		)
+					# 	]
+					# )
 				),
 				Container(
 					expand=True,
@@ -170,23 +298,23 @@ class ChatbotView:
 				)
 			)
 		else:
-			if not "ERROR" in message:
-				logger.info("Adding agent message while process the user message...")
-				self.lv_chat.controls.append(
-					Row(
-						alignment=MainAxisAlignment.START,
-						controls=[
-							Container(
-								expand=9,
-								expand_loose=True,
-								content=Message(is_bot=is_bot, message=message)
-							),
-							Container(expand=1)
-						]
-					)
+			logger.info("Adding agent message while process the user message...")
+			self.lv_chat.controls.append(
+				Row(
+					alignment=MainAxisAlignment.START,
+					controls=[
+						Container(
+							expand=9,
+							expand_loose=True,
+							content=Message(is_bot=is_bot, message=message)
+						),
+						Container(expand=1)
+					]
 				)
-				self.page.update()
+			)
+			self.page.update()
 
+			if not "ERROR" in message:
 				logger.info("Calling the back-end agent to process the user message...")
 				# logger.info("User is asking for nearby places. Getting user location...")
 				response: Response = post(
@@ -202,7 +330,6 @@ class ChatbotView:
 					}
 				)
 
-				logger.info(f"Agent endpoint response received {response.status_code}")
 				logger.info("Evaluating the agent response...")
 				if response.status_code == 201:
 					logger.info("Agent response is OK.")
@@ -225,24 +352,28 @@ class ChatbotView:
 						# file.setcompname(audio_data["comp_name"])
 						file.writeframes(audio_binary)
 
-					# logger.info("Creating new AudioPlayer component and waiting for audio to be loaded...")
-					# self.audio_players.append(
-					# 	AudioPlayer(
-					# 		page=self.page,
-					# 		src=join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME),
-					# 		components_width=self.page.width
-					# 	)
-					# )
+					logger.info("Checking chosen response format...")
+					if self.swt_audio_agent.value:
+						logger.info("Creating new AudioPlayer component and waiting for audio to be loaded...")
+						self.audio_players.append(
+							AudioPlayer(
+								page=self.page,
+								src=join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME),
+								components_width=self.page.width
+							)
+						)
 
-					# logger.info("Replacing last agent message...")
-					# self.lv_chat.controls[-1].controls[0].content = self.audio_players[-1]
-					logger.info("Replacing last agent message with agent response message...")
-					self.lv_chat.controls[-1].controls[0].content = Message(
-						is_bot=True,
-						message=response.json()["agent_response"]["text"],
-					)
+						logger.info("Replacing last agent message...")
+						self.lv_chat.controls[-1].controls[0].content = self.audio_players[-1]
+					else:
+						logger.info("Replacing last agent message with agent response message...")
+						self.lv_chat.controls[-1].controls[0].content = Message(
+							is_bot=True,
+							message=response.json()["agent_response"]["text"],
+						)
 
 				else:
+					logger.info(f"Agent endpoint response received {response.status_code}: {response.json()}")
 					logger.info("Agent response is NOT ok. Replacing last agent message with error message...")
 					self.lv_chat.controls[-1].controls[0].content = Message(
 						is_bot=True,
@@ -253,16 +384,21 @@ class ChatbotView:
 		self.lv_chat.update()
 
 	def cca_send_clicked(self, _: ControlEvent) -> None:
-		logger.info("Changing components to initial state...")
-		aux_message: str = self.txt_message.value
-		self.txt_message.value = ""
-		self.cont_icon.content = self.cca_mic
-		self.cont_icon.on_click = self.cca_mic_clicked
-		self.page.update()
+		if self.txt_message.value == "" or self.txt_message.value.isspace():
+			logger.info("Empty message, not sending...")
 
-		logger.info("Send button clicked")
-		self.add_message(is_bot=False, message=aux_message)
-		self.add_message(is_bot=True, message="Buscando información...")
+		else:
+			logger.info("Send button clicked")
+
+			logger.info("Changing components to initial state...")
+			aux_message: str = self.txt_message.value
+			self.txt_message.value = ""
+			self.cont_icon.content = self.cca_mic
+			self.cont_icon.on_click = self.cca_mic_clicked
+			self.page.update()
+
+			self.add_message(is_bot=False, message=aux_message)
+			self.add_message(is_bot=True, message="Buscando información...")
 
 	def cca_mic_clicked(self, _: ControlEvent) -> None:
 		logger.info("Microphone button clicked")
@@ -307,7 +443,7 @@ class ChatbotView:
 			frames: list = []
 			while self.record_flag:
 				logger.info("Listening...")
-				data = stream.read(CHUNK)
+				data: bytes = stream.read(CHUNK)
 				frames.append(data)
 
 			logger.info("Ending audio recording...")
@@ -324,9 +460,9 @@ class ChatbotView:
 
 			logger.info("Encoding audio file...")
 			with open(join(TEMP_ABSPATH, TEMP_FILE_NAME), "rb") as audio_file:
-				encoded_audio_data = b64encode(audio_file.read()).decode("utf-8")
+				encoded_audio_data: str = b64encode(audio_file.read()).decode("utf-8")
 
-			logger.info("Starting speech recognition...")
+			logger.info("Calling Backend API for speech recognition...")
 			response: Response = post(
 				url=f"{BACK_END_URL}/{ASR_ENDPOINT}",
 				headers={
@@ -334,18 +470,40 @@ class ChatbotView:
 					"Authorization": f"Bearer {self.basket.get('session_token')}"
 				},
 				json={
-					"audio_data": encoded_audio_data
+					"audio": encoded_audio_data
 				}
 			)
 
 			logger.info(f"Speech recognition (ASR) endpoint response received {response.status_code}: {response.json()}")
-			if response.status_code == 200:
+			if response.status_code == 201:
 				user_message: str = response.json()["text"]
 				logger.info(f"Speech captured: {user_message}")
 				self.add_message(is_bot=False, message=user_message.capitalize())
 
+				logger.info("Adding agent message...")
+				self.add_message(is_bot=True, message="Buscando información...")
+				self.page.update()
+
 			else:
 				self.add_message(is_bot=False, message="SPEECH_RECOGNITION_ERROR")
 
-			self.add_message(is_bot=True, message="Buscando información...")
-			self.page.update()
+	def swt_audio_user_changed(self, _: ControlEvent) -> None:
+		if self.swt_audio_user.value:
+			logger.info("Switch audio for user changed to Audio")
+			logger.info("Changing UI components to allow audio messages...")
+			self.cont_icon.content = self.cca_mic
+			self.cont_icon.on_click = self.cca_mic_clicked
+
+		else:
+			logger.info("Switch audio for user changed to Text")
+			logger.info("Changing UI components to allow audio messages...")
+			self.cont_icon.content = self.cca_send
+			self.cont_icon.on_click = self.cca_send_clicked
+
+		self.page.update()
+
+	def swt_audio_agent_changed(self, _: ControlEvent) -> None:
+		if self.swt_audio_agent.value:
+			logger.info("Switch audio for agent changed to Audio")
+		else:
+			logger.info("Switch audio for agent changed to Text")

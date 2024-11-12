@@ -52,6 +52,7 @@ def format_place_name(place_name: str) -> str:
 			.replace('Á', 'A')\
 			.replace('É', 'E')\
 			.replace('Í', 'I')\
+			.replace('Ñ', 'N')\
 			.replace('Ó', 'O')\
 			.replace('Ú', 'U')\
 			.replace('á', 'a')\
@@ -59,8 +60,7 @@ def format_place_name(place_name: str) -> str:
 			.replace('í', 'i')\
 			.replace('ó', 'o')\
 			.replace('ú', 'u')\
-			# .replace('Ñ', 'N')\
-			# .replace('ñ', 'n')
+			.replace('ñ', 'n')
 
 
 # Geolocation functions
