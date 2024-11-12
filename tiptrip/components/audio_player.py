@@ -170,13 +170,17 @@ class AudioPlayer(Container):
 		)
 
 		logger.info("Updating slider value...")
-		self.audio_slider.value = self.milliseconds_to_percentage(self.current_position)
-		logger.info(f"New slider value: {self.audio_slider.value}")
+		new_value: float = self.milliseconds_to_percentage(self.current_position)
+		logger.info(f"New slider value: {new_value}")
+		self.audio_slider.value = new_value if new_value <= 100 else 100
 
+		logger.info("Updating icon container...")
 		if self.current_position == 0:
-			logger.info("Audio finished. Resetting play icon...")
 			self.cont_icon.content = self.cca_play
 			self.cont_icon.on_click = self.play_audio
+		else:
+			self.cont_icon.content = self.cca_pause
+			self.cont_icon.on_click = self.pause_audio
 
 		self.page.update()
 

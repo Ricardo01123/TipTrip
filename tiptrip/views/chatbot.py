@@ -43,7 +43,7 @@ class ChatbotView:
 			on_change=self.swt_audio_agent_changed
 		)
 
-		self.epl_settings: ExpansionTile = ExpansionTile(
+		self.ext_settings: ExpansionTile = ExpansionTile(
 			trailing=Icon(
 				name=icons.KEYBOARD_ARROW_DOWN,
 				color=colors.BLACK,
@@ -212,25 +212,7 @@ class ChatbotView:
 						blur_radius=BLUR,
 						color=colors.GREY_800
 					),
-					content=self.epl_settings
-					# content=Row(
-					# 	alignment=MainAxisAlignment.SPACE_EVENLY,
-					# 	controls=[
-					# 		Container(
-					# 			content=Text(
-					# 				value="Responder con texto",
-					# 				color=colors.BLACK,
-					# 			)
-					# 		),
-					# 		Container(content=self.swt_audio_agent),
-					# 		Container(
-					# 			content=Text(
-					# 				value="Responder con audio",
-					# 				color=colors.BLACK,
-					# 			)
-					# 		)
-					# 	]
-					# )
+					content=self.ext_settings
 				),
 				Container(
 					expand=True,
@@ -325,6 +307,7 @@ class ChatbotView:
 					},
 					json={
 						"prompt": self.lv_chat.controls[-2].controls[1].content.content.value,
+						"tts": self.swt_audio_agent.value,
 						# "latitude": self.basket.get("latitude"),
 						# "longitude": self.basket.get("longitude")
 					}
@@ -333,44 +316,49 @@ class ChatbotView:
 				logger.info("Evaluating the agent response...")
 				if response.status_code == 201:
 					logger.info("Agent response is OK.")
-					data: dict = response.json()
-					logger.info(f"Agent text response: \"{data['agent_response']['text']}\"")
-
-					logger.info("Getting audio data from agent response...")
-					audio_data: dict = response.json()["agent_response"]["audio_data"]
-
-					logger.info("Decoding audio data...")
-					audio_binary = b64decode(audio_data["audio"])
-
-					logger.info("Saving as temporary audio file...")
-					with wave.open(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME), "wb") as file:
-						file.setnchannels(audio_data["nchannels"])
-						file.setsampwidth(audio_data["sampwidth"])
-						file.setframerate(audio_data["framerate"])
-						file.setnframes(audio_data["nframes"])
-						# file.setcomptype(audio_data["comp_type"])
-						# file.setcompname(audio_data["comp_name"])
-						file.writeframes(audio_binary)
 
 					logger.info("Checking chosen response format...")
-					if self.swt_audio_agent.value:
+					if not self.swt_audio_agent.value:
+						logger.info("Agent response is only text")
+						logger.info("Replacing last agent message with agent response message...")
+						self.lv_chat.controls[-1].controls[0].content = Message(
+							is_bot=True,
+							message=response.json()["agent_response"]["text"],
+						)
+
+					else:
+						logger.info("Agent response is audio messages")
+						data: dict = response.json()
+						logger.info(f"Agent text response: \"{data['agent_response']['text']}\"")
+
+						logger.info("Getting audio data from agent response...")
+						audio_data: dict = response.json()["agent_response"]["audio_data"]
+
+						logger.info("Decoding audio data...")
+						audio_binary = b64decode(audio_data["audio"])
+
+						logger.info("Saving as temporary audio file...")
+						with wave.open(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME), "wb") as file:
+							file.setnchannels(audio_data["nchannels"])
+							file.setsampwidth(audio_data["sampwidth"])
+							file.setframerate(audio_data["framerate"])
+							file.setnframes(audio_data["nframes"])
+							# file.setcomptype(audio_data["comp_type"])
+							# file.setcompname(audio_data["comp_name"])
+							file.writeframes(audio_binary)
+
 						logger.info("Creating new AudioPlayer component and waiting for audio to be loaded...")
 						self.audio_players.append(
 							AudioPlayer(
 								page=self.page,
-								src=join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME),
+								# src=join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME),
+								src="https://github.com/mdn/webaudio-examples/blob/main/audio-analyser/viper.mp3?raw=true",
 								components_width=self.page.width
 							)
 						)
 
 						logger.info("Replacing last agent message...")
 						self.lv_chat.controls[-1].controls[0].content = self.audio_players[-1]
-					else:
-						logger.info("Replacing last agent message with agent response message...")
-						self.lv_chat.controls[-1].controls[0].content = Message(
-							is_bot=True,
-							message=response.json()["agent_response"]["text"],
-						)
 
 				else:
 					logger.info(f"Agent endpoint response received {response.status_code}: {response.json()}")
