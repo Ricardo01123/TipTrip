@@ -22,6 +22,7 @@ def clean_basket(basket: Basket, logger: Logger) -> None:
 	basket.delete("session_token")
 	basket.delete("username")
 	basket.delete("created_at")
+	basket.delete("places_data")
 
 
 # Places functions

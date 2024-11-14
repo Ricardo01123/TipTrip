@@ -245,7 +245,8 @@ class AccountView:
 		)
 
 	def get_user_image(self) -> str:
-		files = listdir(ASSETS_ABSPATH)
+		files: list[str] = listdir(ASSETS_ABSPATH)
+		logger.info(f"Found files: {files}")
 		for file in files:
 			if file.startswith("user"):
 				name: str = f"/{file}"

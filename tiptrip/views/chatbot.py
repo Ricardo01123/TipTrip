@@ -27,20 +27,12 @@ class ChatbotView:
 		self.record_flag: bool = False
 		self.audio_players: list = []
 
-		self.swt_audio_user: Switch = Switch(
+		self.swt_audio: Switch = Switch(
 			value=True,
 			adaptive=True,
 			active_color=colors.WHITE,
 			active_track_color=SECONDARY_COLOR,
-			on_change=self.swt_audio_user_changed
-		)
-
-		self.swt_audio_agent: Switch = Switch(
-			value=True,
-			adaptive=True,
-			active_color=colors.WHITE,
-			active_track_color=SECONDARY_COLOR,
-			on_change=self.swt_audio_agent_changed
+			on_change=self.swt_audio_changed
 		)
 
 		self.ext_settings: ExpansionTile = ExpansionTile(
@@ -63,36 +55,6 @@ class ChatbotView:
 				ListTile(
 					content_padding=padding.symmetric(horizontal=SPACING),
 					title=Text(
-						value="Preguntar al chatbot usando:",
-						color=colors.BLACK,
-						size=16
-					)
-				),
-				Container(
-					content=Row(
-						alignment=MainAxisAlignment.SPACE_EVENLY,
-						controls=[
-							Text(
-								value="Sólo texto",
-								color=colors.BLACK,
-								size=16
-							),
-							self.swt_audio_user,
-							Text(
-								value="Texto o audio",
-								color=colors.BLACK,
-								size=16
-							)
-						]
-					)
-				),
-				Container(
-					padding=padding.symmetric(horizontal=SPACING),
-					content=Divider(color=colors.BLACK)
-				),
-				ListTile(
-					content_padding=padding.symmetric(horizontal=SPACING),
-					title=Text(
 						value="Respuestas del chatbot usando:",
 						color=colors.BLACK,
 						size=16
@@ -107,7 +69,7 @@ class ChatbotView:
 								color=colors.BLACK,
 								size=16
 							),
-							self.swt_audio_agent,
+							self.swt_audio,
 							Text(
 								value="Audio",
 								color=colors.BLACK,
@@ -307,7 +269,7 @@ class ChatbotView:
 					},
 					json={
 						"prompt": self.lv_chat.controls[-2].controls[1].content.content.value,
-						"tts": self.swt_audio_agent.value,
+						"tts": self.swt_audio.value,
 						# "latitude": self.basket.get("latitude"),
 						# "longitude": self.basket.get("longitude")
 					}
@@ -318,7 +280,7 @@ class ChatbotView:
 					logger.info("Agent response is OK.")
 
 					logger.info("Checking chosen response format...")
-					if not self.swt_audio_agent.value:
+					if not self.swt_audio.value:
 						logger.info("Agent response is only text")
 						logger.info("Replacing last agent message with agent response message...")
 						self.lv_chat.controls[-1].controls[0].content = Message(
@@ -351,8 +313,7 @@ class ChatbotView:
 						self.audio_players.append(
 							AudioPlayer(
 								page=self.page,
-								# src=join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME),
-								src="https://github.com/mdn/webaudio-examples/blob/main/audio-analyser/viper.mp3?raw=true",
+								src=join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME),
 								components_width=self.page.width
 							)
 						)
@@ -475,23 +436,8 @@ class ChatbotView:
 			else:
 				self.add_message(is_bot=False, message="SPEECH_RECOGNITION_ERROR")
 
-	def swt_audio_user_changed(self, _: ControlEvent) -> None:
-		if self.swt_audio_user.value:
-			logger.info("Switch audio for user changed to Audio")
-			logger.info("Changing UI components to allow audio messages...")
-			self.cont_icon.content = self.cca_mic
-			self.cont_icon.on_click = self.cca_mic_clicked
-
-		else:
-			logger.info("Switch audio for user changed to Text")
-			logger.info("Changing UI components to allow audio messages...")
-			self.cont_icon.content = self.cca_send
-			self.cont_icon.on_click = self.cca_send_clicked
-
-		self.page.update()
-
-	def swt_audio_agent_changed(self, _: ControlEvent) -> None:
-		if self.swt_audio_agent.value:
+	def swt_audio_changed(self, _: ControlEvent) -> None:
+		if self.swt_audio.value:
 			logger.info("Switch audio for agent changed to Audio")
 		else:
 			logger.info("Switch audio for agent changed to Text")

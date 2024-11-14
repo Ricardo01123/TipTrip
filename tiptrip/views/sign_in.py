@@ -217,6 +217,7 @@ class SignInView:
 				self.basket.username = data["username"]
 				self.basket.session_token = data["token"]
 				self.basket.created_at = data["created_at"]
+				self.basket.places_data = []
 
 				logger.info("Cleaning text fields...")
 				self.txt_email.value = ""
