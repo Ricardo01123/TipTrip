@@ -5,6 +5,8 @@ from os.path import exists, join
 from logging import Logger, getLogger, basicConfig, INFO
 
 from resources.config import *
+
+from views.map import MapView
 from views.home import HomeView
 from views.sign_in import SignInView
 from views.sign_up import SignUpView
@@ -47,6 +49,7 @@ def main(page: ft.Page) -> None:
 			case "/place_details": page.views.append(PlaceDetailsView(page))
 			case "/chatbot": page.views.append(ChatbotView(page))
 			case "/favorites": page.views.append(FavoritesView(page))
+			case "/map": page.views.append(MapView(page))
 			# User profile views
 			case "/account": page.views.append(AccountView(page))
 			case "/update_user": page.views.append(UpdateUserView(page))

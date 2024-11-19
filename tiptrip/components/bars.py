@@ -34,26 +34,19 @@ class TopBar(ft.AppBar):
 		)
 
 
-class BottomBar(ft.Container):
+class BottomBar(ft.BottomAppBar):
 	def __init__(self, page: ft.Page, logger: Logger, current_route: str) -> None:
 		super().__init__(
-			# expand=True,
-			width=page.width,
-			height=60,
-			bgcolor=ft.colors.WHITE,
-			border_radius=ft.border_radius.only(top_left=RADIUS, top_right=RADIUS),
-			shadow=ft.BoxShadow(
-				blur_radius=(BLUR / 2),
-				offset=ft.Offset(0, -2),
-				color=ft.colors.GREY
-			),
+			bgcolor=MAIN_COLOR,
+			shape=ft.NotchShape.CIRCULAR,
+			elevation=0,
 			content=ft.Row(
 				alignment=ft.MainAxisAlignment.SPACE_EVENLY,
 				controls=[
 					ft.IconButton(
 						icon=ft.icons.HOME,
 						icon_color=(
-							MAIN_COLOR
+							ft.colors.WHITE
 							if current_route == '/'
 							else ft.colors.BLACK
 						),
@@ -69,7 +62,7 @@ class BottomBar(ft.Container):
 					ft.IconButton(
 						icon=ft.icons.BOOKMARK_BORDER,
 						icon_color=(
-							MAIN_COLOR
+							ft.colors.WHITE
 							if current_route == "/favorites"
 							else ft.colors.BLACK
 						),
@@ -79,7 +72,7 @@ class BottomBar(ft.Container):
 					ft.IconButton(
 						icon=ft.icons.ACCOUNT_CIRCLE,
 						icon_color=(
-							MAIN_COLOR
+							ft.colors.WHITE
 							if current_route == "/account"
 							else ft.colors.BLACK
 						),

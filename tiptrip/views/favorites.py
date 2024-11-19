@@ -92,56 +92,56 @@ class FavoritesView(ft.View):
 			padding=ft.padding.all(value=0.0),
 			spacing=0,
 			controls=[
-				TopBar(page=self.page, leading=False, logger=logger),
-					ft.Container(
-						width=self.page.width,
-						height=RADIUS,
-						bgcolor=MAIN_COLOR,
-						border_radius=ft.border_radius.only(
-							bottom_left=RADIUS,
-							bottom_right=RADIUS
-						),
-						shadow=ft.BoxShadow(
-							blur_radius=BLUR,
-							color=ft.colors.GREY_800
-						)
+				TopBar(page=self.page, leading=True, logger=logger),
+				ft.Container(
+					width=self.page.width,
+					height=RADIUS,
+					bgcolor=MAIN_COLOR,
+					border_radius=ft.border_radius.only(
+						bottom_left=RADIUS,
+						bottom_right=RADIUS
 					),
-					ft.Container(
-						width=self.page.width,
-						height=TXT_CONT_SIZE,
-						margin=ft.margin.symmetric(vertical=10),
-						content=ft.Row(
-							controls=[
-								ft.Container(expand=1),
-								ft.Container(
-									expand=8,
-									bgcolor=ft.colors.WHITE,
-									padding=ft.padding.symmetric(
-										horizontal=(SPACING / 2)
-									),
-									border_radius=ft.border_radius.all(
-										value=RADIUS
-									),
-									shadow=ft.BoxShadow(
-										blur_radius=(BLUR / 2),
-										offset=ft.Offset(0, 2),
-										color=ft.colors.GREY
-									),
-									alignment=ft.alignment.center_left,
-									content=self.txt_favorite_searcher
+					shadow=ft.BoxShadow(
+						blur_radius=BLUR,
+						color=ft.colors.GREY_800
+					)
+				),
+				ft.Container(
+					width=self.page.width,
+					height=TXT_CONT_SIZE,
+					margin=ft.margin.symmetric(vertical=10),
+					content=ft.Row(
+						controls=[
+							ft.Container(expand=1),
+							ft.Container(
+								expand=8,
+								bgcolor=ft.colors.WHITE,
+								padding=ft.padding.symmetric(
+									horizontal=(SPACING / 2)
 								),
-								ft.Container(expand=1),
-							]
-						)
-					),
-					self.cont_pagination,
-					ft.Container(
-						expand=True,
-						width=self.page.width,
-						content=self.lv_favorites_list
-					),
-					BottomBar(page=self.page, logger=logger, current_route="/favorites")
-			]
+								border_radius=ft.border_radius.all(
+									value=RADIUS
+								),
+								shadow=ft.BoxShadow(
+									blur_radius=(BLUR / 2),
+									offset=ft.Offset(0, 2),
+									color=ft.colors.GREY
+								),
+								alignment=ft.alignment.center_left,
+								content=self.txt_favorite_searcher
+							),
+							ft.Container(expand=1),
+						]
+					)
+				),
+				self.cont_pagination,
+				ft.Container(
+					expand=True,
+					width=self.page.width,
+					content=self.lv_favorites_list
+				)
+			],
+			bottom_appbar=BottomBar(page=self.page, logger=logger, current_route="/favorites")
 		)
 
 	def get_favorites(self) -> list | ft.Container:

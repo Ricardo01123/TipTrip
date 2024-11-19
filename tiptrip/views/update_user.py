@@ -215,9 +215,9 @@ class UpdateUserView(ft.View):
 							)
 						]
 					)
-				),
-				BottomBar(page=self.page, logger=logger, current_route="/update_user")
-			]
+				)
+			],
+			bottom_appbar=BottomBar(page=self.page, logger=logger, current_route="/update_user")
 		)
 
 	def format_image_name(self, name: str) -> str:

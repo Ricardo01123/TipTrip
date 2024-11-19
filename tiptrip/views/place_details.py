@@ -209,9 +209,9 @@ class PlaceDetailsView(ft.View):
 						scroll=ft.ScrollMode.HIDDEN,
 						controls=[self.data_tabs]
 					)
-				),
-				BottomBar(page=self.page, logger=logger, current_route="/place_details")
-			]
+				)
+			],
+			bottom_appbar=BottomBar(page=self.page, logger=logger, current_route="/place_details")
 		)
 
 	def get_place_data(self, id: str) -> dict | ft.Container:

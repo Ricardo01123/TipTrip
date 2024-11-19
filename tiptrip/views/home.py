@@ -228,6 +228,14 @@ class HomeView(ft.View):
 			bgcolor=ft.colors.WHITE,
 			padding=ft.padding.all(value=0.0),
 			spacing=0,
+			floating_action_button=ft.FloatingActionButton(
+				icon=ft.icons.MAP,
+				bgcolor=SECONDARY_COLOR,
+				foreground_color=ft.colors.WHITE,
+				on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/map"),
+				shape=ft.CircleBorder()
+			),
+			floating_action_button_location = ft.FloatingActionButtonLocation.CENTER_DOCKED,
 			controls=[
 				TopBar(page=self.page, leading=False, logger=logger),
 				ft.Container(
@@ -292,9 +300,9 @@ class HomeView(ft.View):
 					expand=True,
 					width=self.page.width,
 					content=self.lv_places_list
-				),
-				BottomBar(page=self.page, logger=logger, current_route='/')
-			]
+				)
+			],
+			bottom_appbar=BottomBar(page=self.page, logger=logger, current_route='/')
 		)
 
 	def get_places(

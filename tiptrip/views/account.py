@@ -219,9 +219,9 @@ class AccountView(ft.View):
 							)
 						]
 					)
-				),
-				BottomBar(page=self.page, logger=logger, current_route="/account")
-			]
+				)
+			],
+			bottom_appbar=BottomBar(page=self.page, logger=logger, current_route="/account")
 		)
 
 	def get_user_image(self) -> str:
