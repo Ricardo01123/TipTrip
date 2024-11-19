@@ -1,6 +1,5 @@
-from flet import *
-from logging import getLogger
-from flet_route import Params, Basket
+import flet as ft
+from logging import Logger, getLogger
 
 from resources.config import *
 from components.titles import MainTitle
@@ -9,74 +8,61 @@ from resources.texts import TERMS_CONDITIONS
 from resources.styles import cont_main_style, btn_secondary_style
 
 
-logger = getLogger(f"{PROJECT_NAME}.{__name__}")
+logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
 
 
-class TermsConditionsView:
-	def __init__(self) -> None:
-		self.page = None
-		self.params = None
-		self.basket = None
-		self.btn_back = None
-
-	def view(self, page: Page, params: Params, basket: Basket) -> View:
+class TermsConditionsView(ft.View):
+	def __init__(self, page: ft.Page) -> None:
+		# Custom attributes
 		self.page = page
-		self.params = params
-		self.basket = basket
 
-		self.btn_back: ElevatedButton = ElevatedButton(
+		# Custom components
+		self.btn_back: ft.ElevatedButton = ft.ElevatedButton(
 			width=self.page.width,
-			content=Text(
+			content=ft.Text(
 				value="Regresar a Registrarse",
 				size=BTN_TEXT_SIZE
 			),
-			on_click=lambda _: go_to_view(
-				page=self.page,
-				logger=logger,
-				route="sign_up"
-			),
+			on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/sign_up"),
 			**btn_secondary_style
 		)
 
-		return View(
+		# View native attributes
+		super().__init__(
 			route="/terms_conditions",
-			padding=padding.all(value=0.0),
 			bgcolor=MAIN_COLOR,
+			padding=ft.padding.all(value=0.0),
 			controls=[
-				Container(
-					content=Column(
+				ft.Container(
+					content=ft.Column(
 						controls=[
-							Container(
-								content=IconButton(
-									icon=icons.ARROW_BACK,
-									icon_color=colors.BLACK,
-									on_click=lambda _: go_to_view(
-										page=self.page,
-										logger=logger,
-										route="sign_up"
-									),
+							ft.Container(
+								content=ft.IconButton(
+									icon=ft.icons.ARROW_BACK,
+									icon_color=ft.colors.BLACK,
+									on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/sign_up"),
 								)
 							),
 							MainTitle(
 								top_margin=(SPACING / 2),
 								subtitle="Términos y condiciones"
 							),
-							Container(
+							ft.Container(
 								expand=True,
-								content=Column(
-									scroll=ScrollMode.HIDDEN,
+								content=ft.Column(
+									scroll=ft.ScrollMode.HIDDEN,
 									controls=[
-										Container(
-											content=Text(
+										ft.Container(
+											content=ft.Text(
 												value=TERMS_CONDITIONS,
-												color=colors.BLACK
+												color=ft.colors.BLACK
 											)
 										)
 									]
 								)
 							),
-							Container(
-								margin=margin.only(top=SPACING),
+							ft.Container(
+								margin=ft.margin.only(top=SPACING),
 								content=self.btn_back
 							)
 						]

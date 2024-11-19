@@ -1,110 +1,90 @@
-from flet import *
+import flet as ft
 from logging import Logger
 
 from resources.config import *
 from resources.functions import go_to_view
 
 
-class TopBar(AppBar):
-	def __init__(self, page: Page, leading: bool, logger: Logger) -> None:
+class TopBar(ft.AppBar):
+	def __init__(self, page: ft.Page, leading: bool, logger: Logger) -> None:
 		super().__init__(
 			bgcolor=MAIN_COLOR,
 			leading=(
-				IconButton(
-					icon=icons.ARROW_BACK,
-					icon_color=colors.BLACK,
-					on_click=lambda _: go_to_view(
-						page=page,
-						logger=logger,
-						route="home"
-					)
+				ft.IconButton(
+					icon=ft.icons.ARROW_BACK,
+					icon_color=ft.colors.BLACK,
+					on_click=lambda _: go_to_view(page=page, logger=logger, route='/')
 				)
 				if leading == True
 				else None
 			),
-			title=Text(
+			title=ft.Text(
 				value=PROJECT_NAME,
-				color=colors.BLACK
+				color=ft.colors.BLACK
 			),
 			actions=[
-				IconButton(
-					icon=icons.LOGOUT,
-					icon_color=colors.BLACK,
-					padding=padding.only(right=SPACING),
+				ft.IconButton(
+					icon=ft.icons.LOGOUT,
+					icon_color=ft.colors.BLACK,
+					padding=ft.padding.only(right=SPACING),
 					tooltip="Cerrar sesión",
-					on_click=lambda _: go_to_view(
-						page=page,
-						logger=logger,
-						route=""  # '/'
-					)
+					on_click=lambda _: go_to_view(page=page, logger=logger, route="/sign_in")
 				)
 			]
 		)
 
 
-class BottomBar(Container):
-	def __init__(self, page: Page, logger: Logger, current_route: str) -> None:
+class BottomBar(ft.Container):
+	def __init__(self, page: ft.Page, logger: Logger, current_route: str) -> None:
 		super().__init__(
 			# expand=True,
 			width=page.width,
 			height=60,
-			bgcolor=colors.WHITE,
-			border_radius=border_radius.only(top_left=RADIUS, top_right=RADIUS),
-			shadow=BoxShadow(blur_radius=(BLUR / 2), offset=Offset(0, -2), color=colors.GREY),
-			content=Row(
-				alignment=MainAxisAlignment.SPACE_EVENLY,
+			bgcolor=ft.colors.WHITE,
+			border_radius=ft.border_radius.only(top_left=RADIUS, top_right=RADIUS),
+			shadow=ft.BoxShadow(
+				blur_radius=(BLUR / 2),
+				offset=ft.Offset(0, -2),
+				color=ft.colors.GREY
+			),
+			content=ft.Row(
+				alignment=ft.MainAxisAlignment.SPACE_EVENLY,
 				controls=[
-					IconButton(
-						icon=icons.HOME,
+					ft.IconButton(
+						icon=ft.icons.HOME,
 						icon_color=(
 							MAIN_COLOR
-							if current_route == "/home"
-							else colors.BLACK
+							if current_route == '/'
+							else ft.colors.BLACK
 						),
 						icon_size=30,
-						on_click=lambda _: go_to_view(
-							page=page,
-							logger=logger,
-							route="home"
-						)
+						on_click=lambda _: go_to_view(page=page, logger=logger, route='/')
 					),
-					IconButton(
-						icon=icons.SUPPORT_AGENT,
-						icon_color=colors.BLACK,
+					ft.IconButton(
+						icon=ft.icons.SUPPORT_AGENT,
+						icon_color=ft.colors.BLACK,
 						icon_size=30,
-						on_click=lambda _: go_to_view(
-							page=page,
-							logger=logger,
-							route="chatbot"
-						)
+						on_click=lambda _: go_to_view(page=page, logger=logger, route="/chatbot")
 					),
-					IconButton(
-						icon=icons.BOOKMARK_BORDER,
+					ft.IconButton(
+						icon=ft.icons.BOOKMARK_BORDER,
 						icon_color=(
 							MAIN_COLOR
 							if current_route == "/favorites"
-							else colors.BLACK
+							else ft.colors.BLACK
 						),
 						icon_size=30,
-						on_click=lambda _: go_to_view(
-							page=page,
-							logger=logger,
-							route="favorites"
-						)
+						on_click=lambda _: go_to_view(page=page, logger=logger, route="/favorites")
 					),
-					IconButton(
-						icon=icons.ACCOUNT_CIRCLE,
+					ft.IconButton(
+						icon=ft.icons.ACCOUNT_CIRCLE,
 						icon_color=(
 							MAIN_COLOR
 							if current_route == "/account"
-							else colors.BLACK
+							else ft.colors.BLACK
 						),
 						icon_size=30,
-						on_click=lambda _: go_to_view(
-							page=page,
-							logger=logger,
-							route="account"
-						)
+						on_click=lambda _: go_to_view(page=page, logger=logger, route="/account")
 					)
 				]
 			)

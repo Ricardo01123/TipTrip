@@ -1,5 +1,6 @@
-import os
-from pyaudio import paInt16
+from os import getcwd
+from os.path import join
+# from pyaudio import paInt16
 
 
 # Names
@@ -42,8 +43,8 @@ LOGGING_FORMAT: str = "[%(asctime)s] %(levelname)s in %(name)s: %(message)s"
 RGX_EMAIL: str = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
 # Back-End API
-# BACK_END_URL: str = "http://145.223.74.225:5000"
-BACK_END_URL: str = "http://127.0.0.1:5000"
+BACK_END_URL: str = "http://145.223.74.225:5000"
+# BACK_END_URL: str = "http://127.0.0.1:5000"
 PLACES_ENDPOINT: str = "places"
 USERS_ENDPOINT: str = "users"
 AUTH_USER_ENDPOINT: str = "users/auth"
@@ -52,7 +53,7 @@ AGENT_ENDPOINT: str = "models/agent"
 ASR_ENDPOINT: str = "models/asr"
 
 # Chatbot audio file
-FORMAT: int = paInt16
+# FORMAT: int = paInt16
 CHANNELS: int = 1
 CHUNK: int = 1_024
 SAMPLING_RATE: int = 16_000
@@ -66,9 +67,9 @@ CDXM_MIN_LONGITUDE: float = -99 - 22 / 6
 CDXM_MAX_LONGITUDE: float = -98 - 57 / 60
 
 # Project paths
-PROJECT_DIR_ABSPATH: str = os.getcwd()
-TEMP_ABSPATH: str = os.path.join(PROJECT_DIR_ABSPATH, "temp")
-ASSETS_ABSPATH: str = os.path.join(PROJECT_DIR_ABSPATH, "assets")
+PROJECT_DIR_ABSPATH: str = getcwd()
+TEMP_ABSPATH: str = join(PROJECT_DIR_ABSPATH, "temp")
+ASSETS_ABSPATH: str = join(PROJECT_DIR_ABSPATH, "assets")
 
 # Places filters variables
 MUNICIPALITIES: list[str] = [

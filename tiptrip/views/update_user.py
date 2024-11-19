@@ -1,11 +1,10 @@
-from flet import *
+import flet as ft
 from re import match
 from typing import Any
 from os.path import join
 from shutil import copyfile
-from logging import getLogger
-from requests import Response, put
-from flet_route import Params, Basket
+from requests import put, Response
+from logging import Logger, getLogger
 
 from components.bars import *
 from resources.config import *
@@ -13,160 +12,139 @@ from resources.functions import go_to_view
 from resources.styles import btn_primary_style, btn_secondary_style, txt_style
 
 
-logger = getLogger(f"{PROJECT_NAME}.{__name__}")
+logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
 
 
-class UpdateUserView:
-	def __init__(self) -> None:
-		self.page = None
-		self.params = None
-		self.basket = None
-		self.route = None
-		self.txt_username = None
-		self.txt_email = None
-		self.txt_password = None
-		self.txt_confirm_password = None
+class UpdateUserView(ft.View):
+	def __init__(self, page: ft.Page) -> None:
+		# Custom attributes
+		self.page = page
 
-		self.dlg_updated_data: AlertDialog = AlertDialog(
+		# Custom components
+		self.dlg_updated_data: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=Text("Datos actulizados"),
-			content=Text("Sus datos han sido actualizados correctamente."),
+			title=ft.Text("Datos actulizados"),
+			content=ft.Text("Sus datos han sido actualizados correctamente."),
 			actions=[
-				TextButton("Aceptar", on_click=self.handle_dlg_updated_data),
+				ft.TextButton("Aceptar", on_click=self.handle_dlg_updated_data),
 			],
-			actions_alignment=MainAxisAlignment.END,
+			actions_alignment=ft.MainAxisAlignment.END,
 			on_dismiss=self.handle_dlg_updated_data
 		)
-
-		self.dlg_updated_image: AlertDialog = AlertDialog(
+		self.dlg_updated_image: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=Text("Imagen actualizada"),
-			content=Text("Su imagen de perfil ha sido actualizada correctamente."),
+			title=ft.Text("Imagen actualizada"),
+			content=ft.Text("Su imagen de perfil ha sido actualizada correctamente."),
 			actions=[
-				TextButton("Aceptar", on_click=self.handle_dlg_updated_image),
+				ft.TextButton("Aceptar", on_click=self.handle_dlg_updated_image),
 			],
-			actions_alignment=MainAxisAlignment.END,
+			actions_alignment=ft.MainAxisAlignment.END,
 			on_dismiss=self.handle_dlg_updated_image
 		)
-
-		self.dlg_error: AlertDialog = AlertDialog(
+		self.dlg_error: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=Text(""),
-			content=Text(""),
+			title=ft.Text(""),
+			content=ft.Text(""),
 			actions=[
-				TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
+				ft.TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
 			],
-			actions_alignment=MainAxisAlignment.END,
+			actions_alignment=ft.MainAxisAlignment.END,
 			on_dismiss=lambda _: self.page.close(self.dlg_error)
 		)
-
-	def view(self, page: Page, params: Params, basket: Basket) -> View:
-		self.page = page
-		self.params = params
-		self.basket = basket
-
-		self.route = "/update_user"
-
-		self.txt_username: TextField = TextField(
-			prefix_icon=icons.ACCOUNT_CIRCLE,
+		self.txt_username: ft.TextField = ft.TextField(
+			prefix_icon=ft.icons.ACCOUNT_CIRCLE,
 			hint_text="Nuevo nombre de usuario",
-			value=self.basket.get("username"),
+			value=self.page.session.get("username"),
 			**txt_style
 		)
-
-		self.txt_email: TextField = TextField(
-			prefix_icon=icons.EMAIL,
+		self.txt_email: ft.TextField = ft.TextField(
+			prefix_icon=ft.icons.EMAIL,
 			hint_text="Nuevo correo electrónico",
-			value=self.basket.get("email"),
+			value=self.page.session.get("email"),
 			**txt_style
 		)
-
-		self.txt_password: TextField = TextField(
-			prefix_icon=icons.LOCK,
+		self.txt_password: ft.TextField = ft.TextField(
+			prefix_icon=ft.icons.LOCK,
 			hint_text="Nueva contraseña",
 			password=True,
 			can_reveal_password=True,
 			on_change=self.validate,
 			**txt_style
 		)
-
-		self.txt_confirm_password: TextField = TextField(
-			prefix_icon=icons.LOCK,
+		self.txt_confirm_password: ft.TextField = ft.TextField(
+			prefix_icon=ft.icons.LOCK,
 			hint_text="Confirmar nueva contraseña",
 			password=True,
 			can_reveal_password=True,
 			on_change=self.validate,
 			**txt_style
 		)
-
-		self.lbl_pwd_match: Text = Text(
+		self.lbl_pwd_match: ft.Text = ft.Text(
 			value = "Las contraseñas no coinciden.",
-			style=TextStyle(color=colors.RED),
+			style=ft.TextStyle(color=ft.colors.RED),
 			visible=False
 		)
-
-		self.btn_submit: ElevatedButton = ElevatedButton(
+		self.btn_submit: ft.ElevatedButton = ft.ElevatedButton(
 			width=self.page.width,
-			content=Text(
+			content=ft.Text(
 				value="Confirmar cambios",
 				size=BTN_TEXT_SIZE
 			),
 			on_click=self.btn_submit_clicked,
 			**btn_primary_style
 		)
-
-		self.btn_back: ElevatedButton = ElevatedButton(
+		self.btn_back: ft.ElevatedButton = ft.ElevatedButton(
 			width=self.page.width,
-			content=Text(
+			content=ft.Text(
 				value="Descartar cambios",
 				size=BTN_TEXT_SIZE
 			),
 			on_click=self.btn_back_clicked,
 			**btn_secondary_style
 		)
-
-		self.dlg_user_image: FilePicker = FilePicker(
+		self.dlg_user_image: ft.FilePicker = ft.FilePicker(
 			on_result=self.save_new_user_image
 		)
 		self.page.overlay.append(self.dlg_user_image)
 
-		return View(
-			route=self.route,
+		# View native attributes
+		super().__init__(
+			route="/update_user",
 			bgcolor=MAIN_COLOR,
-			padding=padding.all(value=0.0),
+			padding=ft.padding.all(value=0.0),
 			spacing=0,
 			controls=[
 				TopBar(page=self.page, leading=True, logger=logger),
-				Container(
+				ft.Container(
 					width=self.page.width,
-					alignment=alignment.center,
-					padding=padding.only(
+					alignment=ft.alignment.center,
+					padding=ft.padding.only(
 						left=SPACING,
 						right=SPACING,
 						bottom=SPACING,
 					),
-					content=Stack(
+					content=ft.Stack(
 						width=PROFILE_IMAGE_DIMENSIONS,
 						height=PROFILE_IMAGE_DIMENSIONS,
 						controls=[
-							CircleAvatar(
+							ft.CircleAvatar(
 								radius=(SPACING * 4),
 								foreground_image_src="/user.jpg",
 								background_image_src="/user.jpg",
-								content=Text(
-									value=self.format_image_name(self.basket.get("username"))
+								content=ft.Text(
+									value=self.format_image_name(self.page.session.get("username"))
 								),
 							),
-							Container(
-								alignment=alignment.bottom_right,
-								content=CircleAvatar(
+							ft.Container(
+								alignment=ft.alignment.bottom_right,
+								content=ft.CircleAvatar(
 									bgcolor=SECONDARY_COLOR,
 									radius=SPACING,
-									content=IconButton(
-										icon=icons.EDIT,
-										icon_color=colors.WHITE,
+									content=ft.IconButton(
+										icon=ft.icons.EDIT,
+										icon_color=ft.colors.WHITE,
 										on_click=lambda _: self.dlg_user_image.pick_files(
-											file_type=FilePickerFileType.IMAGE,
+											file_type=ft.FilePickerFileType.IMAGE,
 											allowed_extensions=["jpg", "jpeg", "png"]
 										)
 									)
@@ -175,62 +153,62 @@ class UpdateUserView:
 						]
 					)
 				),
-				Container(
+				ft.Container(
 					expand=True,
 					width=self.page.width,
-					bgcolor=colors.WHITE,
-					padding=padding.all(value=SPACING),
-					border_radius=border_radius.only(
+					bgcolor=ft.colors.WHITE,
+					padding=ft.padding.all(value=SPACING),
+					border_radius=ft.border_radius.only(
 						top_left=RADIUS,
 						top_right=RADIUS
 					),
-					shadow=BoxShadow(
+					shadow=ft.BoxShadow(
 						blur_radius=(BLUR / 2),
-						offset=Offset(0, -2),
-						color=colors.BLACK
+						offset=ft.Offset(0, -2),
+						color=ft.colors.BLACK
 					),
-					content=Column(
+					content=ft.Column(
 						spacing=(SPACING / 2),
 						controls=[
-							Text(
+							ft.Text(
 								value=(
 									"Cambia o ingresa los datos que deseas actualizar.\n"
 									"Los campos de contraseña pueden permanecer "
 									"vacíos si no deseas cambiarlos."
 								),
-								color=colors.BLACK
+								color=ft.colors.BLACK
 							),
-							Container(
-								content=Column(
+							ft.Container(
+								content=ft.Column(
 									spacing=(SPACING / 2),
 									controls=[
-										Container(
+										ft.Container(
 											height=TXT_CONT_SIZE,
 											content=self.txt_username,
 										),
-										Container(
+										ft.Container(
 											height=TXT_CONT_SIZE,
 											content=self.txt_email,
 										),
-										Container(
+										ft.Container(
 											height=TXT_CONT_SIZE,
 											content=self.txt_password,
 										),
-										Container(
+										ft.Container(
 											height=TXT_CONT_SIZE,
 											content=self.txt_confirm_password,
 										),
-										Container(
+										ft.Container(
 											content=self.lbl_pwd_match
 										)
 									]
 								)
 							),
-							Container(
-								content=Column(
+							ft.Container(
+								content=ft.Column(
 									controls=[
 										self.btn_submit,
-										Divider(color=colors.TRANSPARENT),
+										ft.Divider(color=ft.colors.TRANSPARENT),
 										self.btn_back
 									]
 								)
@@ -238,11 +216,7 @@ class UpdateUserView:
 						]
 					)
 				),
-				BottomBar(
-					page=self.page,
-					logger=logger,
-					current_route=self.route
-				)
+				BottomBar(page=self.page, logger=logger, current_route="/update_user")
 			]
 		)
 
@@ -253,7 +227,7 @@ class UpdateUserView:
 		else:
 			return f"{name[:2].upper()}"
 
-	def validate(self, _: ControlEvent) -> None:
+	def validate(self, _: ft.ControlEvent) -> None:
 		if self.txt_password.value != "" or self.txt_confirm_password.value != "":
 			if self.txt_password.value != self.txt_confirm_password.value:
 				self.lbl_pwd_match.visible = True
@@ -265,29 +239,29 @@ class UpdateUserView:
 
 		self.page.update()
 
-	def btn_submit_clicked(self, _: ControlEvent) -> None:
+	def btn_submit_clicked(self, _: ft.ControlEvent) -> None:
 		if self.lbl_pwd_match.visible:
 			logger.info("Passwords do not match. Aborting process...")
-			self.dlg_error.title = Text(value="Las contraseñas no coinciden")
-			self.dlg_error.content = Text(value="Las contraseñas no coinciden. Favor de verificarlas.")
+			self.dlg_error.title = ft.Text(value="Las contraseñas no coinciden")
+			self.dlg_error.content = ft.Text(value="Las contraseñas no coinciden. Favor de verificarlas.")
 			self.page.open(self.dlg_error)
 
 		elif not match(pattern=RGX_EMAIL, string=self.txt_email.value):
 			logger.info("Invalid email format. Aborting process...")
-			self.dlg_error.title = Text(value="Formato de correo inválido")
-			self.dlg_error.content = Text(value="El correo electrónico ingresado no es válido. Favor de verificarlo.")
+			self.dlg_error.title = ft.Text(value="Formato de correo inválido")
+			self.dlg_error.content = ft.Text(value="El correo electrónico ingresado no es válido. Favor de verificarlo.")
 			self.page.open(self.dlg_error)
 
 		else:
 			logger.info("Submit button clicked, initiating process to update user data...")
 			data_changed: bool = False
-			payload: dict[str, Any] = {"mail": self.basket.get("email")}
+			payload: dict[str, Any] = {"mail": self.page.session.get("email")}
 
 			logger.info("Checking what fields have changed...")
-			if self.txt_email.value != self.basket.get("email"):
+			if self.txt_email.value != self.page.session.get("email"):
 				data_changed = True
 				payload["mail"] = self.txt_email.value
-			if self.txt_username.value != self.basket.get("username"):
+			if self.txt_username.value != self.page.session.get("username"):
 				data_changed = True
 				payload["username"] = self.txt_username.value
 			if self.txt_password.value != "":
@@ -296,26 +270,25 @@ class UpdateUserView:
 
 			if not data_changed:
 				logger.info("No changes detected, aborting process...")
-				self.dlg_error.title = Text(value="Sin cambios detectados")
-				self.dlg_error.content = Text(value="No se detectaron cambios en tus datos. Abortando...")
+				self.dlg_error.title = ft.Text(value="Sin cambios detectados")
+				self.dlg_error.content = ft.Text(value="No se detectaron cambios en tus datos. Abortando...")
 				self.page.open(self.dlg_error)
-				# go_to_view(page=self.page, logger=logger, route="account")
 
 			else:
 				logger.info("Making request to update user...")
 				response: Response = put(
-					url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.basket.get('id')}",
+					url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
 					headers={
 						"Content-Type": "application/json",
-						"Authorization": f"Bearer {self.basket.get('session_token')}"
+						"Authorization": f"Bearer {self.page.session.get('session_token')}"
 					},
 					json=payload
 				)
 
 				if response.status_code == 201:
 					logger.info("User updated successfully")
-					self.basket.email = self.txt_email.value
-					self.basket.username = self.txt_username.value
+					self.page.session.set(key="email", value=self.txt_email.value)
+					self.page.session.set(key="username", value=self.txt_username.value)
 
 					logger.info("Cleaning text fields...")
 					self.txt_password.value = ""
@@ -325,8 +298,8 @@ class UpdateUserView:
 
 				else:
 					logger.error("Error updating user")
-					self.dlg_error.title = Text(value="Error al actualizar datos")
-					self.dlg_error.content = Text(
+					self.dlg_error.title = ft.Text(value="Error al actualizar datos")
+					self.dlg_error.content = ft.Text(
 						value=(
 							"Ocurrió un error al intentar actualizar tus datos. "
 							"Favor de intentarlo de nuevo más tarde."
@@ -334,16 +307,16 @@ class UpdateUserView:
 					)
 					self.page.open(self.dlg_error)
 
-	def btn_back_clicked(self, _: ControlEvent) -> None:
+	def btn_back_clicked(self, _: ft.ControlEvent) -> None:
 		logger.info("Back button clicked, discarding changes...")
 
 		logger.info("Cleaning fields...")
 		self.txt_password.value = ""
 		self.txt_confirm_password.value = ""
 
-		go_to_view(page=self.page, logger=logger, route="account")
+		go_to_view(page=self.page, logger=logger, route="/account")
 
-	def save_new_user_image(self, event: FilePickerResultEvent) -> None:
+	def save_new_user_image(self, event: ft.FilePickerResultEvent) -> None:
 		logger.info("Processing new image selected...")
 
 		if event.files:
@@ -357,8 +330,8 @@ class UpdateUserView:
 
 			else:
 				logger.error("Error saving new image.")
-				self.dlg_error.title = Text(value="Error al guardar la nueva imagen")
-				self.dlg_error.content = Text(
+				self.dlg_error.title = ft.Text(value="Error al guardar la nueva imagen")
+				self.dlg_error.content = ft.Text(
 					value=(
 						"Ocurrió un error al intentar guardar la nueva imagen. "
 						"Favor de intentarlo de nuevo más tarde."
@@ -368,10 +341,10 @@ class UpdateUserView:
 		else:
 			logger.info("No image selected. Aborting...")
 
-	def handle_dlg_updated_data(self, _: ControlEvent) -> None:
+	def handle_dlg_updated_data(self, _: ft.ControlEvent) -> None:
 		self.page.close(self.dlg_updated_data)
-		go_to_view(page=self.page, logger=logger, route="account")
+		go_to_view(page=self.page, logger=logger, route="/account")
 
-	def handle_dlg_updated_image(self, _: ControlEvent) -> None:
+	def handle_dlg_updated_image(self, _: ft.ControlEvent) -> None:
 		self.page.close(self.dlg_updated_image)
-		go_to_view(page=self.page, logger=logger, route="account")
+		go_to_view(page=self.page, logger=logger, route="/account")

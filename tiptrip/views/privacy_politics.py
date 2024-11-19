@@ -1,6 +1,5 @@
-from flet import *
-from logging import getLogger
-from flet_route import Params, Basket
+import flet as ft
+from logging import Logger, getLogger
 
 from resources.config import *
 from components.titles import MainTitle
@@ -9,72 +8,59 @@ from resources.texts import PRIVACY_POLITICS
 from resources.styles import cont_main_style, btn_secondary_style
 
 
-logger = getLogger(f"{PROJECT_NAME}.{__name__}")
+logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
 
 
-class PrivacyPoliticsView:
-	def __init__(self) -> None:
-		self.page = None
-		self.params = None
-		self.basket = None
-		self.btn_back = None
-
-	def view(self, page: Page, params: Params, basket: Basket) -> View:
+class PrivacyPoliticsView(ft.View):
+	def __init__(self, page: ft.Page) -> None:
+		# Custom attributes
 		self.page = page
-		self.params = params
-		self.basket = basket
 
-		self.btn_back: ElevatedButton = ElevatedButton(
+		# Custom components
+		self.btn_back: ft.ElevatedButton = ft.ElevatedButton(
 			width=self.page.width,
-			content=Text(
+			content=ft.Text(
 				value="Regresar a Iniciar sesión",
 				size=BTN_TEXT_SIZE
 			),
-			on_click=lambda _: go_to_view(
-				page=self.page,
-				logger=logger,
-				route=""  # '/'
-			),
+			on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/sign_in"),
 			**btn_secondary_style
 		)
 
-		return View(
+		# View native attributes
+		super().__init__(
 			route="/privacy_politics",
-			padding=padding.all(value=0.0),
 			bgcolor=MAIN_COLOR,
+			padding=ft.padding.all(value=0.0),
 			controls=[
-				Container(
-					content=Column(
+				ft.Container(
+					content=ft.Column(
 						controls=[
-							Container(
-								content=IconButton(
-									icon=icons.ARROW_BACK,
-									icon_color=colors.BLACK,
-									on_click=lambda _: go_to_view(
-										page=self.page,
-										logger=logger,
-										route=""  # '/'
-									),
+							ft.Container(
+								content=ft.IconButton(
+									icon=ft.icons.ARROW_BACK,
+									icon_color=ft.colors.BLACK,
+									on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/sign_in"),
 								)
 							),
 							MainTitle(
 								subtitle="Política de Privacidad",
 								top_margin=(SPACING / 2)
 							),
-							Container(
-								margin=margin.only(top=SPACING),
-								content=Column(
-									scroll=ScrollMode.HIDDEN,
+							ft.Container(
+								margin=ft.margin.only(top=SPACING),
+								content=ft.Column(
+									scroll=ft.ScrollMode.HIDDEN,
 									controls=[
-										Text(
+										ft.Text(
 											value=PRIVACY_POLITICS,
-											color=colors.BLACK
+											color=ft.colors.BLACK
 										)
 									]
 								)
 							),
-							Container(
-								margin=margin.only(top=SPACING),
+							ft.Container(
+								margin=ft.margin.only(top=SPACING),
 								content=self.btn_back
 							)
 						]

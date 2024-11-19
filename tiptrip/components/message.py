@@ -1,42 +1,42 @@
-from flet import *
+import flet as ft
 
 from resources.texts import *
 from resources.config import *
 
 
-class Message(Container):
+class Message(ft.Container):
 	def __init__(self, is_bot: bool, message: str) -> None:
 		super().__init__(
 			expand=True,
 			expand_loose=True,
-			border_radius=border_radius.all(value=(RADIUS / 2)),
-			shadow=BoxShadow(
+			border_radius=ft.border_radius.all(value=(RADIUS / 2)),
+			shadow=ft.BoxShadow(
 				blur_radius=(BLUR / 2),
-				offset=Offset(0, 2),
-				color=colors.GREY
+				offset=ft.Offset(0, 2),
+				color=ft.colors.GREY
 			),
-			padding=padding.all(value=(SPACING / 2)),
+			padding=ft.padding.all(value=(SPACING / 2)),
 			bgcolor=(
-				colors.RED
+				ft.colors.RED
 				if "ERROR" in message
 				else (
-					colors.WHITE
+					ft.colors.WHITE
 					if is_bot
 					else SECONDARY_COLOR
 				)
 			),
 			content=(
-				Markdown(
+				ft.Markdown(
 					value=message,
-					md_style_sheet=MarkdownStyleSheet(
-						p_text_style=TextStyle(
-							color=colors.BLACK,
+					md_style_sheet=ft.MarkdownStyleSheet(
+						p_text_style=ft.TextStyle(
+							color=ft.colors.BLACK,
 							size=MESSAGE_TEXT_SIZE
 						)
 					)
 				)
 				if is_bot else
-				Text(
+				ft.Text(
 					value=(
 						message
 						if "ERROR" not in message
@@ -49,7 +49,7 @@ class Message(Container):
 					color=(
 						colors.BLACK
 						if is_bot and "ERROR" not in message
-						else colors.WHITE
+						else ft.colors.WHITE
 					),
 					size=MESSAGE_TEXT_SIZE
 				)

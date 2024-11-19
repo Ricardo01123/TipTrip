@@ -1,9 +1,6 @@
-from flet import *
-from os import listdir
-from os.path import join
-from logging import getLogger
+import flet as ft
 from requests import get, Response
-from flet_route import Params, Basket
+from logging import Logger, getLogger
 
 from components.bars import *
 from resources.config import *
@@ -12,78 +9,75 @@ from components.place_card import PlaceCard
 from resources.styles import txt_messages_style
 
 
-logger = getLogger(f"{PROJECT_NAME}.{__name__}")
+logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
 
 
-class FavoritesView:
-	def __init__(self) -> None:
-		self.route = "/favorites"
-
-	def view(self, page: Page, params: Params, basket: Basket) -> View:
+class FavoritesView(ft.View):
+	def __init__(self, page: ft.Page) -> None:
+		# Custom attributes
 		self.page = page
-		self.params = params
-		self.basket = basket
 
-		self.txt_favorite_searcher: TextField = TextField(
-			prefix_icon=icons.SEARCH,
+		# Custom components
+		self.txt_favorite_searcher: ft.TextField = ft.TextField(
+			prefix_icon=ft.icons.SEARCH,
 			hint_text="Busca un sitio favorito",
 			on_change=self.search_favorite,
 			**txt_messages_style
 		)
 
 		# Places and pagination variables
-		self.items: list | Container = self.get_favorites()
+		self.items: list | ft.Container = self.get_favorites()
 
 		self.current_page: int = 0
 		self.items_per_page: int = 10
 		self.page_start_index: int = 0
 		self.page_end_index: int = self.items_per_page
 
-		self.lv_favorites_list: ListView = ListView(
-			padding=padding.symmetric(
+		self.lv_favorites_list: ft.ListView = ft.ListView(
+			padding=ft.padding.symmetric(
 				vertical=(SPACING / 2),
 				horizontal=SPACING
 			),
 			spacing=(SPACING / 2),
 			controls=(
 				self.items
-				if isinstance(self.items, Container)
+				if isinstance(self.items, ft.Container)
 				else self.items[self.page_start_index:self.page_end_index]
 			)
 		)
 
 		self.total_items: int = len(self.items)
 		self.total_pages: int = (self.total_items + self.items_per_page - 1) // self.items_per_page
-		self.lbl_actual_page: Text = Text(
+		self.lbl_actual_page: ft.Text = ft.Text(
 			value=f"Página {self.current_page + 1} de {self.total_pages}",
-			color=colors.BLACK
+			color=ft.colors.BLACK
 		)
-		self.cont_pagination: Container = Container(
+		self.cont_pagination: ft.Container = ft.Container(
 			width=self.page.width,
-			margin=margin.only(bottom=5),
-			alignment=alignment.center,
-			content=Row(
+			margin=ft.margin.only(bottom=5),
+			alignment=ft.alignment.center,
+			content=ft.Row(
 				controls=[
-					Container(
-						margin=margin.only(left=SPACING - 5),
-						content=Icon(
-							name=icons.ARROW_BACK_IOS_SHARP,
+					ft.Container(
+						margin=ft.margin.only(left=SPACING - 5),
+						content=ft.Icon(
+							name=ft.icons.ARROW_BACK_IOS_SHARP,
 							size=25,
-							color=colors.BLACK
+							color=ft.colors.BLACK
 						),
 						on_click=self.previous_page
 					),
-					Container(
+					ft.Container(
 						expand=True,
-						alignment=alignment.center,
+						alignment=ft.alignment.center,
 						content=self.lbl_actual_page
 					),
-					Container(
-						margin=margin.only(right=SPACING - 5),
-						content=Icon(
-							name=icons.ARROW_FORWARD_IOS_SHARP,
+					ft.Container(
+						margin=ft.margin.only(right=SPACING - 5),
+						content=ft.Icon(
+							name=ft.icons.ARROW_FORWARD_IOS_SHARP,
 							size=25,
-							color=colors.BLACK
+							color=ft.colors.BLACK
 						),
 						on_click=self.next_page
 					),
@@ -91,77 +85,73 @@ class FavoritesView:
 			)
 		)
 
-		return View(
-			route=self.route,
-			bgcolor=colors.WHITE,
-			padding=padding.all(value=0.0),
+		# View native attributes
+		super().__init__(
+			route="/favorites",
+			bgcolor=ft.colors.WHITE,
+			padding=ft.padding.all(value=0.0),
 			spacing=0,
 			controls=[
 				TopBar(page=self.page, leading=False, logger=logger),
-				Container(
-					width=self.page.width,
-					height=RADIUS,
-					bgcolor=MAIN_COLOR,
-					border_radius=border_radius.only(
-						bottom_left=RADIUS,
-						bottom_right=RADIUS
+					ft.Container(
+						width=self.page.width,
+						height=RADIUS,
+						bgcolor=MAIN_COLOR,
+						border_radius=ft.border_radius.only(
+							bottom_left=RADIUS,
+							bottom_right=RADIUS
+						),
+						shadow=ft.BoxShadow(
+							blur_radius=BLUR,
+							color=ft.colors.GREY_800
+						)
 					),
-					shadow=BoxShadow(
-						blur_radius=BLUR,
-						color=colors.GREY_800
-					)
-				),
-				Container(
-					width=self.page.width,
-					height=TXT_CONT_SIZE,
-					margin=margin.symmetric(vertical=10),
-					content=Row(
-						controls=[
-							Container(expand=1),
-							Container(
-								expand=8,
-								bgcolor=colors.WHITE,
-								padding=padding.symmetric(
-									horizontal=(SPACING / 2)
+					ft.Container(
+						width=self.page.width,
+						height=TXT_CONT_SIZE,
+						margin=ft.margin.symmetric(vertical=10),
+						content=ft.Row(
+							controls=[
+								ft.Container(expand=1),
+								ft.Container(
+									expand=8,
+									bgcolor=ft.colors.WHITE,
+									padding=ft.padding.symmetric(
+										horizontal=(SPACING / 2)
+									),
+									border_radius=ft.border_radius.all(
+										value=RADIUS
+									),
+									shadow=ft.BoxShadow(
+										blur_radius=(BLUR / 2),
+										offset=ft.Offset(0, 2),
+										color=ft.colors.GREY
+									),
+									alignment=ft.alignment.center_left,
+									content=self.txt_favorite_searcher
 								),
-								border_radius=border_radius.all(
-									value=RADIUS
-								),
-								shadow=BoxShadow(
-									blur_radius=(BLUR / 2),
-									offset=Offset(0, 2),
-									color=colors.GREY
-								),
-								alignment=alignment.center_left,
-								content=self.txt_favorite_searcher
-							),
-							Container(expand=1),
-						]
-					)
-				),
-				self.cont_pagination,
-				Container(
-					expand=True,
-					width=self.page.width,
-					content=self.lv_favorites_list
-				),
-				BottomBar(
-					page=self.page,
-					logger=logger,
-					current_route=self.route
-				)
+								ft.Container(expand=1),
+							]
+						)
+					),
+					self.cont_pagination,
+					ft.Container(
+						expand=True,
+						width=self.page.width,
+						content=self.lv_favorites_list
+					),
+					BottomBar(page=self.page, logger=logger, current_route="/favorites")
 			]
 		)
 
-
-	def get_favorites(self) -> list | Container:
+	def get_favorites(self) -> list | ft.Container:
 		logger.info("Calling Back-End API...")
 
 		response: Response = get(
-			url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}/{self.basket.get('id')}",
+			url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}/{self.page.session.get('id')}",
 			headers={
 				"Content-Type": "application/json",
-				"Authorization": f"Bearer {self.basket.get('session_token')}"
+				"Authorization": f"Bearer {self.page.session.get('session_token')}"
 			}
 		)
 
@@ -172,7 +162,6 @@ class FavoritesView:
 			return [
 				PlaceCard(
 					page=self.page,
-					basket=self.basket,
 					id=favorite["id"],
 					name=favorite["name"],
 					classification=favorite["classification"],
@@ -186,11 +175,11 @@ class FavoritesView:
 
 		elif response.status_code == 204:
 			return [
-				Container(
-					alignment=alignment.center,
-					content=Text(
+				ft.Container(
+					alignment=ft.alignment.center,
+					content=ft.Text(
 						value="No se encontró ningún sitio turístico favorito.",
-						color=colors.BLACK,
+						color=ft.colors.BLACK,
 						size=30
 					)
 				)
@@ -198,15 +187,15 @@ class FavoritesView:
 
 		else:
 			return [
-				Container(
-					alignment=alignment.center,
-					content=Text(
+				ft.Container(
+					alignment=ft.alignment.center,
+					content=ft.Text(
 						value=(
 							"Ocurrió un error al obtener la lista de sitios "
 							"turísticos favoritos.\nFavor de intentarlo de nuevo "
 							"más tarde."
 						),
-						color=colors.BLACK,
+						color=ft.colors.BLACK,
 						size=30
 					)
 				)
@@ -219,7 +208,7 @@ class FavoritesView:
 		self.lbl_actual_page.value = f"Página {self.current_page + 1} de {self.total_pages}"
 		self.page.update()
 
-	def search_favorite(self, _: ControlEvent) -> None:
+	def search_favorite(self, _: ft.ControlEvent) -> None:
 		if self.txt_favorite_searcher.value == "":
 			logger.info("Cleaning 'searching favorite' filter...")
 			self.lv_favorites_list.controls = self.items[0:self.items_per_page]
@@ -235,7 +224,7 @@ class FavoritesView:
 			self.lv_favorites_list.controls = items[0:self.items_per_page]
 			self.update_pagination_data(items)
 
-	def previous_page(self, _: ControlEvent) -> None:
+	def previous_page(self, _: ft.ControlEvent) -> None:
 		logger.info(f"Going to previous page...")
 		if self.current_page > 0:
 			self.current_page -= 1
@@ -246,7 +235,7 @@ class FavoritesView:
 		self.set_page_indexes()
 		self.page.update()
 
-	def next_page(self, _: ControlEvent) -> None:
+	def next_page(self, _: ft.ControlEvent) -> None:
 		logger.info(f"Going to next page...")
 		if self.current_page < self.total_pages - 1:
 			self.current_page += 1

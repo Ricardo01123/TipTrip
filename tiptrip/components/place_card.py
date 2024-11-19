@@ -1,20 +1,18 @@
-from flet import *
-from logging import getLogger
-from flet_route import Basket
+import flet as ft
+from logging import Logger, getLogger
 from requests import post, delete, Response
 
 from resources.config import *
 from resources.functions import go_to_view
 
 
-logger = getLogger(f"{PROJECT_NAME}.{__name__}")
+logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
 
 
-class PlaceCard(Container):
+class PlaceCard(ft.Container):
 	def __init__(
 			self,
-			page: Page,
-			basket: Basket,
+			page: ft.Page,
 			id: int,
 			name: str,
 			classification: str,
@@ -25,98 +23,93 @@ class PlaceCard(Container):
 			distance: float = None,
 		) -> None:
 
+		self.page: ft.Page = page
+		self.place_id: int = id
+
 		super().__init__(
-			bgcolor=colors.WHITE,
-			padding = padding.only(
+			bgcolor=ft.colors.WHITE,
+			padding=ft.padding.only(
 				left=(SPACING / 2),
 				top=(SPACING / 2),
 				right=(SPACING / 2),
 				bottom=0,
 			),
-			border_radius = border_radius.all(RADIUS),
-			shadow = BoxShadow(
+			border_radius=ft.border_radius.all(RADIUS),
+			shadow=ft.BoxShadow(
 				blur_radius=LOW_BLUR,
-				offset=Offset(0, 3),
-				color=colors.GREY
+				offset=ft.Offset(0, 3),
+				color=ft.colors.GREY
 			),
-			on_click = lambda _: go_to_view(
-				page=page,
-				logger=logger,
-				route=f"place_details/{id}"
-			)
+			on_click=self.open_place_details_view
 		)
 
-		self.page: Page = page
-		self.basket: Basket = basket
-		self.place_id: int = id
-
-		self.saved_iconbutton: IconButton = IconButton(
+		self.saved_iconbutton: ft.IconButton = ft.IconButton(
 			icon=(
-				icons.BOOKMARK
+				ft.icons.BOOKMARK
 				if is_favorite
-				else icons.BOOKMARK_BORDER
+				else ft.icons.BOOKMARK_BORDER
 			),
 			icon_color=SECONDARY_COLOR,
 			icon_size=25,
 			on_click=self.handle_saved_iconbutton
 		)
 
-		self.dlg_error: AlertDialog = AlertDialog(
+		self.dlg_error: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=Text(""),
-			content=Text(""),
+			title=ft.Text(""),
+			content=ft.Text(""),
 			actions=[
-				TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
+				ft.TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
 			],
-			actions_alignment=MainAxisAlignment.END,
+			actions_alignment=ft.MainAxisAlignment.END,
 			on_dismiss=lambda _: self.page.close(self.dlg_error)
 		)
 
-		self.content=Column(
+		self.content=ft.Column(
 			controls=[
-				Container(
-					content=Row(
-						scroll=ScrollMode.HIDDEN,
+				ft.Container(
+					content=ft.Row(
+						scroll=ft.ScrollMode.HIDDEN,
 						controls=[
-							Text(
+							ft.Text(
 								value=name,
 								color=MAIN_COLOR,
 								size=PLC_TITLE_SIZE,
-								weight=FontWeight.BOLD,
+								weight=ft.FontWeight.BOLD,
 							)
 						]
 					)
 				),
-				Container(
-					content=Row(
+				ft.Container(
+					content=ft.Row(
 						controls=[
-							Container(
+							ft.Container(
 								expand=1,
-								content=Image(
+								content=ft.Image(
 									src=image_link,
-									fit=ImageFit.FILL,
-									repeat=ImageRepeat.NO_REPEAT,
-									border_radius=border_radius.all(RADIUS)
+									fit=ft.ImageFit.FILL,
+									repeat=ft.ImageRepeat.NO_REPEAT,
+									border_radius=ft.border_radius.all(RADIUS)
 								)
 							),
-							Container(
+							ft.Container(
 								expand=1,
-								content=Column(
+								content=ft.Column(
 									controls=[
-										Container(
-											content=Row(
+										ft.Container(
+											content=ft.Row(
 												spacing=3,
-												alignment=MainAxisAlignment.START,
+												alignment=ft.MainAxisAlignment.START,
 												controls=[
-													Container(
-														content=Icon(
-															name=icons.MUSEUM_SHARP,
+													ft.Container(
+														content=ft.Icon(
+															name=ft.icons.MUSEUM_SHARP,
 															color=SECONDARY_COLOR,
 															size=15
 														)
 													),
-													Container(
-														content=Text(
+													ft.Container(
+														content=ft.Text(
 															value=classification,
 															color=SECONDARY_COLOR,
 															size=PLC_CATEGORY_SIZE
@@ -125,85 +118,85 @@ class PlaceCard(Container):
 												]
 											)
 										),
-										Container(
-											content=Text(
+										ft.Container(
+											content=ft.Text(
 												value=address,
-												color=colors.BLACK
+												color=ft.colors.BLACK
 											)
 										)
 									]
 								)
-							),
+							)
 						]
-					),
+					)
 				),
-				Container(
-					content=Row(
-						alignment=MainAxisAlignment.SPACE_BETWEEN,
+				ft.Container(
+					content=ft.Row(
+						alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
 						spacing=0,
 						controls=[
-							Container(content=self.saved_iconbutton),
-							Container(
-								content=Text(
+							ft.Container(content=self.saved_iconbutton),
+							ft.Container(
+								content=ft.Text(
 									value=(
 										f"Distancia de mí: {distance:.2f} km"
 										if distance is not None
 										else "Distancia de mí: No disponible"
 									),
 									color=(
-										colors.BLACK
+										ft.colors.BLACK
 										if distance is not None
-										else colors.RED
+										else ft.colors.RED
 									)
 								)
 							),
-							Container(
+							ft.Container(
 								width=60,
 								bgcolor=(
 									SECONDARY_COLOR
 									if punctuation is not None
-									else colors.RED
+									else ft.colors.RED
 								),
-								border_radius=border_radius.all(
+								border_radius=ft.border_radius.all(
 									value=15
 								),
-								padding=padding.only(
+								padding=ft.padding.only(
 									right=5
 								),
-								content=Row(
+								content=ft.Row(
 									spacing=0,
-									alignment=MainAxisAlignment.CENTER,
+									alignment=ft.MainAxisAlignment.CENTER,
 									controls=(
 										[
-											Container(
+											ft.Container(
 												expand=1,
-												alignment=alignment.center_right,
-												content=Icon(
-													name=icons.STAR_BORDER,
-													color=colors.WHITE,
+												alignment=ft.alignment.center_right,
+												content=ft.Icon(
+													name=ft.icons.STAR_BORDER,
+													color=ft.colors.WHITE,
 													size=14
 												)
 											),
-											Container(
+											ft.Container(
 												expand=1,
-												alignment=alignment.center_left,
-												content=Text(
+												alignment=ft.alignment.center_left,
+												content=ft.Text(
 													value=punctuation,
-													color=colors.WHITE,
+													color=ft.colors.WHITE,
 												)
 											)
 										]
 										if punctuation is not None else
 										[
-											Container(
+											ft.Container(
 												expand=True,
-												margin=margin.symmetric(
+												margin=ft.margin.symmetric(
 													vertical=3
 												),
-												alignment=alignment.center,
-												content=Icon(
-													name=icons.STAR_BORDER,
-													color=colors.WHITE,
+												alignment=ft.alignment.center,
+												content=ft.Icon(
+													name=ft.icons.STAR_BORDER,
+													color=ft.colors.WHITE,
 													size=14
 												)
 											)
@@ -217,25 +210,29 @@ class PlaceCard(Container):
 			]
 		)
 
-	def handle_saved_iconbutton(self, _) -> None:
-		if self.saved_iconbutton.icon == icons.BOOKMARK:
+	def open_place_details_view(self, _: ft.ControlEvent) -> None:
+		self.page.session.set(key="place_id", value=self.place_id)
+		go_to_view(page=self.page, logger=logger, route="/place_details")
+
+	def handle_saved_iconbutton(self, _: ft.ControlEvent) -> None:
+		if self.saved_iconbutton.icon == ft.icons.BOOKMARK:
 			logger.info("Removing place from favorites...")
 			response: Response = delete(
-				url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}/{self.basket.get('id')}/{self.place_id}",
+				url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}/{self.page.session.get('id')}/{self.place_id}",
 				headers={
 					"Content-Type": "application/json",
-					"Authorization": f"Bearer {self.basket.get('session_token')}"
+					"Authorization": f"Bearer {self.page.session.get('session_token')}"
 				}
 			)
 
 			if response.status_code == 200:
 				logger.info("Place removed from favorites successfully")
-				self.saved_iconbutton.icon = icons.BOOKMARK_BORDER
+				self.saved_iconbutton.icon = ft.icons.BOOKMARK_BORDER
 				self.page.update()
 			else:
 				print("Error removing place from favorites")
-				self.dlg_error.title = Text("Error al eliminar")
-				self.dlg_error.content = Text(
+				self.dlg_error.title = ft.Text("Error al eliminar")
+				self.dlg_error.content = ft.Text(
 					"Ocurrió un error eliminando el sitio turístico de la lista de favoritos. "
 					"Favor de intentarlo de nuevo más tarde."
 				)
@@ -247,22 +244,22 @@ class PlaceCard(Container):
 				url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}",
 				headers={
 					"Content-Type": "application/json",
-					"Authorization": f"Bearer {self.basket.get('session_token')}"
+					"Authorization": f"Bearer {self.page.session.get('session_token')}"
 				},
 				json={
-					"user_id": self.basket.get("id"),
+					"user_id": self.page.session.get("id"),
 					"place_id": self.place_id
 				}
 			)
 
 			if response.status_code == 201:
 				logger.info("Place added to favorites successfully")
-				self.saved_iconbutton.icon = icons.BOOKMARK
+				self.saved_iconbutton.icon = ft.icons.BOOKMARK
 				self.page.update()
 			else:
 				print("Error adding place to favorites")
-				self.dlg_error.title = Text("Error al agregar")
-				self.dlg_error.content = Text(
+				self.dlg_error.title = ft.Text("Error al agregar")
+				self.dlg_error.content = ft.Text(
 					"Ocurrió un error agregando el sitio turístico a la lista de favoritos. "
 					"Favor de intentarlo de nuevo más tarde."
 				)

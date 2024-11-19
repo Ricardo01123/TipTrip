@@ -1,43 +1,80 @@
-from time import sleep
-from logging import basicConfig, getLogger, INFO
-
+import flet as ft
 from os import remove
+from time import sleep
 from os.path import exists, join
-
-from flet import *
-from flet_route import Routing
+from logging import Logger, getLogger, basicConfig, INFO
 
 from resources.config import *
-from resources.router import routes
-# from components.loading_ring import loading_ring
+from views.home import HomeView
+from views.sign_in import SignInView
+from views.sign_up import SignUpView
+from views.loading import LoadingView
+from views.chatbot import ChatbotView
+from views.account import AccountView
+from views.favorites import FavoritesView
+from views.update_user import UpdateUserView
+from views.place_details import PlaceDetailsView
+from views.change_password import ChangePasswordView
+from views.privacy_politics import PrivacyPoliticsView
+from views.terms_conditions import TermsConditionsView
 
 
 basicConfig(level=INFO, format=LOGGING_FORMAT)
-logger = getLogger(PROJECT_NAME)
+logger: Logger = getLogger(PROJECT_NAME)
 
 
-def main(page: Page) -> None:
-	logger.info(f"Starting app's navigation configurations...")
-	page.window.width = 412
-	page.window.height = 915
-	# loading_ring.left = (page.window.width // 2) - (LOADING_RING_SIZE // 2)
-	# loading_ring.top = (page.window.height // 2) - (LOADING_RING_SIZE // 2)
-	# page.overlay.append(loading_ring)
+def main(page: ft.Page) -> None:
+	page.title = "Tip Trip"
 
-	Routing(page=page, app_routes=routes)
+	logger.info(f"Starting app's basic configurations...")
+	def route_change(_: ft.RouteChangeEvent) -> None:
+		page.views.clear()
+
+		# Opening view
+		page.views.append(SignInView(page))
+		# Other views
+		match page.route:
+			# Loading view
+			case "/loading": page.views.append(LoadingView(page))
+			# Login views
+			case "/sign_in": page.views.append(SignInView(page))
+			case "/sign_up": page.views.append(SignUpView(page))
+			case "/change_password": page.views.append(ChangePasswordView(page))
+			case "/privacy_politics": page.views.append(PrivacyPoliticsView(page))
+			case "/terms_conditions": page.views.append(TermsConditionsView(page))
+			# Functionality views
+			case '/': page.views.append(HomeView(page))
+			case "/place_details": page.views.append(PlaceDetailsView(page))
+			case "/chatbot": page.views.append(ChatbotView(page))
+			case "/favorites": page.views.append(FavoritesView(page))
+			# User profile views
+			case "/account": page.views.append(AccountView(page))
+			case "/update_user": page.views.append(UpdateUserView(page))
+			# Else
+			case _: logger.error(f"Route '{page.route}' does not exists")
+
+		page.update()
+
+	def view_pop(_: ft.ViewPopEvent) -> None:
+		page.views.pop()
+		top_view: ft.View = page.views[-1]
+		page.go(top_view.route)
+
+	page.session.set(key="modalview_loaded", value=False)
+
+	page.on_route_change = route_change
+	page.on_view_pop = view_pop
 
 	# page.go("/loading")
 	# sleep(1)
-	# page.go("/sign_in")
-	page.go(page.route)
+	page.go("/sign_in")
 
 
-if __name__ == "__main__":
-	app(target=main, assets_dir="assets")
+ft.app(main, assets_dir="assets")
 
-	logger.info("Ending app execution, deleting temporal audio file if exists...")
-	if exists(join(TEMP_ABSPATH, TEMP_FILE_NAME)):
-		remove(join(TEMP_ABSPATH, TEMP_FILE_NAME))
+logger.info("Ending app execution, deleting temporal audio files if exists...")
+if exists(join(TEMP_ABSPATH, TEMP_FILE_NAME)):
+	remove(join(TEMP_ABSPATH, TEMP_FILE_NAME))
 
-	if exists(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME)):
-		remove(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME))
+if exists(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME)):
+	remove(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME))

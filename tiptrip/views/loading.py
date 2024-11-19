@@ -1,81 +1,75 @@
-from flet import *
+import flet as ft
 from random import choice
-from flet_route import Params, Basket
 
 from resources.config import *
 from resources.texts import ADVICES
 
 
-class LoadingView:
-    def __init__(self):
-        self.page = None
-        self.params = None
-        self.basket = None
+class LoadingView(ft.View):
+	def __init__(self, page: ft.Page) -> None:
+		# Custom attributes
+		self.page = page
 
-    def view(self, page: Page, params: Params, basket: Basket) -> View:
-        self.page = page
-        self.params = params
-        self.basket = basket
-
-        return View(
-            route="/loading",
-            bgcolor=colors.WHITE,
-            padding=padding.all(value=0),
-            controls=[
-                Container(
-                    expand=8,
-                    width=self.page.width,
-                    bgcolor=MAIN_COLOR,
-                    padding=padding.all(value=SPACING),
-                    border_radius=border_radius.only(
-                        bottom_left=RADIUS,
-                        bottom_right=RADIUS
-                    ),
-                    shadow=BoxShadow(blur_radius=LOW_BLUR),
-                    content=Column(
-                        alignment=MainAxisAlignment.CENTER,
-                        horizontal_alignment=CrossAxisAlignment.CENTER,
-                        spacing=SPACING,
-                        controls=[
-                            Container(
-                                width=self.page.width,
-                                content=Text(
-                                    value=PROJECT_NAME,
-                                    size=45,
-                                    color=colors.WHITE,
-                                    text_align=TextAlign.CENTER
-                                )
-                            ),
-                            Container(
-                                width=self.page.width,
-                                content=Icon(
-                                    name=icons.FMD_GOOD_OUTLINED,
-                                    size=300,
-                                    color=colors.WHITE
-                                )
-                            ),
-                            Container(
-                                width=self.page.width,
-                                content=Text(
-                                    value="Cargando...",
-                                    size=30,
-                                    color=colors.WHITE,
-                                    text_align=TextAlign.CENTER
-                                )
-                            )
-                        ]
-                    )
-                ),
-                Container(
-                    expand=2,
-                    width=self.page.width,
-                    padding=padding.all(value=SPACING),
-                    content=Text(
-                        value=f"Consejo: {choice(ADVICES)}",
-                        size=20,
-                        color=colors.BLACK,
-                        text_align=TextAlign.CENTER
-                    )
-                )
-            ]
-        )
+		# View native attributes
+		super().__init__(
+			route="/loading",
+			bgcolor=MAIN_COLOR,
+			padding=ft.padding.all(value=0.0),
+			controls=[
+				ft.Container(
+					expand=8,
+					width=self.page.width,
+					bgcolor=MAIN_COLOR,
+					padding=ft.padding.all(value=SPACING),
+					border_radius=ft.border_radius.only(
+						bottom_left=RADIUS,
+						bottom_right=RADIUS
+					),
+					shadow=ft.BoxShadow(blur_radius=LOW_BLUR),
+					content=ft.Column(
+						alignment=ft.MainAxisAlignment.CENTER,
+						horizontal_alignment=ft.CrossAxisAlignment.CENTER,
+						spacing=SPACING,
+						controls=[
+							ft.Container(
+								width=self.page.width,
+								content=ft.Text(
+									value=PROJECT_NAME,
+									size=45,
+									color=ft.colors.WHITE,
+									text_align=ft.TextAlign.CENTER
+								)
+							),
+							ft.Container(
+								width=self.page.width,
+								content=ft.Icon(
+									name=ft.icons.FMD_GOOD_OUTLINED,
+									size=300,
+									color=ft.colors.WHITE
+								)
+							),
+							ft.Container(
+								width=self.page.width,
+								content=ft.Text(
+									value="Cargando...",
+									size=30,
+									color=ft.colors.WHITE,
+									text_align=ft.TextAlign.CENTER
+								)
+							)
+						]
+					)
+				),
+				ft.Container(
+					expand=2,
+					width=self.page.width,
+					padding=ft.padding.all(value=SPACING),
+					content=ft.Text(
+						value=f"Consejo: {choice(ADVICES)}",
+						size=20,
+						color=ft.colors.BLACK,
+						text_align=ft.TextAlign.CENTER
+					)
+				)
+			]
+		)

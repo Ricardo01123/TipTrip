@@ -1,246 +1,226 @@
-from flet import *
+import flet as ft
 from os import listdir
-from logging import getLogger
-from requests import Response, delete
-from flet_route import Params, Basket
+from requests import delete, Response
+from logging import Logger, getLogger
 
 
 from components.bars import *
 from resources.config import *
-from resources.functions import clean_basket, go_to_view
+from resources.functions import go_to_view
 from resources.styles import btn_secondary_style, btn_danger_style
 
 
-logger = getLogger(f"{PROJECT_NAME}.{__name__}")
+logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
 
 
-class AccountView:
-	def __init__(self) -> None:
-		self.page = None
-		self.params = None
-		self.basket = None
-		self.route = None
-		self.btn_delete_user = None
+class AccountView(ft.View):
+	def __init__(self, page: ft.Page) -> None:
+		# Custom attributes
+		self.page = page
 		self.user_image: str = self.get_user_image()
 
-		self.dlg_confirm_delete_account: AlertDialog = AlertDialog(
+		# Custom components
+		self.dlg_confirm_delete_account: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=Text("Eliminar cuenta"),
-			content=Text(
+			title=ft.Text("Eliminar cuenta"),
+			content=ft.Text(
 				"¿Estás seguro de que deseas eliminar tu cuenta?\n"
 				"Esta acción no se puede deshacer."
 			),
 			actions=[
-				TextButton(
+				ft.TextButton(
 					"Cancelar",
 					on_click=lambda _: self.page.close(self.dlg_confirm_delete_account)
 				),
-				TextButton("Aceptar", on_click=self.delete_account)
+				ft.TextButton("Aceptar", on_click=self.delete_account)
 			],
-			actions_alignment=MainAxisAlignment.END,
+			actions_alignment=ft.MainAxisAlignment.END,
 			on_dismiss=lambda _: self.page.close(self.dlg_confirm_delete_account)
 		)
-
-		self.dlg_account_deleted: AlertDialog = AlertDialog(
+		self.dlg_account_deleted: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=Text("Cuenta eliminada"),
-			content=Text("Su cuenta ha sido eliminada exitosamente."),
+			title=ft.Text("Cuenta eliminada"),
+			content=ft.Text("Su cuenta ha sido eliminada exitosamente."),
 			actions=[
-				TextButton("Aceptar", on_click=self.handle_ok_account_deleted)
+				ft.TextButton("Aceptar", on_click=self.handle_ok_account_deleted)
 			],
-			actions_alignment=MainAxisAlignment.END,
+			actions_alignment=ft.MainAxisAlignment.END,
 			on_dismiss=self.handle_ok_account_deleted
 		)
-
-		self.dlg_error: AlertDialog = AlertDialog(
+		self.dlg_error: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=Text("Error al eliminar cuenta"),
-			content=Text(
+			title=ft.Text("Error al eliminar cuenta"),
+			content=ft.Text(
 				value=(
 					"Ocurrió un error al eliminar la cuenta. "
 					"Favor de intentarlo de nuevo más tarde."
 				)
 			),
 			actions=[
-				TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
+				ft.TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
 			],
-			actions_alignment=MainAxisAlignment.END,
+			actions_alignment=ft.MainAxisAlignment.END,
 			on_dismiss=lambda _: self.page.close(self.dlg_error)
 		)
-
-	def view(self, page: Page, params: Params, basket: Basket) -> View:
-		self.page = page
-		self.params = params
-		self.basket = basket
-
-		self.route = "/account"
-
-		self.btn_delete_user: ElevatedButton = ElevatedButton(
+		self.btn_delete_user: ft.ElevatedButton = ft.ElevatedButton(
 			width=self.page.width,
-			icon=icons.DELETE,
+			icon=ft.icons.DELETE,
 			text="Eliminar cuenta",
 			on_click=self.btn_delete_user_clicked,
 			**btn_danger_style
 		)
 
-		return View(
-			route=self.route,
+		# View native attributes
+		super().__init__(
+			route="/account",
 			bgcolor=MAIN_COLOR,
-			padding=padding.all(value=0.0),
+			padding=ft.padding.all(value=0.0),
 			spacing=0,
 			controls=[
 				TopBar(page=self.page, leading=True, logger=logger),
-				Container(
+				ft.Container(
 					width=self.page.width,
-					alignment=alignment.center,
-					padding=padding.only(
+					alignment=ft.alignment.center,
+					padding=ft.padding.only(
 						left=SPACING,
 						right=SPACING,
 						bottom=SPACING,
 					),
-					content=CircleAvatar(
+					content=ft.CircleAvatar(
 						radius=(SPACING * 4),
 						background_image_src=self.user_image,
 						foreground_image_src=self.user_image,
-						content=Text(
-							value=self.format_image_name(self.basket.get("username"))
+						content=ft.Text(
+							value=self.format_image_name(self.page.session.get("username"))
 						),
 					)
 				),
-				Container(
+				ft.Container(
 					expand=True,
 					width=self.page.width,
-					bgcolor=colors.WHITE,
-					padding=padding.only(
+					bgcolor=ft.colors.WHITE,
+					padding=ft.padding.only(
 						top=(SPACING * 2),
 						right=SPACING,
 						bottom=SPACING,
 						left=SPACING,
 					),
-					border_radius=border_radius.only(
+					border_radius=ft.border_radius.only(
 						top_left=RADIUS,
 						top_right=RADIUS
 					),
-					shadow=BoxShadow(
+					shadow=ft.BoxShadow(
 						blur_radius=(BLUR / 2),
-						offset=Offset(0, -2),
-						color=colors.BLACK
+						offset=ft.Offset(0, -2),
+						color=ft.colors.BLACK
 					),
-					content=Column(
+					content=ft.Column(
 						width=self.page.width,
-						alignment=MainAxisAlignment.START,
+						alignment=ft.MainAxisAlignment.START,
 						spacing=SPACING,
 						controls=[
-							Container(
+							ft.Container(
 								height=80,
-								bgcolor=colors.WHITE,
-								padding=padding.symmetric(
+								bgcolor=ft.colors.WHITE,
+								padding=ft.padding.symmetric(
 									vertical=(SPACING / 2),
 									horizontal=SPACING
 								),
-								border_radius=border_radius.all(
+								border_radius=ft.border_radius.all(
 									value=RADIUS
 								),
-								shadow=BoxShadow(
+								shadow=ft.BoxShadow(
 									blur_radius=LOW_BLUR,
-									color=colors.GREY_500
+									color=ft.colors.GREY_500
 								),
-								content=Column(
-									alignment=MainAxisAlignment.CENTER,
+								content=ft.Column(
+									alignment=ft.MainAxisAlignment.CENTER,
 									spacing=0,
 									controls=[
-										Container(
+										ft.Container(
 											expand=1,
 											width=self.page.width,
-											alignment=alignment.bottom_left,
-											content=Text(
-												value=self.basket.get("username"),
-												color=colors.BLACK,
-												weight=FontWeight.BOLD,
+											alignment=ft.alignment.bottom_left,
+											content=ft.Text(
+												value=self.page.session.get("username"),
+												color=ft.colors.BLACK,
+												weight=ft.FontWeight.BOLD,
 												size=20,
 											),
 										),
-										Container(
+										ft.Container(
 											expand=1,
 											width=self.page.width,
-											alignment=alignment.top_left,
-											content=Text(
+											alignment=ft.alignment.top_left,
+											content=ft.Text(
 												value="Nombre de usuario",
-												color=colors.BLACK
+												color=ft.colors.BLACK
 											),
 										)
 									]
 								)
 							),
-							Container(
+							ft.Container(
 								height=80,
-								bgcolor=colors.WHITE,
-								padding=padding.symmetric(
+								bgcolor=ft.colors.WHITE,
+								padding=ft.padding.symmetric(
 									vertical=(SPACING / 2),
 									horizontal=SPACING
 								),
-								border_radius=border_radius.all(
+								border_radius=ft.border_radius.all(
 									value=RADIUS
 								),
-								shadow=BoxShadow(
+								shadow=ft.BoxShadow(
 									blur_radius=LOW_BLUR,
-									color=colors.GREY_500
+									color=ft.colors.GREY_500
 								),
-								content=Column(
-									alignment=MainAxisAlignment.CENTER,
+								content=ft.Column(
+									alignment=ft.MainAxisAlignment.CENTER,
 									spacing=0,
 									controls=[
-										Container(
+										ft.Container(
 											expand=1,
 											width=self.page.width,
-											alignment=alignment.bottom_left,
-											content=Text(
-												value=self.basket.get("created_at"),
-												color=colors.BLACK,
+											alignment=ft.alignment.bottom_left,
+											content=ft.Text(
+												value=self.page.session.get("created_at"),
+												color=ft.colors.BLACK,
 												size=18,
 											),
 										),
-										Container(
+										ft.Container(
 											expand=1,
 											width=self.page.width,
-											alignment=alignment.top_left,
-											content=Text(
+											alignment=ft.alignment.top_left,
+											content=ft.Text(
 												value="Fecha de creación de la cuenta",
-												color=colors.BLACK,
+												color=ft.colors.BLACK,
 											),
 										)
 									]
 								)
 							),
-							Container(
-								margin=margin.only(top=SPACING),
-								padding=padding.symmetric(horizontal=SPACING),
-								alignment=alignment.center,
-								content=ElevatedButton(
+							ft.Container(
+								margin=ft.margin.only(top=SPACING),
+								padding=ft.padding.symmetric(horizontal=SPACING),
+								alignment=ft.alignment.center,
+								content=ft.ElevatedButton(
 									width=self.page.width,
-									icon=icons.EDIT,
+									icon=ft.icons.EDIT,
 									text="Editar perfil",
-									on_click=lambda _: go_to_view(
-										page=self.page,
-										logger=logger,
-										route="update_user"
-									),
+									on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/update_user"),
 									**btn_secondary_style
 								)
 							),
-							Container(
-								padding=padding.symmetric(horizontal=SPACING),
-								alignment=alignment.center,
+							ft.Container(
+								padding=ft.padding.symmetric(horizontal=SPACING),
+								alignment=ft.alignment.center,
 								content=self.btn_delete_user
 							)
 						]
 					)
 				),
-				BottomBar(
-					page=self.page,
-					logger=logger,
-					current_route=self.route
-				)
+				BottomBar(page=self.page, logger=logger, current_route="/account")
 			]
 		)
 
@@ -261,22 +241,21 @@ class AccountView:
 		else:
 			return f"{name[:2].upper()}"
 
-	def btn_delete_user_clicked(self, _: ControlEvent) -> None:
+	def btn_delete_user_clicked(self, _: ft.ControlEvent) -> None:
 		logger.info("Delete user button clicked")
 		self.page.open(self.dlg_confirm_delete_account)
 
-	def handle_ok_account_deleted(self, _: ControlEvent) -> None:
+	def handle_ok_account_deleted(self, _: ft.ControlEvent) -> None:
 		self.page.close(self.dlg_account_deleted)
-		clean_basket(self.basket, logger=logger)
-		go_to_view(page=self.page, logger=logger, route="") # Redirect to sign in
+		go_to_view(page=self.page, logger=logger, route="/sign_in")
 
-	def delete_account(self, _: ControlEvent) -> None:
+	def delete_account(self, _: ft.ControlEvent) -> None:
 		logger.info("Making request to delete account...")
 		response: Response = delete(
-			url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.basket.get('id')}",
+			url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
 			headers={
 				"Content-Type": "application/json",
-				"Authorization": f"Bearer {self.basket.get('session_token')}"
+				"Authorization": f"Bearer {self.page.session.get('session_token')}"
 			}
 		)
 
