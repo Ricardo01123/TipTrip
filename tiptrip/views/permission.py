@@ -1,11 +1,11 @@
 import flet as ft
+from requests import post, Response
 from logging import Logger, getLogger
 
 from resources.config import *
 from resources.styles import *
 from resources.functions import *
 from components.titles import MainTitle
-# from components.geolocator import geolocator
 
 
 logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
@@ -15,7 +15,6 @@ class PermissionsView(ft.View):
 	def __init__(self, page: ft.Page) -> None:
 		# Custom attributes
 		self.page = page
-		# self.gl: ft.Geolocator = geolocator
 		self.gl: ft.Geolocator = ft.Geolocator(
 			location_settings=ft.GeolocatorSettings(
 				accuracy=ft.GeolocatorPositionAccuracy.LOW
@@ -25,34 +24,17 @@ class PermissionsView(ft.View):
 		self.page.overlay.append(self.gl)
 
 		# Custom components
-		self.btn_submit: ft.ElevatedButton = ft.ElevatedButton(
+		self.btn_yes: ft.ElevatedButton = ft.ElevatedButton(
 			width=self.page.width,
-			content=ft.Text(value="Continuar", size=BTN_TEXT_SIZE),
-			on_click=self.btn_submit_clicked,
+			content=ft.Text(value="Otorgar permisos", size=BTN_TEXT_SIZE),
+			on_click=self.btn_yes_clicked,
 			**btn_primary_style
 		)
-		self.btn_logout: ft.ElevatedButton = ft.ElevatedButton(
+		self.btn_no: ft.ElevatedButton = ft.ElevatedButton(
 			width=self.page.width,
-			content=ft.Text(value="Salir", size=BTN_TEXT_SIZE),
-			on_click=self.btn_logout_clicked,
+			content=ft.Text(value="Continuar sin ubicación", size=BTN_TEXT_SIZE),
+			on_click=self.btn_no_clicked,
 			**btn_secondary_style,
-		)
-
-		self.dlg_location_permissions_denied: ft.AlertDialog = ft.AlertDialog(
-			modal=True,
-			title=ft.Text("Permisos de ubicación"),
-			content=ft.Text(
-				"No se han otorgado los permisos de ubicación. "
-				"Para continuar, es necesario otorgar los permisos de ubicación."
-			),
-			actions_alignment=ft.MainAxisAlignment.END,
-			actions=[
-				ft.TextButton(
-					text="Aceptar",
-					on_click=lambda _: self.page.close(self.dlg_location_permissions_denied)
-				)
-			],
-			on_dismiss=lambda _: self.page.close(self.dlg_location_permissions_denied)
 		)
 
 		# View native attributes
@@ -80,8 +62,11 @@ class PermissionsView(ft.View):
 								margin=ft.margin.only(top=(SPACING * 3)),
 								content=ft.Text(
 									value=(
-										"Para poder brindarte una mejor experiencia, "
-										"necesitamos acceder a tu ubicación. "
+										"Para utilizar las funcionalidades de recomendación de sitios "
+										"turísticos cercanos a tu posición actual, así como para disfrutar "
+										"del mapa interactivo, es necesario otorgar los permisos de ubicación.\n\n"
+										"Puedes continuar sin otorgarlos, pero dichas funcionalidades "
+										"no estarán disponibles hasta que permitas el uso de tu ubicación."
 									),
 									color=ft.colors.BLACK
 								)
@@ -90,9 +75,9 @@ class PermissionsView(ft.View):
 								margin=ft.margin.only(top=(SPACING * 3)),
 								content=ft.Column(
 									controls=[
-										self.btn_submit,
+										self.btn_yes,
 										ft.Divider(color=ft.colors.TRANSPARENT),
-										self.btn_logout
+										self.btn_no
 									]
 								)
 							),
@@ -103,7 +88,7 @@ class PermissionsView(ft.View):
 			]
 		)
 
-	def btn_submit_clicked(self, _: ft.ControlEvent) -> None:
+	def btn_yes_clicked(self, _: ft.ControlEvent) -> None:
 		logger.info("Checking location permissions...")
 		if request_location_permissions(self.gl, logger):
 			logger.info("Location permissions granted. Getting current coordinates...")
@@ -112,14 +97,29 @@ class PermissionsView(ft.View):
 			self.page.session.set(key="current_longitude", value=current_position.longitude)
 			logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
 
-			go_to_view(page=self.page, logger=logger, route='/')
+			logger.info("Saving user's coordinates in DB...")
+			response: Response = post(
+				url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
+				headers={
+					"Content-Type": "application/json",
+					"Authorization": f"Bearer {self.page.session.get('session_token')}"
+				},
+				json={
+					"latitude": self.page.session.get("current_latitude"),
+					"longitude": self.page.session.get("current_longitude")
+				}
+			)
 
-		else:
-			logger.warning("Location permissions are not granted")
-			self.page.open(self.dlg_location_permissions_denied)
+			if response.status_code == 201:
+				logger.info("User's coordinates saved successfully")
+			else:
+				logger.warning(f"Error saving user's coordinates: {response.json()}")
 
-	def btn_logout_clicked(self, _: ft.ControlEvent) -> None:
-		logger.info("Cleaning session...")
-		self.page.session.clear()
+		go_to_view(page=self.page, logger=logger, route='/')
 
-		go_to_view(page=self.page, logger=logger, route="/sign_in")
+	def btn_no_clicked(self, _: ft.ControlEvent) -> None:
+		logger.warning("Location permissions are not granted. Continuing without coordinates...")
+		self.page.session.set(key="current_latitude", value=None)
+		self.page.session.set(key="current_longitude", value=None)
+
+		go_to_view(page=self.page, logger=logger, route='/')

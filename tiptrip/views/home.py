@@ -329,33 +329,39 @@ class HomeView(ft.View):
 		municipality: str =  None
 	) -> list | ft.Container:
 
-		logger.info("Checking current coordinates...")
-		if not self.page.session.contains_key("current_latitude") and not self.page.session.contains_key("current_longitude") or \
-			self.page.session.get("current_latitude") is None and self.page.session.get("current_longitude") is None:
+		logger.info("Checking if first load...")
+		if self.page.session.get("current_latitude") is not None and self.page.session.get("current_longitude") is not None:
+			logger.info("Not first load. Checking location permissions...")
 
-			logger.info("Asking for location permissions...")
-			self.page.open(self.dlg_request_location_permission)
+			if self.chk_distance.value:
+				logger.info("Location permissions are granted...")
+				logger.info("Verifying if user's location is inside CDMX coordinates...")
+				# self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
+				# self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
 
-		else:
-			logger.info("Location permissions are granted...")
-			logger.info("Verifying if user's location is inside CDMX coordinates...")
-			self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
-			self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
-			if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
-				logger.info("User's location is inside CDMX coordinates. Using filter distance...")
-				self.chk_distance.value = True
-				self.sld_distance.disabled = False
-				self.page.update()
+				if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
+					logger.info("User's location is inside CDMX coordinates. Using filter distance...")
+					self.chk_distance.value = True
+					self.sld_distance.disabled = False
+					self.page.update()
 
-				distance: int = (
-					100
-					if self.page.session.get("places_data") is None
-					else int(self.sld_distance.value)
-				)
+					distance: int = (
+						100
+						if self.page.session.get("places_data") is None
+						else int(self.sld_distance.value)
+					)
+
+				else:
+					logger.warning("User's location is not inside CDMX coordinates. Skipping...")
+					self.page.open(self.dlg_location_outside_cdmx)
 
 			else:
-				logger.warning("User's location is not inside CDMX coordinates. Skipping...")
-				self.page.open(self.dlg_location_outside_cdmx)
+				logger.info("Location permissions are granted. Not using filter distance...")
+				distance = None
+
+		else:
+			logger.info("First load. Continuing...")
+			distance = None
 
 		logger.info("Getting places data...")
 		response: Response = get(
@@ -446,8 +452,8 @@ class HomeView(ft.View):
 			if is_location_permission_enabled(self.gl, logger):
 				logger.info("Location permissions are granted...")
 				logger.info("Verifying if user's location is inside CDMX coordinates...")
-				self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
-				self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
+				# self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
+				# self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
 				if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
 					logger.info("User's location is inside CDMX coordinates. Allowing distance filter...")
 					self.chk_distance.value = True
@@ -473,8 +479,8 @@ class HomeView(ft.View):
 		if request_location_permissions(self.gl, logger):
 			logger.info("Location permissions granted...")
 			logger.info("Verifying if user's location is inside CDMX coordinates...")
-			self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
-			self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
+			# self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
+			# self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
 			if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
 				logger.info("User's location is inside CDMX coordinates. Allowing distance filter...")
 				self.chk_distance.value = True
@@ -543,9 +549,9 @@ class HomeView(ft.View):
 		self.sld_distance.disabled = True
 		self.page.update()
 
-		self.page.session.set(key="places_data", value=self.get_places())
-		self.lv_places_list.controls = self.page.session.get("places_data")[0:self.items_per_page]
-		self.update_pagination_data(self.page.session.get("places_data"))
+		# self.page.session.set(key="places_data", value=self.get_places())
+		# self.lv_places_list.controls = self.page.session.get("places_data")[0:self.items_per_page]
+		# self.update_pagination_data(self.page.session.get("places_data"))
 		self.page.open(self.dlg_sites_filter)
 
 	def apply_filters(self, _: ft.ControlEvent) -> None:
@@ -567,7 +573,7 @@ class HomeView(ft.View):
 			)
 		)
 
-		if isinstance(self.page.session.get("places_data")[0], PlaceCard):
+		if len(self.page.session.get("places_data")) > 0 and isinstance(self.page.session.get("places_data")[0], PlaceCard):
 			self.lv_places_list.controls = self.page.session.get("places_data")[0:self.items_per_page]
 		else:
 			self.lv_places_list.controls = self.page.session.get("places_data")

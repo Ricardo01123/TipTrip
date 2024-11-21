@@ -6,7 +6,6 @@ from resources.config import *
 from resources.styles import *
 from resources.functions import *
 from components.titles import MainTitle
-# from components.geolocator import geolocator
 
 
 logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
@@ -16,7 +15,6 @@ class SignInView(ft.View):
 	def __init__(self, page: ft.Page) -> None:
 		# Custom attributes
 		self.page = page
-		# self.gl: ft.Geolocator = geolocator
 		self.gl: ft.Geolocator = ft.Geolocator(
 			location_settings=ft.GeolocatorSettings(
 				accuracy=ft.GeolocatorPositionAccuracy.LOW

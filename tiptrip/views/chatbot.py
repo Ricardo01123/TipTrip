@@ -232,7 +232,7 @@ class ChatbotView(ft.View):
 				logger.info("Calling the back-end agent to process the user message...")
 				# logger.info("User is asking for nearby places. Getting user location...")
 				response: Response = post(
-					url=f"{BACK_END_URL}/{AGENT_ENDPOINT}",
+					url=f"{BACK_END_URL}/{AGENT_ENDPOINT}/{self.page.session.get('id')}",
 					headers={
 						"Content-Type": "application/json",
 						"Authorization": f"Bearer {self.page.session.get('session_token')}"
