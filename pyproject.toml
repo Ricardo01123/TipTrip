@@ -14,6 +14,7 @@ python = "^3.11"
 flet = "^0.24.1"
 requests = "^2.32.3"
 pyaudio = "^0.2.14"
+geopy = "^2.4.1"
 
 
 [build-system]

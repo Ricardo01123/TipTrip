@@ -250,8 +250,8 @@ class HomeView(ft.View):
 				icon=ft.icons.MAP,
 				bgcolor=SECONDARY_COLOR,
 				foreground_color=ft.colors.WHITE,
-				on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/map"),
-				shape=ft.CircleBorder()
+				shape=ft.CircleBorder(),
+				on_click=self.check_if_open_map
 			),
 			floating_action_button_location = ft.FloatingActionButtonLocation.CENTER_DOCKED,
 			controls=[
@@ -609,3 +609,19 @@ class HomeView(ft.View):
 
 		self.set_page_indexes()
 		self.page.update()
+
+	def check_if_open_map(self, _: ft.ControlEvent) -> None:
+		logger.info("Checking location permissions...")
+		if is_location_permission_enabled(self.gl, logger):
+			logger.info("Location permissions are granted...")
+			go_to_view(self.page, logger=logger, route="/map")
+
+		else:
+			logger.warning("Location permissions are not granted...")
+			logger.info("Requesting location permissions...")
+			# TODO: CORREGIR ESTE DIALOG
+			self.dlg_request_location_permission.content = ft.Text(
+				"Para acceder al mapa interactivo, "
+				"necesitamos que permitas el acceso a tu ubicación."
+			)
+			self.page.open(self.dlg_request_location_permission)

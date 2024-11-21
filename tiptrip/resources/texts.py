@@ -1,6 +1,7 @@
 ADVICES: list[str] = [
     "Puedes usar comandos de voz para realizar búsquedas.",
-    "Encuentra tu lugar ideal, cerca de ti."
+    "Encuentra tu lugar ideal, cerca de ti.",
+	"En el mapa interactivo, ¡haz click en un marcador de un sitio turístico para ver su información!"
 ]
 
 SPEECH_RECOGNITION_ERROR_MESSAGE: str = (

@@ -71,7 +71,7 @@ def main(page: ft.Page) -> None:
 	page.on_view_pop = view_pop
 
 	# page.go("/loading")
-	# sleep(1)
+	# sleep(5)
 	page.go("/sign_in")
 
 

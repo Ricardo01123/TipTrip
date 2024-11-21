@@ -46,10 +46,6 @@ class ChatbotView(ft.View):
 			),
 			tile_padding=ft.padding.symmetric(horizontal=SPACING),
 			controls=[
-				ft.Container(
-					padding=ft.padding.symmetric(horizontal=SPACING),
-					content=ft.Divider(color=ft.colors.BLACK)
-				),
 				ft.ListTile(
 					content_padding=ft.padding.symmetric(horizontal=SPACING),
 					title=ft.Text(
@@ -74,23 +70,6 @@ class ChatbotView(ft.View):
 								size=16
 							)
 						]
-					)
-				),
-				ft.Container(
-					padding=ft.padding.symmetric(horizontal=SPACING),
-					content=ft.Divider(color=ft.colors.BLACK)
-				),
-				ft.ListTile(
-					content_padding=ft.padding.only(
-						top=0,
-						right=SPACING,
-						bottom=SPACING,
-						left=SPACING
-					),
-					title=ft.Text(
-						value="Consideraciones a tomar en cuenta:",
-						color=ft.colors.BLACK,
-						size=16
 					)
 				)
 			]
