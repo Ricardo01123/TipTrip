@@ -256,12 +256,13 @@ class SignUpView(ft.View):
 
 			logger.info("Adding user data to session data...")
 			data: dict = response.json()
+			self.page.session.set(key="aux", value=None) # This is a workaround to avoid a bug in the framework
 			self.page.session.set(key="id", value=data["id"])
 			self.page.session.set(key="email", value=self.txt_email.value)
 			self.page.session.set(key="username", value=data["username"])
 			self.page.session.set(key="session_token", value=data["token"])
 			self.page.session.set(key="created_at", value=data["created_at"])
-			self.page.session.set(key="places_data", value=[])
+			self.page.session.set(key="places_data", value=None)
 
 			logger.info("Cleaning text fields...")
 			self.txt_username.value = ""
@@ -270,7 +271,9 @@ class SignUpView(ft.View):
 			self.txt_confirm_password.value = ""
 			self.chk_tyc.value = False
 
-			go_to_view(page=self.page, logger=logger, route='/')
+			self.page.update()
+
+			go_to_view(page=self.page, logger=logger, route="/permissions")
 
 		else:
 			logger.error("An error occurred while trying to authenticate user")

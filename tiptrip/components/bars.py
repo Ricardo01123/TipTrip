@@ -7,13 +7,16 @@ from resources.functions import go_to_view
 
 class TopBar(ft.AppBar):
 	def __init__(self, page: ft.Page, leading: bool, logger: Logger) -> None:
+		self.page = page
+		self.logger = logger
+
 		super().__init__(
 			bgcolor=MAIN_COLOR,
 			leading=(
 				ft.IconButton(
 					icon=ft.icons.ARROW_BACK,
 					icon_color=ft.colors.BLACK,
-					on_click=lambda _: go_to_view(page=page, logger=logger, route='/')
+					on_click=lambda _: go_to_view(page=self.page, logger=self.logger, route='/')
 				)
 				if leading == True
 				else None
@@ -28,10 +31,16 @@ class TopBar(ft.AppBar):
 					icon_color=ft.colors.BLACK,
 					padding=ft.padding.only(right=SPACING),
 					tooltip="Cerrar sesión",
-					on_click=lambda _: go_to_view(page=page, logger=logger, route="/sign_in")
+					on_click=self.logout
 				)
 			]
 		)
+
+	def logout(self, _: ft.ControlEvent) -> None:
+		self.logger.info("Cleaning session...")
+		self.page.session.clear()
+
+		go_to_view(page=self.page, logger=self.logger, route="/sign_in")
 
 
 class BottomBar(ft.BottomAppBar):

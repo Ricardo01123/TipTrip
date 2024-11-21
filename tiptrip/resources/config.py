@@ -1,6 +1,6 @@
 from os import getcwd
 from os.path import join
-# from pyaudio import paInt16
+from pyaudio import paInt16
 
 
 # Names
@@ -53,7 +53,7 @@ AGENT_ENDPOINT: str = "models/agent"
 ASR_ENDPOINT: str = "models/asr"
 
 # Chatbot audio file
-# FORMAT: int = paInt16
+FORMAT: int = paInt16
 CHANNELS: int = 1
 CHUNK: int = 1_024
 SAMPLING_RATE: int = 16_000

@@ -6,6 +6,7 @@ from resources.config import *
 from resources.styles import *
 from resources.functions import *
 from components.titles import MainTitle
+# from components.geolocator import geolocator
 
 
 logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
@@ -15,6 +16,14 @@ class SignInView(ft.View):
 	def __init__(self, page: ft.Page) -> None:
 		# Custom attributes
 		self.page = page
+		# self.gl: ft.Geolocator = geolocator
+		self.gl: ft.Geolocator = ft.Geolocator(
+			location_settings=ft.GeolocatorSettings(
+				accuracy=ft.GeolocatorPositionAccuracy.LOW
+			),
+			on_error=lambda error: logger.error(f"Geolocator error: {error}"),
+		)
+		self.page.overlay.append(self.gl)
 
 		# Custom components
 		self.txt_email: ft.TextField = ft.TextField(
@@ -171,7 +180,7 @@ class SignInView(ft.View):
 		self.page.update()
 
 		if email_txt_filled and password_txt_filled:
-			logger.info("Checking if credentials exists in DB...")
+			logger.info("Authenticating user...")
 			response: Response = post(
 				url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
 				headers={"Content-Type": "application/json"},
@@ -191,13 +200,25 @@ class SignInView(ft.View):
 				self.page.session.set(key="username", value=data["username"])
 				self.page.session.set(key="session_token", value=data["token"])
 				self.page.session.set(key="created_at", value=data["created_at"])
-				self.page.session.set(key="places_data", value=[])
+				self.page.session.set(key="places_data", value=None)
 
 				logger.info("Cleaning text fields...")
 				self.txt_email.value = ""
 				self.txt_password.value = ""
 
-				go_to_view(page=self.page, logger=logger, route='/')
+				logger.info("Checking location permissions...")
+				if request_location_permissions(self.gl, logger):
+					logger.info("Location permissions granted. Getting current coordinates...")
+					current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+					self.page.session.set(key="current_latitude", value=current_position.latitude)
+					self.page.session.set(key="current_longitude", value=current_position.longitude)
+					logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+
+					go_to_view(page=self.page, logger=logger, route='/')
+
+				else:
+					logger.warning("Location permissions are not granted")
+					go_to_view(page=self.page, logger=logger, route="/permissions")
 
 			elif response.status_code == 401 or response.status_code == 404:
 				logger.warning("User and/or password are incorrect")

@@ -1,7 +1,7 @@
 import wave
 import flet as ft
 from os.path import join
-# from pyaudio import PyAudio
+from pyaudio import PyAudio
 from requests import post, Response
 from logging import Logger, getLogger
 from base64 import b64encode, b64decode
@@ -21,6 +21,8 @@ class ChatbotView(ft.View):
 	def __init__(self, page: ft.Page) -> None:
 		# Custom attributes
 		self.page = page
+		self.record_flag: bool = False
+		self.audio_players: list = []
 
 		# Custom components
 		# Settings components
@@ -339,92 +341,91 @@ class ChatbotView(ft.View):
 			self.add_message(is_bot=True, message="Buscando información...")
 
 	def cca_mic_clicked(self, _: ft.ControlEvent) -> None:
-		print("Microphone button clicked")
-		# logger.info("Microphone button clicked")
-		# if self.record_flag:
-		# 	logger.info("Disabling authorization for audio recording...")
-		# 	self.record_flag = False
+		logger.info("Microphone button clicked")
+		if self.record_flag:
+			logger.info("Disabling authorization for audio recording...")
+			self.record_flag = False
 
-		# 	logger.info("Changing UI components to initial state...")
-		# 	self.txt_message.value = ""
-		# 	self.cca_mic.bgcolor = MAIN_COLOR
-		# 	self.cca_mic.content = ft.Icon(
-		# 		name=ft.icons.MIC,
-		# 		color=ft.colors.WHITE,
-		# 		size=25
-		# 	)
-		# 	self.page.update()
-		# else:
-		# 	logger.info("Establishing audio configuration...")
-		# 	audio: PyAudio = PyAudio()
-		# 	stream = audio.open(
-		# 		format=FORMAT,
-		# 		channels=CHANNELS,
-		# 		rate=SAMPLING_RATE,
-		# 		input=True,
-		# 		frames_per_buffer=CHUNK
-		# 	)
+			logger.info("Changing UI components to initial state...")
+			self.txt_message.value = ""
+			self.cca_mic.bgcolor = MAIN_COLOR
+			self.cca_mic.content = ft.Icon(
+				name=ft.icons.MIC,
+				color=ft.colors.WHITE,
+				size=25
+			)
+			self.page.update()
+		else:
+			logger.info("Establishing audio configuration...")
+			audio: PyAudio = PyAudio()
+			stream = audio.open(
+				format=FORMAT,
+				channels=CHANNELS,
+				rate=SAMPLING_RATE,
+				input=True,
+				frames_per_buffer=CHUNK
+			)
 
-		# 	logger.info("Establishing authorization for audio recording...")
-		# 	self.record_flag = True
+			logger.info("Establishing authorization for audio recording...")
+			self.record_flag = True
 
-		# 	logger.info("Changing UI components to recording state...")
-		# 	self.txt_message.value = "Grabando audio..."
-		# 	self.cca_mic.bgcolor = ft.colors.RED
-		# 	self.cca_mic.content = ft.Icon(
-		# 		name=ft.icons.STOP,
-		# 		color=ft.colors.WHITE,
-		# 		size=25
-		# 	)
-		# 	self.page.update()
+			logger.info("Changing UI components to recording state...")
+			self.txt_message.value = "Grabando audio..."
+			self.cca_mic.bgcolor = ft.colors.RED
+			self.cca_mic.content = ft.Icon(
+				name=ft.icons.STOP,
+				color=ft.colors.WHITE,
+				size=25
+			)
+			self.page.update()
 
-		# 	logger.info("Starting audio recording...")
-		# 	frames: list = []
-		# 	while self.record_flag:
-		# 		logger.info("Listening...")
-		# 		data: bytes = stream.read(CHUNK)
-		# 		frames.append(data)
+			logger.info("Starting audio recording...")
+			frames: list = []
+			while self.record_flag:
+				logger.info("Listening...")
+				data: bytes = stream.read(CHUNK)
+				frames.append(data)
 
-		# 	logger.info("Ending audio recording...")
-		# 	stream.stop_stream()
-		# 	stream.close()
-		# 	audio.terminate()
+			logger.info("Ending audio recording...")
+			stream.stop_stream()
+			stream.close()
+			audio.terminate()
 
-		# 	logger.info("Saving audio file...")
-		# 	with wave.open(join(TEMP_ABSPATH, TEMP_FILE_NAME), "wb") as file:
-		# 		file.setnchannels(CHANNELS)
-		# 		file.setsampwidth(audio.get_sample_size(FORMAT))
-		# 		file.setframerate(SAMPLING_RATE)
-		# 		file.writeframes(b"".join(frames))
+			logger.info("Saving audio file...")
+			with wave.open(join(TEMP_ABSPATH, TEMP_FILE_NAME), "wb") as file:
+				file.setnchannels(CHANNELS)
+				file.setsampwidth(audio.get_sample_size(FORMAT))
+				file.setframerate(SAMPLING_RATE)
+				file.writeframes(b"".join(frames))
 
-		# 	logger.info("Encoding audio file...")
-		# 	with open(join(TEMP_ABSPATH, TEMP_FILE_NAME), "rb") as audio_file:
-		# 		encoded_audio_data: str = b64encode(audio_file.read()).decode("utf-8")
+			logger.info("Encoding audio file...")
+			with open(join(TEMP_ABSPATH, TEMP_FILE_NAME), "rb") as audio_file:
+				encoded_audio_data: str = b64encode(audio_file.read()).decode("utf-8")
 
-		# 	logger.info("Calling Backend API for speech recognition...")
-		# 	response: Response = post(
-		# 		url=f"{BACK_END_URL}/{ASR_ENDPOINT}",
-		# 		headers={
-		# 			"Content-Type": "application/json",
-		# 			"Authorization": f"Bearer {self.page.session.get('session_token')}"
-		# 		},
-		# 		json={
-		# 			"audio": encoded_audio_data
-		# 		}
-		# 	)
+			logger.info("Calling Backend API for speech recognition...")
+			response: Response = post(
+				url=f"{BACK_END_URL}/{ASR_ENDPOINT}",
+				headers={
+					"Content-Type": "application/json",
+					"Authorization": f"Bearer {self.page.session.get('session_token')}"
+				},
+				json={
+					"audio": encoded_audio_data
+				}
+			)
 
-		# 	logger.info(f"Speech recognition (ASR) endpoint response received {response.status_code}: {response.json()}")
-		# 	if response.status_code == 201:
-		# 		user_message: str = response.json()["text"]
-		# 		logger.info(f"Speech captured: {user_message}")
-		# 		self.add_message(is_bot=False, message=user_message.capitalize())
+			logger.info(f"Speech recognition (ASR) endpoint response received {response.status_code}: {response.json()}")
+			if response.status_code == 201:
+				user_message: str = response.json()["text"]
+				logger.info(f"Speech captured: {user_message}")
+				self.add_message(is_bot=False, message=user_message.capitalize())
 
-		# 		logger.info("Adding agent message...")
-		# 		self.add_message(is_bot=True, message="Buscando información...")
-		# 		self.page.update()
+				logger.info("Adding agent message...")
+				self.add_message(is_bot=True, message="Buscando información...")
+				self.page.update()
 
-		# 	else:
-		# 		self.add_message(is_bot=False, message="SPEECH_RECOGNITION_ERROR")
+			else:
+				self.add_message(is_bot=False, message="SPEECH_RECOGNITION_ERROR")
 
 	def swt_audio_changed(self, _: ft.ControlEvent) -> None:
 		if self.swt_audio.value:

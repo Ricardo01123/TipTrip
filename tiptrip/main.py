@@ -15,6 +15,7 @@ from views.chatbot import ChatbotView
 from views.account import AccountView
 from views.favorites import FavoritesView
 from views.update_user import UpdateUserView
+from views.permission import PermissionsView
 from views.place_details import PlaceDetailsView
 from views.change_password import ChangePasswordView
 from views.privacy_politics import PrivacyPoliticsView
@@ -27,6 +28,8 @@ logger: Logger = getLogger(PROJECT_NAME)
 
 def main(page: ft.Page) -> None:
 	page.title = "Tip Trip"
+	page.window.width = 412
+	page.window.height = 915
 
 	logger.info(f"Starting app's basic configurations...")
 	def route_change(_: ft.RouteChangeEvent) -> None:
@@ -44,6 +47,7 @@ def main(page: ft.Page) -> None:
 			case "/change_password": page.views.append(ChangePasswordView(page))
 			case "/privacy_politics": page.views.append(PrivacyPoliticsView(page))
 			case "/terms_conditions": page.views.append(TermsConditionsView(page))
+			case "/permissions": page.views.append(PermissionsView(page))
 			# Functionality views
 			case '/': page.views.append(HomeView(page))
 			case "/place_details": page.views.append(PlaceDetailsView(page))
@@ -62,8 +66,6 @@ def main(page: ft.Page) -> None:
 		page.views.pop()
 		top_view: ft.View = page.views[-1]
 		page.go(top_view.route)
-
-	page.session.set(key="modalview_loaded", value=False)
 
 	page.on_route_change = route_change
 	page.on_view_pop = view_pop
