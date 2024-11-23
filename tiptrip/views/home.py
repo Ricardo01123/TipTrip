@@ -247,7 +247,7 @@ class HomeView(ft.View):
 			padding=ft.padding.all(value=0.0),
 			spacing=0,
 			floating_action_button=ft.FloatingActionButton(
-				icon=ft.icons.MAP,
+				icon=ft.icons.LOCATION_ON,
 				bgcolor=SECONDARY_COLOR,
 				foreground_color=ft.colors.WHITE,
 				shape=ft.CircleBorder(),
