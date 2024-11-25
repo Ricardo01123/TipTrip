@@ -28,10 +28,25 @@ def get_place_image(place_name: str) -> str:
 		return ["/default.png"]
 
 
+def get_place_icon(classification: str) -> str:
+	match classification.lower():
+		case "arquitectura": return ft.icons.LOCATION_CITY
+		case "centro cultural": return ft.icons.PEOPLE_ALT
+		case "centro religioso": return ft.icons.CHURCH
+		case "escultura": return ft.icons.HANDYMAN
+		case "experiencia": return ft.icons.TAG_FACES_ROUNDED
+		case "monumento": return ft.icons.BOOKMARK
+		case "mural": return ft.icons.PALETTE
+		case "museo": return ft.icons.MUSEUM_SHARP
+		case "zona arqueológica": return ft.icons.TEMPLE_HINDU
+		case _: return ft.icons.LOCATION_ON
+
+
 def format_place_name(place_name: str) -> str:
 	return place_name\
 		.replace(' ', "_")\
 		.replace('-', "_")\
+		.replace("'", "")\
 		.replace(',', "")\
 		.replace('.', "")\
 		.replace(':', "")\

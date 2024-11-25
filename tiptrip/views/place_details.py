@@ -8,7 +8,7 @@ from requests import post, delete, Response
 from components.bars import *
 from resources.config import *
 from components.carousel import Carousel
-from resources.functions import format_place_name
+from resources.functions import format_place_name, get_place_icon
 
 
 logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
@@ -23,9 +23,9 @@ class PlaceDetailsView(ft.View):
 		# Custom components
 		self.saved_iconbutton: ft.IconButton = ft.IconButton(
 			icon=(
-				ft.icons.BOOKMARK
+				ft.icons.BOOKMARKS
 				if self.place_data["is_favorite"]
-				else ft.icons.BOOKMARK_BORDER
+				else ft.icons.BOOKMARKS_OUTLINED
 			),
 			icon_color=SECONDARY_COLOR,
 			icon_size=25,
@@ -118,7 +118,7 @@ class PlaceDetailsView(ft.View):
 															ft.Container(content=self.saved_iconbutton),
 															ft.Container(
 																content=ft.Icon(
-																	name=ft.icons.MUSEUM_SHARP,
+																	name=get_place_icon(self.place_data["info"]["classification"]),
 																	color=SECONDARY_COLOR,
 																	size=18
 																)
@@ -602,7 +602,7 @@ class PlaceDetailsView(ft.View):
 			return ["/default.png"]
 
 	def handle_saved_iconbutton(self, _) -> None:
-		if self.saved_iconbutton.icon == ft.icons.BOOKMARK:
+		if self.saved_iconbutton.icon == ft.icons.BOOKMARKS:
 			logger.info("Removing place from favorites...")
 			response: Response = delete(
 				url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}/{self.page.session.get('id')}/{self.place_data['id']}",
@@ -614,7 +614,7 @@ class PlaceDetailsView(ft.View):
 
 			if response.status_code == 200:
 				logger.info("Place removed from favorites successfully")
-				self.saved_iconbutton.icon = ft.icons.BOOKMARK_BORDER
+				self.saved_iconbutton.icon = ft.icons.BOOKMARKS_OUTLINED
 				self.page.update()
 			else:
 				print("Error removing place from favorites")
@@ -641,7 +641,7 @@ class PlaceDetailsView(ft.View):
 
 			if response.status_code == 201:
 				logger.info("Place added to favorites successfully")
-				self.saved_iconbutton.icon = ft.icons.BOOKMARK
+				self.saved_iconbutton.icon = ft.icons.BOOKMARKS
 				self.page.update()
 			else:
 				print("Error adding place to favorites")

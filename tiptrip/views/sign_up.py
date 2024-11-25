@@ -262,7 +262,16 @@ class SignUpView(ft.View):
 			self.page.session.set(key="username", value=data["username"])
 			self.page.session.set(key="session_token", value=data["token"])
 			self.page.session.set(key="created_at", value=data["created_at"])
+			# Creating session environment variables
+			# Home variables
 			self.page.session.set(key="places_data", value=None)
+			self.page.session.set(key="sld_value", value=7)
+			self.page.session.set(key="drd_classification_value", value="")
+			self.page.session.set(key="drd_municipality_value", value="")
+			# Map variables
+			self.page.session.set(key="map_places_data", value=None)
+			self.page.session.set(key="map_sld_value", value=7)
+			self.page.session.set(key="map_drd_value", value="")
 
 			logger.info("Cleaning text fields...")
 			self.txt_username.value = ""

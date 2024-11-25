@@ -3,7 +3,7 @@ from logging import Logger, getLogger
 from requests import post, delete, Response
 
 from resources.config import *
-from resources.functions import go_to_view
+from resources.functions import go_to_view, get_place_icon
 
 
 logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
@@ -45,9 +45,9 @@ class PlaceCard(ft.Container):
 
 		self.saved_iconbutton: ft.IconButton = ft.IconButton(
 			icon=(
-				ft.icons.BOOKMARK
+				ft.icons.BOOKMARKS
 				if is_favorite
-				else ft.icons.BOOKMARK_BORDER
+				else ft.icons.BOOKMARKS_OUTLINED
 			),
 			icon_color=SECONDARY_COLOR,
 			icon_size=25,
@@ -103,9 +103,9 @@ class PlaceCard(ft.Container):
 												controls=[
 													ft.Container(
 														content=ft.Icon(
-															name=ft.icons.MUSEUM_SHARP,
+															name=get_place_icon(classification),
 															color=SECONDARY_COLOR,
-															size=15
+															size=20
 														)
 													),
 													ft.Container(
@@ -227,7 +227,7 @@ class PlaceCard(ft.Container):
 
 			if response.status_code == 200:
 				logger.info("Place removed from favorites successfully")
-				self.saved_iconbutton.icon = ft.icons.BOOKMARK_BORDER
+				self.saved_iconbutton.icon = ft.icons.BOOKMARKS_OUTLINED
 				self.page.update()
 			else:
 				print("Error removing place from favorites")
@@ -254,7 +254,7 @@ class PlaceCard(ft.Container):
 
 			if response.status_code == 201:
 				logger.info("Place added to favorites successfully")
-				self.saved_iconbutton.icon = ft.icons.BOOKMARK
+				self.saved_iconbutton.icon = ft.icons.BOOKMARKS
 				self.page.update()
 			else:
 				print("Error adding place to favorites")

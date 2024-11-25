@@ -18,6 +18,8 @@ class MapView(ft.View):
 	def __init__(self, page: ft.Page) -> None:
 		# Custom attributes
 		self.page = page
+		self.markers_names_are_hidden: bool = True
+		self.markers_names_umbral: int = 15
 
 		# Geolocator components
 		self.gl: ft.Geolocator = ft.Geolocator(
@@ -29,11 +31,22 @@ class MapView(ft.View):
 		self.page.overlay.append(self.gl)
 
 		# Map components
-		self.markers_names_are_hidden: bool = True
-		self.circle_layer = map.CircleLayer(circles=[self.create_circle_marker()])
+		self.page.session.set(
+			key="map_places_data",
+			value=(
+				self.get_places(distance=100)
+				if self.page.session.get("map_places_data") is None
+				else self.page.session.get("map_places_data")
+			)
+		)
+		self.circle_layer = map.CircleLayer(
+			circles=[
+				self.create_circle_marker(radius=self.page.session.get("map_sld_value"))
+			]
+		)
 		self.marker_layer = map.MarkerLayer(
 			markers=[
-				*self.create_places_markers(self.get_places()),
+				*self.create_places_markers(self.page.session.get("map_places_data")),
 				self.create_user_marker()
 			]
 		)
@@ -123,6 +136,7 @@ class MapView(ft.View):
 		# Settings components
 		self.drd_classification: ft.Dropdown = ft.Dropdown(
 			label="Filtrar por clasificación",
+			value=self.page.session.get("map_drd_value"),
 			options=[
 				ft.dropdown.Option(classification)
 				for classification in CLASSIFICATIONS
@@ -131,7 +145,7 @@ class MapView(ft.View):
 		self.sld_distance: ft.Slider = ft.Slider(
 			min=1,
 			max=15,
-			value=7,
+			value=self.page.session.get("map_sld_value"),
 			divisions=5,
 			label="{value} km",
 			active_color=SECONDARY_COLOR,
@@ -216,7 +230,7 @@ class MapView(ft.View):
 			]
 		)
 
-	def get_places(self, distance: int = 20, classification: str = None) -> list | None:
+	def get_places(self, distance: int, classification: str = None) -> list | None:
 		logger.info("Getting places data...")
 		response: Response = get(
 			url=f"{BACK_END_URL}/{PLACES_ENDPOINT}",
@@ -317,7 +331,7 @@ class MapView(ft.View):
 			)
 		)
 
-	def create_circle_marker(self, radius: int = 7) -> map.CircleMarker:
+	def create_circle_marker(self, radius: int) -> map.CircleMarker:
 		logger.info("Creating circle marker...")
 		return map.CircleMarker(
 			coordinates=map.MapLatitudeLongitude(
@@ -343,7 +357,7 @@ class MapView(ft.View):
 				content=ft.Row(
 					controls=[
 						ft.Icon(
-							ft.icons.LOCATION_ON_ROUNDED,
+							name=ft.icons.LOCATION_ON_ROUNDED,
 							color=ft.colors.RED,
 							size=30
 						),
@@ -353,7 +367,7 @@ class MapView(ft.View):
 							color=ft.colors.BLACK,
 							weight=ft.FontWeight.BOLD,
 							visible=False
-						),
+						)
 					],
 					spacing=5,
 				),
@@ -376,8 +390,7 @@ class MapView(ft.View):
 					"longitud": place["address"]["longitude"],
 					"distancia": place["distance"]
 				}
-			)
-			for place in items
+			) for place in items
 		]
 
 	def center_user(self, _: ft.ControlEvent) -> None:
@@ -403,7 +416,7 @@ class MapView(ft.View):
 				if not self.circle_layer.circles == []:
 					self.circle_layer.circles.pop()
 				self.circle_layer.circles.append(
-					self.create_circle_marker(radius=self.sld_distance.value)
+					self.create_circle_marker(radius=self.page.session.get("map_sld_value"))
 				)
 
 				logger.info("Creating new map...")
@@ -415,6 +428,7 @@ class MapView(ft.View):
 			else:
 				logger.warning("Location permissions are not granted. Asking for permissions...")
 				self.page.open(self.dlg_request_location_permission)
+				return
 
 		except Exception as e:
 			logger.error(f"Error centering user on map: {e}")
@@ -431,17 +445,24 @@ class MapView(ft.View):
 			if self.gl.is_location_service_enabled():
 				logger.info("Location permissions granted")
 
-				logger.info("Getting nearby places...")
-				nearby_places: Optional[list] = self.get_places(
-					distance=self.sld_distance.value,
-					classification=(
-						self.drd_classification.value
-						if self.drd_classification.value != ""
-						else None
+				logger.info("Storing new filters values in session...")
+				self.page.session.set(key="map_sld_value", value=self.sld_distance.value)
+				self.page.session.set(key="map_drd_value", value=self.drd_classification.value)
+
+				logger.info("Getting places info...")
+				self.page.session.set(
+					key="map_places_data",
+					value=self.get_places(
+						distance=self.page.session.get("map_sld_value"),
+						classification=(
+							self.page.session.get("map_drd_value")
+							if self.page.session.get("map_drd_value") != ""
+							else None
+						)
 					)
 				)
-				if nearby_places is not None or nearby_places == []:
-					if nearby_places == []:
+				if self.page.session.get("map_places_data") is not None or self.page.session.get("map_places_data") == []:
+					if self.page.session.get("map_places_data") == []:
 						logger.warning("No places found")
 						self.dlg_error.title.value = "Sin resultados"
 						self.dlg_error.content.value = "No se encontró ningún lugar turístico con los filtros aplicados."
@@ -453,7 +474,7 @@ class MapView(ft.View):
 						self.marker_layer.markers = []
 
 						logger.info("Creating new markers...")
-						new_places: Optional[list] = self.create_places_markers(nearby_places)
+						new_places: Optional[list] = self.create_places_markers(self.page.session.get("map_places_data"))
 						self.marker_layer.markers = [*new_places]
 
 				else:
@@ -483,7 +504,7 @@ class MapView(ft.View):
 				if self.circle_layer.circles != []:
 					self.circle_layer.circles.pop()
 				self.circle_layer.circles.append(
-					self.create_circle_marker(radius=self.sld_distance.value)
+					self.create_circle_marker(radius=self.page.session.get("map_sld_value"))
 				)
 
 				self.page.update()
@@ -491,6 +512,7 @@ class MapView(ft.View):
 			else:
 				logger.warning("Location permissions are not granted. Asking for permissions...")
 				self.page.open(self.dlg_request_location_permission)
+				return
 
 		except Exception as e:
 			logger.error(f"Error applying filters: {e}")
@@ -502,10 +524,92 @@ class MapView(ft.View):
 			self.page.open(self.dlg_error)
 
 	def clean_filters(self, _: ft.ControlEvent) -> None:
-		logger.info("Cleaning filters...")
-		self.drd_classification.value = ""
-		self.sld_distance.value = 7
-		self.page.update()
+		try:
+			logger.info("Cleaning filters process started...")
+
+			logger.info("Checking location permissions...")
+			if self.gl.is_location_service_enabled():
+				logger.info("Location permissions granted")
+
+				logger.info("Cleaning filters...")
+				self.page.session.set(key="map_sld_value", value=7)
+				self.page.session.set(key="map_drd_value", value="")
+				self.sld_distance.value = 7
+				self.drd_classification.value = ""
+
+				logger.info("Getting places info...")
+				self.page.session.set(
+					key="map_places_data",
+					value=self.get_places(
+						distance=100,
+						classification=(
+							self.page.session.get("map_drd_value")
+							if self.page.session.get("map_drd_value") != ""
+							else None
+						)
+					)
+				)
+				if self.page.session.get("map_places_data") is not None or self.page.session.get("map_places_data") == []:
+					if self.page.session.get("map_places_data") == []:
+						logger.warning("No places found")
+						self.dlg_error.title.value = "Sin resultados"
+						self.dlg_error.content.value = "No se encontró ningún lugar turístico con los filtros aplicados."
+						self.page.open(self.dlg_error)
+						return
+
+					else:
+						logger.info("Cleaning previous markers...")
+						self.marker_layer.markers = []
+
+						logger.info("Creating new markers...")
+						new_places: Optional[list] = self.create_places_markers(self.page.session.get("map_places_data"))
+						self.marker_layer.markers = [*new_places]
+
+				else:
+					logger.error("Error getting nearby places")
+					self.dlg_error.title.value = "Error al aplicar filtros"
+					self.dlg_error.content.value = (
+						"Ocurrió un error al aplicar los filtros. "
+						"Favor de intentarlo de nuevo más tarde."
+					)
+					self.page.open(self.dlg_error)
+					return
+
+				logger.info("Getting current coordinates...")
+				current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+				self.page.session.set(key="current_latitude", value=current_position.latitude)
+				self.page.session.set(key="current_longitude", value=current_position.longitude)
+				logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+
+				logger.info("Centering map on user coordinates...")
+				self.map.configuration.initial_center = map.MapLatitudeLongitude(
+					self.page.session.get("current_latitude"),
+					self.page.session.get("current_longitude")
+				)
+				self.marker_layer.markers.append(self.create_user_marker())
+
+				logger.info("Adding circle distance radius marker...")
+				if self.circle_layer.circles != []:
+					self.circle_layer.circles.pop()
+				self.circle_layer.circles.append(
+					self.create_circle_marker(radius=self.page.session.get("map_sld_value"))
+				)
+
+				self.page.update()
+
+			else:
+				logger.warning("Location permissions are not granted. Asking for permissions...")
+				self.page.open(self.dlg_request_location_permission)
+				return
+
+		except Exception as e:
+			logger.error(f"Error applying filters: {e}")
+			self.dlg_error.title.value = "Error al aplicar filtros"
+			self.dlg_error.content.value = (
+				"Ocurrió un error al aplicar los filtros. "
+				"Favor de intentarlo de nuevo más tarde."
+			)
+			self.page.open(self.dlg_error)
 
 	def handle_map_click(self, event: map.MapTapEvent) -> None:
 		clicked_lat: float = event.coordinates.latitude
@@ -533,13 +637,13 @@ class MapView(ft.View):
 
 	def handle_map_event(self, event: map.MapEvent) -> None:
 		if str(event.source) == "MapEventSource.SCROLL_WHEEL":
-			if event.zoom >= 15 and self.markers_names_are_hidden:
+			if event.zoom >= self.markers_names_umbral and self.markers_names_are_hidden:
 				logger.info("Showing markers names...")
 				for marker in self.marker_layer.markers:
 					marker.content.controls[-1].visible = True
 				self.markers_names_are_hidden = False
 
-			if event.zoom < 15 and not self.markers_names_are_hidden:
+			if event.zoom < self.markers_names_umbral and not self.markers_names_are_hidden:
 				logger.info("Hiding markers names...")
 				for marker in self.marker_layer.markers:
 					marker.content.controls[-1].visible = False

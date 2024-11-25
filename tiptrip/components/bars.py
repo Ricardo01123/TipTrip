@@ -69,7 +69,7 @@ class BottomBar(ft.BottomAppBar):
 						on_click=lambda _: go_to_view(page=page, logger=logger, route="/chatbot")
 					),
 					ft.IconButton(
-						icon=ft.icons.BOOKMARK_BORDER,
+						icon=ft.icons.BOOKMARKS,
 						icon_color=(
 							ft.colors.WHITE
 							if current_route == "/favorites"
