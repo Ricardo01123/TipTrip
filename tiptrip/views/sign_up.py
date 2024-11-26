@@ -254,20 +254,20 @@ class SignUpView(ft.View):
 		if response.status_code == 201:
 			logger.info("User authenticated successfully")
 
-			logger.info("Adding user data to session data...")
 			data: dict = response.json()
+			logger.info("Setting session data...")
+			# User variables
 			self.page.session.set(key="aux", value=None) # This is a workaround to avoid a bug in the framework
 			self.page.session.set(key="id", value=data["id"])
 			self.page.session.set(key="email", value=self.txt_email.value)
 			self.page.session.set(key="username", value=data["username"])
 			self.page.session.set(key="session_token", value=data["token"])
 			self.page.session.set(key="created_at", value=data["created_at"])
-			# Creating session environment variables
 			# Home variables
 			self.page.session.set(key="places_data", value=None)
-			self.page.session.set(key="sld_value", value=7)
 			self.page.session.set(key="drd_classification_value", value="")
 			self.page.session.set(key="drd_municipality_value", value="")
+			self.page.session.set(key="sld_value", value=7)
 			# Map variables
 			self.page.session.set(key="map_places_data", value=None)
 			self.page.session.set(key="map_sld_value", value=7)

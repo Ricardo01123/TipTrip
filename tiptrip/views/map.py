@@ -230,7 +230,7 @@ class MapView(ft.View):
 			]
 		)
 
-	def get_places(self, distance: int, classification: str = None) -> list | None:
+	def get_places(self, distance: int, classification: str = None) -> Optional[list]:
 		logger.info("Getting places data...")
 		response: Response = get(
 			url=f"{BACK_END_URL}/{PLACES_ENDPOINT}",

@@ -36,6 +36,7 @@ class HomeView(ft.View):
 		)
 		self.drd_municipality: ft.Dropdown = ft.Dropdown(
 			label="Filtrar por delegación",
+			value=self.page.session.get("drd_municipality_value"),
 			options=[
 				ft.dropdown.Option(municipality)
 				for municipality in MUNICIPALITIES
@@ -43,6 +44,7 @@ class HomeView(ft.View):
 		)
 		self.drd_classification: ft.Dropdown = ft.Dropdown(
 			label="Filtrar por clasificación",
+			value=self.page.session.get("drd_classification_value"),
 			options=[
 				ft.dropdown.Option(classification)
 				for classification in CLASSIFICATIONS
@@ -50,16 +52,20 @@ class HomeView(ft.View):
 		)
 		self.chk_distance: ft.Checkbox = ft.Checkbox(
 			label="Filtrar por cercanía",
-			value=False,
-			on_change=self.hide_show_slider
+			value=self.page.session.get("chk_distance_value"),
+			on_change=self.activate_or_desactivate_distance_filter
 		)
 		self.sld_distance: ft.Slider = ft.Slider(
 			min=1,
 			max=15,
-			value=7,
+			value=self.page.session.get("sld_value"),
 			divisions=5,
 			label="{value} km",
-			disabled=True
+			disabled=(
+				False
+				if self.page.session.get("chk_distance_value")
+				else True
+			)
 		)
 		self.dlg_sites_filter: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
@@ -103,81 +109,53 @@ class HomeView(ft.View):
 			on_dismiss=lambda _: self.page.close(self.dlg_sites_filter)
 		)
 
-		# Modals components
+		# Modals and bottom sheet components
 		self.dlg_request_location_permission: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=ft.Text("Permisos de ubicación"),
-			content=ft.Text(
-				"Para filtrar sitios turísticos por cercanía a tu posición actual, "
-				"necesitamos que permitas el acceso a tu ubicación."
-			),
+			title=ft.Text(""),
+			content=ft.Text(""),
 			actions=[
 				ft.TextButton(
 					text="Cancelar",
-					on_click=self.handle_cancel_location_permission
+					on_click=self.request_location_permission_denied
 				),
 				ft.TextButton(
 					text="Aceptar",
-					on_click=self.handle_accept_location_permission
+					on_click=self.request_location_permission
 				)
 			],
 			actions_alignment=ft.MainAxisAlignment.END,
 			on_dismiss=lambda _: self.page.close(self.dlg_request_location_permission)
 		)
-		self.dlg_location_permissions_failed: ft.AlertDialog = ft.AlertDialog(
+		self.dlg_location: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=ft.Text("Permisos de ubicación"),
-			content=ft.Text(
-				"No se han otorgado los permisos de ubicación, "
-				"se ha deshabilitado la opción de filtrado de sitios turísticos por cercanía."
-			),
+			title=ft.Text(""),
+			content=ft.Text(""),
 			actions_alignment=ft.MainAxisAlignment.END,
 			actions=[
 				ft.TextButton(
 					text="Aceptar",
-					on_click=lambda _: self.page.close(self.dlg_location_permissions_failed)
+					on_click=lambda _: self.page.close(self.dlg_location)
 				)
 			],
-			on_dismiss=lambda _: self.page.close(self.dlg_location_permissions_failed)
+			on_dismiss=lambda _: self.page.close(self.dlg_location)
 		)
-		self.dlg_location_permissions_succeded: ft.AlertDialog = ft.AlertDialog(
+		self.dlg_error: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=ft.Text("Permisos de ubicación"),
-			content=ft.Text(
-				"Se han otorgado los permisos de ubicación, "
-				"Ahora puedes usar la opción de filtrado de sitios turísticos por cercanía."
-			),
-			actions_alignment=ft.MainAxisAlignment.END,
+			title=ft.Text(""),
+			content=ft.Text(""),
 			actions=[
-				ft.TextButton(
-					text="Aceptar",
-					on_click=lambda _: self.page.close(self.dlg_location_permissions_succeded)
-				)
+				ft.TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
 			],
-			on_dismiss=lambda _: self.page.close(self.dlg_location_permissions_succeded)
-		)
-		self.dlg_location_outside_cdmx: ft.AlertDialog = ft.AlertDialog(
-			modal=True,
-			title=ft.Text("Ubicación fuera de CDMX"),
-			content=ft.Text(
-				"Tu ubicación actual no se encuentra dentro de los límites de la Ciudad de México, "
-				"por lo que no se puede aplicar el filtro de cercanía."
-			),
 			actions_alignment=ft.MainAxisAlignment.END,
-			actions=[
-				ft.TextButton(
-					text="Aceptar",
-					on_click=lambda _: self.page.close(self.dlg_location_outside_cdmx)
-				)
-			],
-			on_dismiss=lambda _: self.page.close(self.dlg_location_outside_cdmx)
+			on_dismiss=lambda _: self.page.close(self.dlg_error)
 		)
 
 		# Places and pagination variables
 		self.page.session.set(
 			key="places_data",
 			value=(
-				self.get_places()
+				self.get_places(distance=100)
 				if self.page.session.get("places_data") is None
 				else self.page.session.get("places_data")
 			)
@@ -325,42 +303,16 @@ class HomeView(ft.View):
 
 	def get_places(
 		self,
+		distance: int,
 		classification: str = None,
-		municipality: str =  None
-	) -> list | ft.Container:
+		municipality: str = None
+	) -> list:
 
-		logger.info("Checking if first load...")
-		if self.page.session.get("current_latitude") is not None and self.page.session.get("current_longitude") is not None:
-			logger.info("Not first load. Checking location permissions...")
+		logger.info("Checking if user is inside CDMX coordinates...")
+		if not self.page.session.get("is_inside_cdmx"):
+			logger.warning("User's location is outside CDMX coordinates. Deactivating distance filter...")
 
-			if self.chk_distance.value:
-				logger.info("Location permissions are granted...")
-				logger.info("Verifying if user's location is inside CDMX coordinates...")
-				# self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
-				# self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
-
-				if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
-					logger.info("User's location is inside CDMX coordinates. Using filter distance...")
-					self.chk_distance.value = True
-					self.sld_distance.disabled = False
-					self.page.update()
-
-					distance: int = (
-						100
-						if self.page.session.get("places_data") is None
-						else int(self.sld_distance.value)
-					)
-
-				else:
-					logger.warning("User's location is not inside CDMX coordinates. Skipping...")
-					self.page.open(self.dlg_location_outside_cdmx)
-
-			else:
-				logger.info("Location permissions are granted. Not using filter distance...")
-				distance = None
-
-		else:
-			logger.info("First load. Continuing...")
+			logger.info("Continuing without distance filter...")
 			distance = None
 
 		logger.info("Getting places data...")
@@ -379,7 +331,7 @@ class HomeView(ft.View):
 			}
 		)
 
-		logger.info("Evaluating response...")
+		logger.info(f"Evaluating response with status {response.status_code}...")
 		if response.status_code == 200:
 			places: dict = response.json()["places"]
 			logger.info(f"Obtained a total of {len(places)} places...")
@@ -405,7 +357,7 @@ class HomeView(ft.View):
 			]
 
 		elif response.status_code == 204:
-			logger.info(f"Places endpoint response received {response.status_code}: {response.json()}")
+			logger.info(f"Places endpoint response received: {response.json()}")
 			return [
 				ft.Container(
 					alignment=ft.alignment.center,
@@ -421,7 +373,7 @@ class HomeView(ft.View):
 			]
 
 		else:
-			logger.info(f"Places endpoint response received {response.status_code}: {response.json()}")
+			logger.info(f"Places endpoint response received: {response.json()}")
 			return [
 				ft.Container(
 					alignment=ft.alignment.center,
@@ -436,84 +388,8 @@ class HomeView(ft.View):
 				)
 			]
 
-	def hide_show_slider(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_sites_filter)
-
-		if not self.chk_distance.value:
-			logger.info("Disabling distance filter...")
-			self.chk_distance.value = False
-			self.sld_distance.disabled = True
-
-			self.page.update()
-			self.page.open(self.dlg_sites_filter)
-
-		else:
-			logger.info("Checking location permissions...")
-			if is_location_permission_enabled(self.gl, logger):
-				logger.info("Location permissions are granted...")
-				logger.info("Verifying if user's location is inside CDMX coordinates...")
-				# self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
-				# self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
-				if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
-					logger.info("User's location is inside CDMX coordinates. Allowing distance filter...")
-					self.chk_distance.value = True
-					self.sld_distance.disabled = False
-
-					self.page.update()
-					self.page.open(self.dlg_sites_filter)
-
-				else:
-					logger.warning("User's location is not inside CDMX coordinates. Desabling distance filter...")
-					self.chk_distance.value = False
-					self.sld_distance.disabled = True
-
-					self.page.update()
-					self.page.open(self.dlg_location_outside_cdmx)
-
-			else:
-				logger.warning("Location permissions are not granted...")
-				logger.info("Requesting location permissions...")
-				self.page.open(self.dlg_request_location_permission)
-
-	def handle_accept_location_permission(self, _: ft.ControlEvent) -> None:
-		if request_location_permissions(self.gl, logger):
-			logger.info("Location permissions granted...")
-			logger.info("Verifying if user's location is inside CDMX coordinates...")
-			# self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
-			# self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
-			if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
-				logger.info("User's location is inside CDMX coordinates. Allowing distance filter...")
-				self.chk_distance.value = True
-				self.sld_distance.disabled = False
-
-				self.page.update()
-				self.page.open(self.dlg_sites_filter)
-
-			else:
-				logger.warning("User's location is not inside CDMX coordinates. Desabling distance filter...")
-				self.chk_distance.value = False
-				self.sld_distance.disabled = True
-
-				self.page.update()
-				self.page.open(self.dlg_location_outside_cdmx)
-
-		else:
-			logger.warning("Location permissions denied...")
-			logger.info("Opening location permissions failed dialog...")
-			self.chk_distance.value = False
-			self.sld_distance.disabled = True
-			self.page.update()
-			self.page.open(self.dlg_location_permissions_failed)
-
-	def handle_cancel_location_permission(self, _: ft.ControlEvent) -> None:
-		logger.warning("User canceled location permission request...")
-		logger.info("Closing location permission alert dialog and cleaning filter...")
-		self.page.close(self.dlg_request_location_permission)
-		self.chk_distance.value = False
-		self.sld_distance.disabled = True
-		self.page.update()
-
 	def update_pagination_data(self, items: list) -> None:
+		logger.info("Updating pagination data...")
 		self.current_page = 0
 		self.total_items = len(items)
 		self.total_pages = (self.total_items + self.items_per_page - 1) // self.items_per_page
@@ -523,68 +399,17 @@ class HomeView(ft.View):
 		self.lbl_actual_page.value = f"Página {self.current_page + 1} de {self.total_pages}"
 		self.page.update()
 
-	def search_place(self, _: ft.ControlEvent) -> None:
-		if self.txt_place_searcher.value == "":
-			logger.info("Cleaning 'searching place' filter...")
-			self.lv_places_list.controls = self.page.session.get("places_data")[0:self.items_per_page]
-			self.update_pagination_data(self.page.session.get("places_data"))
-		else:
-			value: str = self.txt_place_searcher.value.lower()
-			logger.info(f"Searching place... Searching for value {value}")
-			items: list = [
-				place for place in self.page.session.get("places_data") if value in
-				# Searching in the structure of the PlaceCard component in place_card.py
-				place.content.controls[0].content.controls[0].value.lower()
-			]
-			self.lv_places_list.controls = items[0:self.items_per_page]
-			self.update_pagination_data(items)
-
-	def clean_filters(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_sites_filter)
-		logger.info("Cleaning filters...")
-		self.drd_classification.value = None
-		self.drd_municipality.value = None
-		self.chk_distance.value = False
-		self.sld_distance.value = 7
-		self.sld_distance.disabled = True
-		self.page.update()
-
-		# self.page.session.set(key="places_data", value=self.get_places())
-		# self.lv_places_list.controls = self.page.session.get("places_data")[0:self.items_per_page]
-		# self.update_pagination_data(self.page.session.get("places_data"))
-		self.page.open(self.dlg_sites_filter)
-
-	def apply_filters(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_sites_filter)
-		logger.info("Applying filters...")
-
-		logger.info("Modifying db consult conditions...")
-		self.page.session.set(key="places_data", value=self.get_places(
-				classification=(
-					self.drd_classification.value
-					if self.drd_classification.value != ""
-					else None
-				),
-				municipality=(
-					self.drd_municipality.value
-					if self.drd_municipality.value != ""
-					else None
-				)
-			)
-		)
-
-		if len(self.page.session.get("places_data")) > 0 and isinstance(self.page.session.get("places_data")[0], PlaceCard):
-			self.lv_places_list.controls = self.page.session.get("places_data")[0:self.items_per_page]
-		else:
-			self.lv_places_list.controls = self.page.session.get("places_data")
-
-		self.update_pagination_data(self.page.session.get("places_data"))
-		self.page.update()
-
 	def set_page_indexes(self) -> None:
+		logger.info("Setting page indexes...")
 		self.page_start_index = self.current_page * self.items_per_page
 		self.page_end_index = self.page_start_index + self.items_per_page
-		self.lv_places_list.controls = self.page.session.get("places_data")[self.page_start_index:self.page_end_index]
+		self.lv_places_list.controls = (
+			self.page.session.get("places_data")
+			if len(self.page.session.get("places_data")) == 1 and isinstance(self.page.session.get("places_data")[0], ft.Container)
+			else self.page.session.get("places_data")[self.page_start_index:self.page_end_index]
+		)
+
+		self.page.update()
 
 	def previous_page(self, _: ft.ControlEvent) -> None:
 		logger.info(f"Going to previous page...")
@@ -616,16 +441,280 @@ class HomeView(ft.View):
 		self.set_page_indexes()
 		self.page.update()
 
+	def search_place(self, _: ft.ControlEvent) -> None:
+		if self.txt_place_searcher.value == "":
+			logger.info("Cleaning 'searching place' filter...")
+			self.lv_places_list.controls = self.page.session.get("places_data")[0:self.items_per_page]
+			self.update_pagination_data(self.page.session.get("places_data"))
+		else:
+			value: str = self.txt_place_searcher.value.lower()
+			logger.info(f"Searching place... Searching for value {value}")
+			items: list = [
+				place for place in self.page.session.get("places_data") if value in
+				# Searching in the structure of the PlaceCard component in place_card.py
+				place.content.controls[0].content.controls[0].value.lower()
+			]
+			self.lv_places_list.controls = items[0:self.items_per_page]
+			self.update_pagination_data(items)
+
+	def activate_or_desactivate_distance_filter(self, _: ft.ControlEvent) -> None:
+		self.page.close(self.dlg_sites_filter)
+
+		if not self.chk_distance.value:
+			logger.info("Deactivating distance filter...")
+			self.sld_distance.disabled = True
+			self.page.update()
+
+			logger.info("Storing new distance filter value and coordinates in session...")
+			self.page.session.set(key="chk_distance_value", value=False)
+			self.page.session.set(key="current_latitude", value=None)
+			self.page.session.set(key="current_longitude", value=None)
+
+		else:
+			logger.info("Checking location permissions...")
+			if is_location_permission_enabled(gl=self.gl, logger=logger):
+				logger.info("Location permissions granted. Getting current coordinates")
+				# current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+				# self.page.session.set(key="current_latitude", value=current_position.latitude)
+				# self.page.session.set(key="current_longitude", value=current_position.longitude)
+				# logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+				self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
+				self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
+
+				logger.info("Verifying if user's location is inside CDMX coordinates...")
+				if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
+					logger.info("User's location is inside CDMX coordinates. Activating distance filter...")
+					self.sld_distance.disabled = False
+					self.chk_distance.value = True
+					self.page.update()
+
+					logger.info("Storing new distance filter values in session...")
+					self.page.session.set(key="is_inside_cdmx", value=True)
+					self.page.session.set(key="chk_distance_value", value=True)
+
+				else:
+					self.page.session.set(key="is_inside_cdmx", value=False)
+					self.page.session.set(key="chk_distance_value", value=False)
+					self.chk_distance.value = False
+					logger.info("Opening outside CDMX location dialog...")
+					self.dlg_location.title = ft.Text(value="Ubicación fuera de CDMX")
+					self.dlg_location.content = ft.Text(
+						value=(
+							"Tu ubicación actual se encuentra fuera de los límites de la Ciudad de México, "
+							"por lo que no se puede aplicar el filtro de cercanía."
+						)
+					)
+					self.page.open(self.dlg_location)
+
+			else:
+				logger.warning("Location permissions are not granted. Opening location permissions dialog...")
+				self.dlg_request_location_permission.title = ft.Text("Permisos de ubicación")
+				self.dlg_request_location_permission.content = ft.Text(
+					value=(
+						"Para filtrar sitios turísticos por cercanía a tu posición actual, "
+						"necesitamos que permitas el acceso a tu ubicación."
+					)
+				)
+				self.page.open(self.dlg_request_location_permission)
+
+	def request_location_permission(self, _: ft.ControlEvent) -> None:
+		self.page.close(self.dlg_request_location_permission)
+
+		logger.info("Requesting location permissions...")
+		if request_location_permissions(self.gl, logger):
+			logger.info("Location permissions granted. Getting current coordinates...")
+			self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
+			self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
+			# current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+			# self.page.session.set(key="current_latitude", value=current_position.latitude)
+			# self.page.session.set(key="current_longitude", value=current_position.longitude)
+			# logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+
+			logger.info("Verifying if user's location is inside CDMX coordinates...")
+			if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
+				logger.info("User's location is inside CDMX coordinates. Allowing distance filter...")
+				self.page.session.set(key="is_inside_cdmx", value=True)
+				self.page.session.set(key="chk_distance_value", value=True)
+				self.page.session.set(key="sld_value", value=7)
+
+				self.chk_distance.value = True
+				self.sld_distance.disabled = False
+				self.sld_distance.value = self.page.session.get("sld_value")
+				self.page.update()
+
+				self.page.open(self.dlg_sites_filter)
+
+			else:
+				logger.warning("User's location is not inside CDMX coordinates. Disabling distance filter...")
+				self.page.session.set(key="is_inside_cdmx", value=False)
+				self.page.session.set(key="chk_distance_value", value=True)
+				self.page.session.set(key="sld_value", value=7)
+
+				self.chk_distance.value = False
+				self.sld_distance.disabled = True
+				self.page.update()
+
+				self.dlg_location.title = ft.Text("Ubicación fuera de CDMX")
+				self.dlg_location.content = ft.Text(
+					"Tu ubicación actual no se encuentra dentro de los límites de la Ciudad de México, "
+					"por lo que no se puede aplicar el filtro de cercanía."
+				)
+				self.page.open(self.dlg_location)
+
+		else:
+			logger.warning("Location permissions denied. Denying distance filter...")
+			self.page.session.set(key="chk_distance_value", value=False)
+			self.page.session.set(key="sld_value", value=7)
+			self.chk_distance.value = False
+			self.sld_distance.disabled = True
+			self.page.update()
+
+			logger.info("Opening location permissions failed dialog...")
+			self.dlg_location.title = ft.Text("Permisos de ubicación")
+			self.dlg_location.content = ft.Text(
+				"No se han otorgado los permisos de ubicación, "
+				"se ha deshabilitado la opción de filtrado de sitios turísticos por cercanía."
+			)
+			self.page.open(self.dlg_location)
+
+	def request_location_permission_denied(self, _: ft.ControlEvent) -> None:
+		logger.info("Location permissions denied. Denying distance filter...")
+		self.page.close(self.dlg_request_location_permission)
+
+		self.page.session.set(key="chk_distance_value", value=False)
+		self.page.session.set(key="sld_value", value=7)
+		self.chk_distance.value = False
+		self.sld_distance.disabled = True
+		self.sld_distance.value = 7
+		self.page.update()
+
+	def apply_filters(self, _: ft.ControlEvent) -> None:
+		try:
+			logger.info("Applying filters...")
+			self.page.close(self.dlg_sites_filter)
+
+			logger.info("Storing new filters values in session...")
+			self.page.session.set(key="drd_classification_value", value=self.drd_classification.value)
+			self.page.session.set(key="drd_municipality_value", value=self.drd_municipality.value)
+			self.page.session.set(key="sld_value", value=self.sld_distance.value)
+
+			logger.info("Checking location permissions...")
+			if is_location_permission_enabled(gl=self.gl, logger=logger):
+				logger.info("Location permissions granted. Getting current coordinates...")
+				self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
+				self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
+				# current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+				# self.page.session.set(key="current_latitude", value=current_position.latitude)
+				# self.page.session.set(key="current_longitude", value=current_position.longitude)
+				# logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+
+			else:
+				logger.warning("Location permissions are not granted. Continuing without distance filter...")
+				self.page.session.set(key="current_latitude", value=None)
+				self.page.session.set(key="current_longitude", value=None)
+
+			logger.info("Getting places info...")
+			self.page.session.set(
+				key="places_data",
+				value=self.get_places(
+					distance=self.page.session.get("sld_value"),
+					classification=(
+						self.page.session.get("drd_classification_value")
+						if self.page.session.get("drd_classification_value") != ""
+						else None
+					),
+					municipality=(
+						self.page.session.get("drd_municipality_value")
+						if self.page.session.get("drd_municipality_value") != ""
+						else None
+					)
+				)
+			)
+
+			logger.info("Updating view with new info...")
+			self.set_page_indexes()
+			self.update_pagination_data(self.page.session.get("places_data"))
+
+		except Exception as e:
+			logger.error(f"Error applying filters: {e}")
+			self.dlg_error.title.value = "Error al aplicar filtros"
+			self.dlg_error.content.value = (
+				"Ocurrió un error al aplicar los filtros. "
+				"Favor de intentarlo de nuevo más tarde."
+			)
+			self.page.open(self.dlg_error)
+
+	def clean_filters(self, _: ft.ControlEvent) -> None:
+		try:
+			logger.info("Cleaning filters process started...")
+			self.page.close(self.dlg_sites_filter)
+
+			logger.info("Storing new clean filters values in session...")
+			self.page.session.set(key="drd_classification_value", value="")
+			self.page.session.set(key="drd_municipality_value", value="")
+			self.page.session.set(key="sld_value", value=7)
+
+			logger.info("Cleaning components values...")
+			self.drd_classification.value = ""
+			self.drd_municipality.value = ""
+			self.sld_distance.value = 7
+			self.page.update()
+
+			logger.info("Checking location permissions...")
+			if is_location_permission_enabled(gl=self.gl, logger=logger):
+				logger.info("Location permissions granted. Getting current coordinates")
+				# current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+				# self.page.session.set(key="current_latitude", value=current_position.latitude)
+				# self.page.session.set(key="current_longitude", value=current_position.longitude)
+				# logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+				self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
+				self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
+
+			else:
+				logger.warning("Location permissions are not granted. Continuing without distance filter...")
+				self.page.session.set(key="current_latitude", value=None)
+				self.page.session.set(key="current_longitude", value=None)
+
+			logger.info("Getting places info...")
+			self.page.session.set(
+				key="places_data",
+				value=self.get_places(
+					distance=100,
+					classification=(
+						self.page.session.get("drd_classification_value")
+						if self.page.session.get("drd_classification_value") != ""
+						else None
+					),
+					municipality=(
+						self.page.session.get("drd_municipality_value")
+						if self.page.session.get("drd_municipality_value") != ""
+						else None
+					)
+				)
+			)
+
+			logger.info("Updating view with new info...")
+			self.set_page_indexes()
+			self.update_pagination_data(self.page.session.get("places_data"))
+
+		except Exception as e:
+			logger.error(f"Error cleaning filters: {e}")
+			self.dlg_error.title.value = "Error al limpiar filtros"
+			self.dlg_error.content.value = (
+				"Ocurrió un error al limpiar los filtros. "
+				"Favor de intentarlo de nuevo más tarde."
+			)
+			self.page.open(self.dlg_error)
+
 	def check_if_open_map(self, _: ft.ControlEvent) -> None:
 		logger.info("Checking location permissions...")
-		if is_location_permission_enabled(self.gl, logger):
+		if self.gl.is_location_service_enabled():
 			logger.info("Location permissions are granted...")
 			go_to_view(self.page, logger=logger, route="/map")
 
 		else:
 			logger.warning("Location permissions are not granted...")
 			logger.info("Requesting location permissions...")
-			# TODO: CORREGIR ESTE DIALOG
 			self.dlg_request_location_permission.content = ft.Text(
 				"Para acceder al mapa interactivo, "
 				"necesitamos que permitas el acceso a tu ubicación."

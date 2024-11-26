@@ -97,6 +97,27 @@ class PermissionsView(ft.View):
 			self.page.session.set(key="current_longitude", value=current_position.longitude)
 			logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
 
+			self.page.session.set(
+				key="is_inside_cdmx",
+				value=(
+					True
+					if is_inside_cdmx((
+						self.page.session.get("current_latitude"),
+						self.page.session.get("current_longitude")
+					))
+					else False
+				)
+			)
+			self.page.session.set(
+				key="chk_distance_value",
+				value=(
+					True
+					if self.page.session.get("is_inside_cdmx")
+					else False
+				)
+			)
+
+			# TODO: MOVE TO CHATBOT VIEW
 			logger.info("Saving user's coordinates in DB...")
 			response: Response = post(
 				url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
@@ -121,5 +142,8 @@ class PermissionsView(ft.View):
 		logger.warning("Location permissions are not granted. Continuing without coordinates...")
 		self.page.session.set(key="current_latitude", value=None)
 		self.page.session.set(key="current_longitude", value=None)
+
+		self.page.session.set(key="is_inside_cdmx", value=False)
+		self.page.session.set(key="chk_distance_value", value=False)
 
 		go_to_view(page=self.page, logger=logger, route='/')

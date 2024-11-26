@@ -192,18 +192,19 @@ class SignInView(ft.View):
 				logger.info("User authenticated successfully")
 				data: dict = response.json()
 
-				logger.info("Adding user data to session data...")
+				logger.info("Setting session data...")
+				# User variables
+				self.page.session.set(key="aux", value=None) # This is a workaround to avoid a bug in the framework
 				self.page.session.set(key="id", value=data["id"])
 				self.page.session.set(key="email", value=self.txt_email.value)
 				self.page.session.set(key="username", value=data["username"])
 				self.page.session.set(key="session_token", value=data["token"])
 				self.page.session.set(key="created_at", value=data["created_at"])
-				# Creating session environment variables
 				# Home variables
 				self.page.session.set(key="places_data", value=None)
-				self.page.session.set(key="sld_value", value=7)
 				self.page.session.set(key="drd_classification_value", value="")
 				self.page.session.set(key="drd_municipality_value", value="")
+				self.page.session.set(key="sld_value", value=7)
 				# Map variables
 				self.page.session.set(key="map_places_data", value=None)
 				self.page.session.set(key="map_sld_value", value=7)
@@ -216,10 +217,32 @@ class SignInView(ft.View):
 				logger.info("Checking location permissions...")
 				if request_location_permissions(self.gl, logger):
 					logger.info("Location permissions granted. Getting current coordinates...")
+					# self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
+					# self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
 					current_position: ft.GeolocatorPosition = self.gl.get_current_position()
 					self.page.session.set(key="current_latitude", value=current_position.latitude)
 					self.page.session.set(key="current_longitude", value=current_position.longitude)
 					logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+
+					self.page.session.set(
+						key="is_inside_cdmx",
+						value=(
+							True
+							if is_inside_cdmx((
+								self.page.session.get("current_latitude"),
+								self.page.session.get("current_longitude")
+							))
+							else False
+						)
+					)
+					self.page.session.set(
+						key="chk_distance_value",
+						value=(
+							True
+							if self.page.session.get("is_inside_cdmx")
+							else False
+						)
+					)
 
 					go_to_view(page=self.page, logger=logger, route='/')
 

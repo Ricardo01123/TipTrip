@@ -55,6 +55,7 @@ class ChatbotView(ft.View):
 					)
 				),
 				ft.Container(
+					margin=ft.margin.only(bottom=(SPACING / 2)),
 					content=ft.Row(
 						alignment=ft.MainAxisAlignment.SPACE_EVENLY,
 						controls=[

@@ -87,6 +87,7 @@ def is_location_permission_enabled(gl: ft.Geolocator, logger: Logger) -> bool:
 def request_location_permissions(gl: ft.Geolocator, logger: Logger) -> bool:
 	try:
 		logger.info("Opening device's location settings...")
+		# TODO: CHANGE FOR OPENING LOCATION SETTINGS
 		gl.request_permission(wait_timeout=60)
 		# gl.open_location_settings()
 		sleep(5)
