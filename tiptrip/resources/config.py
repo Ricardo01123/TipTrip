@@ -103,3 +103,29 @@ CLASSIFICATIONS: list[str] = [
 	"Museo",
 	"Zona arqueológica"
 ]
+
+LOCATION_PHRASES: list[str] = [
+    "cercano", "cerca de mi", "cerca de mi ubicacion", "cerca de donde estoy", "cerca de aqui", "cerca de mi posicion",
+    "alrededor", "en mi area", "alrededor de mi", "en mi ubicacion", "desde mi ubicacion",
+    "en mi posicion actual", "alrededor de donde estoy", "alrededor de mi ubicacion",
+    "en las cercanias", "cerca de mi zona", "en mi zona", "cerca de este lugar", "cerca de este sitio",
+    "alrededor de este sitio", "en los alrededores", "cerca de mi direccion", "en esta area", "en esta ubicacion",
+    "en mi proximidad", "en mi entorno", "en esta zona", "cerca de mi lugar actual", "cerca de donde me encuentro",
+    "en el area de mi ubicacion", "cerca del punto donde estoy", "en mi vecindad", "por aqui",
+    "en los alrededores de aqui", "en los alrededores de mi posicion", "en esta proximidad", "en las inmediaciones",
+    "en mi posicion geografica", "donde me encuentro ahora", "en mi ubicacion actual", "cerca de mi lugar",
+    "cerca de la ubicacion actual", "en mi posicion geolocalizada", "en las cercanias de aqui",
+    "en el area alrededor de mi", "donde estoy ahora", "cerca del lugar donde estoy", "por mi area",
+    "en este lugar", "por mi ubicacion", "en el sitio donde estoy", "en este mismo lugar", "por los alrededores",
+    "en esta area geografica", "cerca de mi posicion exacta", "en el entorno donde estoy", "en mi lugar actual",
+    "alrededor de este punto", "donde me encuentro en este momento", "en esta zona especifica",
+    "cerca de aqui mismo", "cerca de esta ubicacion exacta", "en las proximidades de aqui", "alrededor de donde me ubico",
+    "en el area cercana a mi", "en los alrededores de mi sitio", "alrededor de esta area",
+    "cerca del lugar donde me encuentro", "en mi ubicacion de ahora", "alrededor de mi punto actual",
+    "en el lugar donde me ubico", "cerca de este punto exacto", "en las cercanias donde estoy",
+    "alrededor de esta posicion", "dentro de mi radio", "en la vecindad de aqui", "en los alrededores inmediatos",
+    "por donde estoy ahora", "cerca de este lugar preciso", "en las cercanias de esta posicion",
+    "cerca del sitio donde estoy", "en mi ubicacion especifica", "por los alrededores donde me ubico",
+    "en este punto exacto", "en la zona donde me encuentro", "en la proximidad donde estoy", "por la ubicacion actual",
+    "en el sitio exacto donde estoy"
+]

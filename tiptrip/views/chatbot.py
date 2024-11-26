@@ -1,5 +1,6 @@
 import wave
 import flet as ft
+from time import sleep
 from os.path import join
 from pyaudio import PyAudio
 from requests import post, Response
@@ -8,6 +9,7 @@ from base64 import b64encode, b64decode
 
 from resources.texts import *
 from resources.config import *
+from resources.functions import *
 from components.bars import TopBar
 from components.message import Message
 from components.audio_player import AudioPlayer
@@ -25,6 +27,15 @@ class ChatbotView(ft.View):
 		self.audio_players: list = []
 
 		# Custom components
+		# Geolocation components
+		self.gl: ft.Geolocator = ft.Geolocator(
+			location_settings=ft.GeolocatorSettings(
+				accuracy=ft.GeolocatorPositionAccuracy.LOW
+			),
+			on_error=lambda error: logger.error(f"Geolocator error: {error}"),
+		)
+		self.page.overlay.append(self.gl)
+
 		# Settings components
 		self.swt_audio: ft.Switch = ft.Switch(
 			value=True,
@@ -125,6 +136,48 @@ class ChatbotView(ft.View):
 			on_click=self.cca_mic_clicked
 		)
 
+		# Modals components
+		self.dlg_request_location_permission: ft.AlertDialog = ft.AlertDialog(
+			modal=True,
+			title=ft.Text(""),
+			content=ft.Text(""),
+			actions=[
+				ft.TextButton(
+					text="Cancelar",
+					on_click=self.request_location_permission_denied
+				),
+				ft.TextButton(
+					text="Aceptar",
+					on_click=self.request_location_permission
+				)
+			],
+			actions_alignment=ft.MainAxisAlignment.END,
+			on_dismiss=lambda _: self.page.close(self.dlg_request_location_permission)
+		)
+		self.dlg_location: ft.AlertDialog = ft.AlertDialog(
+			modal=True,
+			title=ft.Text(""),
+			content=ft.Text(""),
+			actions_alignment=ft.MainAxisAlignment.END,
+			actions=[
+				ft.TextButton(
+					text="Aceptar",
+					on_click=lambda _: self.page.close(self.dlg_location)
+				)
+			],
+			on_dismiss=lambda _: self.page.close(self.dlg_location)
+		)
+		self.dlg_error: ft.AlertDialog = ft.AlertDialog(
+			modal=True,
+			title=ft.Text(""),
+			content=ft.Text(""),
+			actions=[
+				ft.TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
+			],
+			actions_alignment=ft.MainAxisAlignment.END,
+			on_dismiss=lambda _: self.page.close(self.dlg_error)
+		)
+
 		# View native attributes
 		super().__init__(
 			route="/chatbot",
@@ -196,7 +249,7 @@ class ChatbotView(ft.View):
 			self.cont_icon.on_click = self.cca_send_clicked
 		self.page.update()
 
-	def add_message(self, is_bot: bool, message: str) -> None:
+	def add_message(self, is_bot: bool, message: str, must_anwser: bool = False) -> None:
 		if not is_bot:
 			logger.info("Adding user message...")
 			self.lv_chat.controls.append(
@@ -213,92 +266,91 @@ class ChatbotView(ft.View):
 				)
 			)
 		else:
-			logger.info("Adding agent message while process the user message...")
-			self.lv_chat.controls.append(
-				ft.Row(
-					alignment=ft.MainAxisAlignment.START,
-					controls=[
-						ft.Container(
-							expand=9,
-							expand_loose=True,
-							content=Message(is_bot=is_bot, message=message)
-						),
-						ft.Container(expand=1)
-					]
+			if not must_anwser:
+				logger.info("Adding agent message while process the user message...")
+				self.lv_chat.controls.append(
+					ft.Row(
+						alignment=ft.MainAxisAlignment.START,
+						controls=[
+							ft.Container(
+								expand=9,
+								expand_loose=True,
+								content=Message(is_bot=is_bot, message=message)
+							),
+							ft.Container(expand=1)
+						]
+					)
 				)
-			)
-			self.page.update()
+				self.page.update()
 
-			if not "ERROR" in message:
-				logger.info("Calling the back-end agent to process the user message...")
-				# logger.info("User is asking for nearby places. Getting user location...")
-				response: Response = post(
-					url=f"{BACK_END_URL}/{AGENT_ENDPOINT}/{self.page.session.get('id')}",
-					headers={
-						"Content-Type": "application/json",
-						"Authorization": f"Bearer {self.page.session.get('session_token')}"
-					},
-					json={
-						"prompt": self.lv_chat.controls[-2].controls[1].content.content.value,
-						"tts": self.swt_audio.value,
-						# "latitude": self.page.session.get("latitude"),
-						# "longitude": self.page.session.get("longitude")
-					}
-				)
+			else:
+				if not "ERROR" in message:
+					logger.info("Calling the back-end agent to process the user message...")
+					response: Response = post(
+						url=f"{BACK_END_URL}/{AGENT_ENDPOINT}/{self.page.session.get('id')}",
+						headers={
+							"Content-Type": "application/json",
+							"Authorization": f"Bearer {self.page.session.get('session_token')}"
+						},
+						json={
+							"prompt": self.lv_chat.controls[-2].controls[1].content.content.value,
+							"tts": self.swt_audio.value
+						}
+					)
 
-				logger.info("Evaluating the agent response...")
-				if response.status_code == 201:
-					logger.info("Agent response is OK.")
+					logger.info("Evaluating the agent response...")
+					if response.status_code == 201:
+						logger.info("Agent response is OK.")
 
-					logger.info("Checking chosen response format...")
-					if not self.swt_audio.value:
-						logger.info("Agent response is only text")
-						logger.info("Replacing last agent message with agent response message...")
-						self.lv_chat.controls[-1].controls[0].content = Message(
-							is_bot=True,
-							message=response.json()["agent_response"]["text"],
-						)
+						logger.info("Checking chosen response format...")
+						if not self.swt_audio.value:
+							logger.info("Agent response is only text")
+							logger.info("Replacing last agent message with agent response message...")
+							self.lv_chat.controls[-1].controls[0].content = Message(
+								is_bot=True,
+								message=response.json()["agent_response"]["text"],
+							)
+
+						else:
+							logger.info("Agent response is audio messages")
+							data: dict = response.json()
+							logger.info(f"Agent text response: \"{data['agent_response']['text']}\"")
+
+							logger.info("Getting audio data from agent response...")
+							audio_data: dict = response.json()["agent_response"]["audio_data"]
+
+							logger.info("Decoding audio data...")
+							audio_binary = b64decode(audio_data["audio"])
+
+							logger.info("Saving as temporary audio file...")
+							with wave.open(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME), "wb") as file:
+								file.setnchannels(audio_data["nchannels"])
+								file.setsampwidth(audio_data["sampwidth"])
+								file.setframerate(audio_data["framerate"])
+								file.setnframes(audio_data["nframes"])
+								# file.setcomptype(audio_data["comp_type"])
+								# file.setcompname(audio_data["comp_name"])
+								file.writeframes(audio_binary)
+
+							logger.info("Creating new AudioPlayer component and waiting for audio to be loaded...")
+							self.audio_players.append(
+								AudioPlayer(
+									page=self.page,
+									src=join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME),
+									components_width=self.page.width
+								)
+							)
+
+							logger.info("Replacing last agent message...")
+							self.lv_chat.controls[-1].controls[0].content = self.audio_players[-1]
 
 					else:
-						logger.info("Agent response is audio messages")
-						data: dict = response.json()
-						logger.info(f"Agent text response: \"{data['agent_response']['text']}\"")
-
-						logger.info("Getting audio data from agent response...")
-						audio_data: dict = response.json()["agent_response"]["audio_data"]
-
-						logger.info("Decoding audio data...")
-						audio_binary = b64decode(audio_data["audio"])
-
-						logger.info("Saving as temporary audio file...")
-						with wave.open(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME), "wb") as file:
-							file.setnchannels(audio_data["nchannels"])
-							file.setsampwidth(audio_data["sampwidth"])
-							file.setframerate(audio_data["framerate"])
-							file.setnframes(audio_data["nframes"])
-							# file.setcomptype(audio_data["comp_type"])
-							# file.setcompname(audio_data["comp_name"])
-							file.writeframes(audio_binary)
-
-						logger.info("Creating new AudioPlayer component and waiting for audio to be loaded...")
-						self.audio_players.append(
-							AudioPlayer(
-								page=self.page,
-								src=join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME),
-								components_width=self.page.width
-							)
+						logger.info(f"Agent endpoint response received {response.status_code}: {response.json()}")
+						logger.info("Agent response is NOT ok. Replacing last agent message with error message...")
+						self.lv_chat.controls[-1].controls[0].content = Message(
+							is_bot=True,
+							message="AGENT_ERROR",
 						)
-
-						logger.info("Replacing last agent message...")
-						self.lv_chat.controls[-1].controls[0].content = self.audio_players[-1]
-
-				else:
-					logger.info(f"Agent endpoint response received {response.status_code}: {response.json()}")
-					logger.info("Agent response is NOT ok. Replacing last agent message with error message...")
-					self.lv_chat.controls[-1].controls[0].content = Message(
-						is_bot=True,
-						message="AGENT_ERROR",
-					)
 
 		logger.info("Updating live view components...")
 		self.lv_chat.update()
@@ -319,6 +371,87 @@ class ChatbotView(ft.View):
 
 			self.add_message(is_bot=False, message=aux_message)
 			self.add_message(is_bot=True, message="Buscando información...")
+
+			logger.info("Checking if the agent needs user's location...")
+			for phrase in LOCATION_PHRASES:
+				if phrase in aux_message.lower():
+					logger.info("Agent is asking for user location. Checking location permissions...")
+					if is_location_permission_enabled(gl=self.gl, logger=logger):
+						logger.info("Location permissions granted. Getting current coordinates...")
+						current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+						self.page.session.set(key="current_latitude", value=current_position.latitude)
+						self.page.session.set(key="current_longitude", value=current_position.longitude)
+						logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+
+						logger.info("Verifying if user's location is inside CDMX coordinates...")
+						if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
+							logger.info("User's location is inside CDMX coordinates. Saving user's location inside DB...")
+
+							response: Response = post(
+								url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
+								headers={
+									"Content-Type": "application/json",
+									"Authorization": f"Bearer {self.page.session.get('session_token')}"
+								},
+								json={
+									"latitude": self.page.session.get("current_latitude"),
+									"longitude": self.page.session.get("current_longitude")
+								}
+							)
+
+							if response.status_code == 201:
+								logger.info("User's coordinates saved successfully")
+								sleep(2)
+								break
+
+							else:
+								logger.warning(f"Error saving user's coordinates: {response.json()}")
+								logger.info("Replacing last agent message with error message...")
+								self.lv_chat.controls[-1].controls[0].content = Message(
+									is_bot=True,
+									message=(
+										"Ocurrió un error al solicitar información de lugares cercanos a tu ubicación actual. "
+										"Favor de intentarlo de nuevo más tarde."
+									)
+								)
+								self.lv_chat.update()
+								return
+
+						else:
+							logger.warning("User's location is outside CDMX coordinates. ")
+							logger.info("Replacing last agent message with error message...")
+							self.lv_chat.controls[-1].controls[0].content = Message(
+								is_bot=True,
+								message=(
+									"Tu ubicación actual se encuentra fuera de los límites de la Ciudad de México, "
+									"por lo que no se puede realizar la búsqueda de información de lugares cercanos a tu ubicación actual."
+								)
+							)
+							self.lv_chat.update()
+							return
+
+					else:
+						logger.warning("Location permissions are not granted. Opening location permissions dialog...")
+						# logger.info("Removing last bot message...")
+						# self.lv_chat.controls.pop()
+						# self.lv_chat.update()
+
+						logger.info("Opening request location permissions dialog...")
+						self.dlg_request_location_permission.title = ft.Text("Permisos de ubicación")
+						self.dlg_request_location_permission.content = ft.Text(
+							value=(
+								"Para obtener información sobre lugares cercanos a tu ubicación actual, "
+								"necesitamos que permitas el acceso a tu ubicación."
+							)
+						)
+						self.page.open(self.dlg_request_location_permission)
+						return
+
+			self.add_message(
+				is_bot=True,
+				message=self.lv_chat.controls[-2].controls[1].content.content.value,
+				must_anwser=True
+			)
 
 	def cca_mic_clicked(self, _: ft.ControlEvent) -> None:
 		logger.info("Microphone button clicked")
@@ -412,3 +545,70 @@ class ChatbotView(ft.View):
 			logger.info("Switch audio for agent changed to Audio")
 		else:
 			logger.info("Switch audio for agent changed to Text")
+
+	def request_location_permission(self, _: ft.ControlEvent) -> None:
+		self.page.close(self.dlg_request_location_permission)
+
+		logger.info("Requesting location permissions...")
+		if request_location_permissions(self.gl, logger):
+			logger.info("Location permissions granted. Getting current coordinates...")
+			current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+			self.page.session.set(key="current_latitude", value=current_position.latitude)
+			self.page.session.set(key="current_longitude", value=current_position.longitude)
+			logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+
+			logger.info("Verifying if user's location is inside CDMX coordinates...")
+			if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
+				logger.warning("User's location is inside CDMX coordinates. ")
+				logger.info("Replacing last agent message with success message...")
+				self.lv_chat.controls[-1].controls[0].content = Message(
+					is_bot=True,
+					message=(
+						"Perfecto, ahora puedes realizar cualquier pregunta sobre "
+						"lugares turísticos cercanos a tu ubicación actual.\n"
+						"¡Intentalo!"
+					)
+				)
+
+			else:
+				logger.warning("User's location is outside CDMX coordinates")
+				logger.info("Replacing last agent message with error message...")
+				self.lv_chat.controls[-1].controls[0].content = Message(
+					is_bot=True,
+					message=(
+						"Tu ubicación actual se encuentra fuera de los límites "
+						"de la Ciudad de México, por lo que no se puede realizar "
+						"la búsqueda de información de lugares cercanos a tu ubicación actual.\n"
+						"Por favor intenta de nuevo con una pregunta diferente."
+					)
+				)
+
+		else:
+			logger.warning("Location permissions denied")
+			logger.info("Replacing last agent message with error message...")
+			self.lv_chat.controls[-1].controls[0].content = Message(
+				is_bot=True,
+				message=(
+					"No se han otorgado los permisos de ubicación, "
+					"por lo que no se puede realizar la búsqueda de información "
+					"de lugares cercanos a tu ubicación actual.\n"
+					"Por favor intenta de nuevo con una pregunta diferente."
+				)
+			)
+
+		self.lv_chat.update()
+
+	def request_location_permission_denied(self, _: ft.ControlEvent) -> None:
+		self.page.close(self.dlg_request_location_permission)
+		logger.info("Location permissions denied")
+		logger.info("Replacing last agent message with error message...")
+		self.lv_chat.controls[-1].controls[0].content = Message(
+			is_bot=True,
+			message=(
+				"No se han otorgado los permisos de ubicación, "
+				"por lo que no se puede realizar la búsqueda de información de "
+				"lugares cercanos a tu ubicación actual.\n"
+				"Por favor intenta de nuevo con una pregunta diferente."
+			)
+		)
+		self.lv_chat.update()

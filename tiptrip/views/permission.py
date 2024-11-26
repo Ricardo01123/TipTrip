@@ -117,25 +117,6 @@ class PermissionsView(ft.View):
 				)
 			)
 
-			# TODO: MOVE TO CHATBOT VIEW
-			logger.info("Saving user's coordinates in DB...")
-			response: Response = post(
-				url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
-				headers={
-					"Content-Type": "application/json",
-					"Authorization": f"Bearer {self.page.session.get('session_token')}"
-				},
-				json={
-					"latitude": self.page.session.get("current_latitude"),
-					"longitude": self.page.session.get("current_longitude")
-				}
-			)
-
-			if response.status_code == 201:
-				logger.info("User's coordinates saved successfully")
-			else:
-				logger.warning(f"Error saving user's coordinates: {response.json()}")
-
 		go_to_view(page=self.page, logger=logger, route='/')
 
 	def btn_no_clicked(self, _: ft.ControlEvent) -> None:
