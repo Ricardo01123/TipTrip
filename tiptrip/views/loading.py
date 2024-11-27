@@ -13,7 +13,7 @@ class LoadingView(ft.View):
 		# View native attributes
 		super().__init__(
 			route="/loading",
-			bgcolor=MAIN_COLOR,
+			bgcolor=ft.colors.WHITE,
 			padding=ft.padding.all(value=0.0),
 			controls=[
 				ft.Container(

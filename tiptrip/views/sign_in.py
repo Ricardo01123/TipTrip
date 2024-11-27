@@ -5,6 +5,7 @@ from logging import Logger, getLogger
 from resources.config import *
 from resources.styles import *
 from resources.functions import *
+from components.splash import Splash
 from components.titles import MainTitle
 
 
@@ -15,6 +16,8 @@ class SignInView(ft.View):
 	def __init__(self, page: ft.Page) -> None:
 		# Custom attributes
 		self.page = page
+
+		# Geolocator component
 		self.gl: ft.Geolocator = ft.Geolocator(
 			location_settings=ft.GeolocatorSettings(
 				accuracy=ft.GeolocatorPositionAccuracy.LOW
@@ -82,6 +85,17 @@ class SignInView(ft.View):
 			**btn_secondary_style,
 		)
 
+		# Splash components
+		self.splash = Splash(page=self.page)
+		self.page.overlay.append(self.splash)
+		self.cont_splash = ft.Container(
+			expand=True,
+			width=self.page.width,
+			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
+			content=None,
+			visible=False
+		)
+
 		# View native attributes
 		super().__init__(
 			route="/sign_in",
@@ -89,69 +103,78 @@ class SignInView(ft.View):
 			padding=ft.padding.all(value=0.0),
 			controls=[
 				ft.Container(
-					content=ft.Column(
-						scroll=ft.ScrollMode.HIDDEN,
+					expand=True,
+					content=ft.Stack(
 						controls=[
-							MainTitle(
-								subtitle="Iniciar sesión",
-								top_margin=(SPACING * 2),
-							),
 							ft.Container(
-								margin=ft.margin.only(top=(SPACING * 2)),
+								height=self.page.height,
 								content=ft.Column(
-									spacing=(SPACING / 2),
+									scroll=ft.ScrollMode.HIDDEN,
 									controls=[
-										ft.Container(
-											height=TXT_CONT_SIZE,
-											content=self.txt_email
+										MainTitle(
+											subtitle="Iniciar sesión",
+											top_margin=(SPACING * 2),
 										),
-										ft.Container(content=self.lbl_email_required),
 										ft.Container(
-											height=TXT_CONT_SIZE,
-											content=self.txt_password
-										),
-										ft.Container(content=self.lbl_password_required),
-										ft.Container(
-											content=ft.TextButton(
-												content=ft.Container(
-													content=ft.Text(
-														value="¿Olvidaste tu contraseña?",
-														color=ft.colors.BLACK
+											margin=ft.margin.only(top=(SPACING * 2)),
+											content=ft.Column(
+												spacing=(SPACING / 2),
+												controls=[
+													ft.Container(
+														height=TXT_CONT_SIZE,
+														content=self.txt_email
+													),
+													ft.Container(content=self.lbl_email_required),
+													ft.Container(
+														height=TXT_CONT_SIZE,
+														content=self.txt_password
+													),
+													ft.Container(content=self.lbl_password_required),
+													ft.Container(
+														content=ft.TextButton(
+															content=ft.Container(
+																content=ft.Text(
+																	value="¿Olvidaste tu contraseña?",
+																	color=ft.colors.BLACK
+																)
+															),
+															on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/change_password")
+														)
 													)
+												]
+											)
+										),
+										ft.Container(
+											margin=ft.margin.only(top=(SPACING * 3)),
+											content=ft.Column(
+												controls=[
+													self.btn_submit,
+													ft.Divider(color=ft.colors.TRANSPARENT),
+													self.btn_sign_up
+												]
+											)
+										),
+										ft.Container(
+											margin=ft.margin.only(top=(SPACING * 2)),
+											content=ft.Markdown(
+												value=(
+													"Para conocer más acerca de nuestra "
+													"Política de Privacidad da click "
+													"[aquí](https://www.google.com)."
 												),
-												on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/change_password")
+												md_style_sheet=ft.MarkdownStyleSheet(
+													p_text_style=ft.TextStyle(color=ft.colors.BLACK)
+												),
+												on_tap_link=lambda _: go_to_view(page=self.page, logger=logger, route="/privacy_politics")
 											)
 										)
 									]
-								)
+								),
+								**cont_main_style
 							),
-							ft.Container(
-								margin=ft.margin.only(top=(SPACING * 3)),
-								content=ft.Column(
-									controls=[
-										self.btn_submit,
-										ft.Divider(color=ft.colors.TRANSPARENT),
-										self.btn_sign_up
-									]
-								)
-							),
-							ft.Container(
-								margin=ft.margin.only(top=(SPACING * 2)),
-								content=ft.Markdown(
-									value=(
-										"Para conocer más acerca de nuestra "
-										"Política de Privacidad da click "
-										"[aquí](https://www.google.com)."
-									),
-									md_style_sheet=ft.MarkdownStyleSheet(
-										p_text_style=ft.TextStyle(color=ft.colors.BLACK)
-									),
-									on_tap_link=lambda _: go_to_view(page=self.page, logger=logger, route="/privacy_politics")
-								)
-							)
+							self.cont_splash
 						]
-					),
-					**cont_main_style
+					)
 				)
 			]
 		)
@@ -178,6 +201,11 @@ class SignInView(ft.View):
 		self.page.update()
 
 		if email_txt_filled and password_txt_filled:
+			logger.info("Showing loading splash screen...")
+			self.cont_splash.visible = True
+			self.splash.visible = True
+			self.page.update()
+
 			logger.info("Authenticating user...")
 			response: Response = post(
 				url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
@@ -217,8 +245,6 @@ class SignInView(ft.View):
 				logger.info("Checking location permissions...")
 				if request_location_permissions(self.gl, logger):
 					logger.info("Location permissions granted. Getting current coordinates...")
-					# self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
-					# self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
 					current_position: ft.GeolocatorPosition = self.gl.get_current_position()
 					self.page.session.set(key="current_latitude", value=current_position.latitude)
 					self.page.session.set(key="current_longitude", value=current_position.longitude)
@@ -246,14 +272,36 @@ class SignInView(ft.View):
 
 					go_to_view(page=self.page, logger=logger, route='/')
 
+					logger.info("Hidding loading splash screen...")
+					self.cont_splash.visible = False
+					self.splash.visible = False
+					self.page.update()
+
 				else:
 					logger.warning("Location permissions are not granted")
 					go_to_view(page=self.page, logger=logger, route="/permissions")
 
+					logger.info("Hidding loading splash screen...")
+					self.cont_splash.visible = False
+					self.splash.visible = False
+					self.page.update()
+
 			elif response.status_code == 401 or response.status_code == 404:
 				logger.warning("User and/or password are incorrect")
+
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
+				self.page.update()
+
 				self.page.open(self.dlg_not_found)
 
 			else:
 				logger.error("An error occurred while authenticating the user")
+
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
+				self.page.update()
+
 				self.page.open(self.dlg_error)

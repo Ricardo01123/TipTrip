@@ -5,6 +5,7 @@ from os.path import exists, join
 from logging import Logger, getLogger, basicConfig, INFO
 
 from resources.config import *
+from resources.functions import go_to_view
 
 from views.map import MapView
 from views.home import HomeView
@@ -70,9 +71,9 @@ def main(page: ft.Page) -> None:
 	page.on_route_change = route_change
 	page.on_view_pop = view_pop
 
-	# page.go("/loading")
-	# sleep(5)
-	page.go("/sign_in")
+	go_to_view(page=page, logger=logger, route="/loading")
+	sleep(2.5)
+	go_to_view(page=page, logger=logger, route="/sign_in")
 
 
 ft.app(main, assets_dir="assets")

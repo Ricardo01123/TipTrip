@@ -8,6 +8,7 @@ from logging import Logger, getLogger
 from resources.config import *
 from resources.functions import *
 from components.bars import TopBar
+from components.splash import Splash
 from resources.config import PROJECT_NAME
 
 
@@ -201,10 +202,22 @@ class MapView(ft.View):
 			]
 		)
 
+		# Splash components
+		self.splash = Splash(page=self.page)
+		self.splash.visible = False
+		self.page.overlay.append(self.splash)
+		self.cont_splash = ft.Container(
+			expand=True,
+			width=self.page.width,
+			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
+			content=None,
+			visible=False
+		)
+
 		# View native attributes
 		super().__init__(
 			route = "/map",
-			bgcolor=MAIN_COLOR,
+			bgcolor=ft.colors.WHITE,
 			padding=ft.padding.all(value=0.0),
 			spacing=0,
 			floating_action_button=ft.FloatingActionButton(
@@ -215,7 +228,7 @@ class MapView(ft.View):
 				on_click=self.center_user
 			),
 			floating_action_button_location=ft.FloatingActionButtonLocation.MINI_END_FLOAT,
-			controls = [
+			controls=[
 				TopBar(page=self.page, leading=True, logger=logger),
 				ft.Container(
 					width=self.page.width,
@@ -226,7 +239,16 @@ class MapView(ft.View):
 					),
 					content=self.ext_settings
 				),
-				self.map
+				ft.Container(
+					expand=True,
+					width=self.page.width,
+					content=ft.Stack(
+						controls=[
+							ft.Container(content=self.map),
+							self.cont_splash
+						]
+					)
+				)
 			]
 		)
 
@@ -340,7 +362,7 @@ class MapView(ft.View):
 			),
 			use_radius_in_meter=True,
 			radius=(radius * 1000),
-			color=ft.colors.TRANSPARENT,
+			color=ft.colors.with_opacity(0.07, ft.colors.BLUE),
 			border_color=SECONDARY_COLOR,
 			border_stroke_width=4,
 		)
@@ -395,6 +417,11 @@ class MapView(ft.View):
 
 	def center_user(self, _: ft.ControlEvent) -> None:
 		try:
+			logger.info("Showing loading splash screen...")
+			self.cont_splash.visible = True
+			self.splash.visible = True
+			self.page.update()
+
 			logger.info("Checking location permissions...")
 			if self.gl.is_location_service_enabled():
 				logger.info("Location permissions granted. Getting current coordinates")
@@ -422,15 +449,26 @@ class MapView(ft.View):
 				logger.info("Creating new map...")
 				self.map = self.create_map()
 
-				logger.info("Updating page...")
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
 				self.page.update()
 
 			else:
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
+				self.page.update()
+
 				logger.warning("Location permissions are not granted. Asking for permissions...")
 				self.page.open(self.dlg_request_location_permission)
-				return
 
 		except Exception as e:
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			self.page.update()
+
 			logger.error(f"Error centering user on map: {e}")
 			self.dlg_error.title.value = "Error al centrar usuario"
 			self.dlg_error.content.value = (
@@ -441,6 +479,11 @@ class MapView(ft.View):
 
 	def apply_filters(self, _: ft.ControlEvent) -> None:
 		try:
+			logger.info("Showing loading splash screen...")
+			self.cont_splash.visible = True
+			self.splash.visible = True
+			self.page.update()
+
 			logger.info("Checking location permissions...")
 			if self.gl.is_location_service_enabled():
 				logger.info("Location permissions granted")
@@ -466,6 +509,12 @@ class MapView(ft.View):
 						logger.warning("No places found")
 						self.dlg_error.title.value = "Sin resultados"
 						self.dlg_error.content.value = "No se encontró ningún lugar turístico con los filtros aplicados."
+
+						logger.info("Hidding loading splash screen...")
+						self.cont_splash.visible = False
+						self.splash.visible = False
+						self.page.update()
+
 						self.page.open(self.dlg_error)
 						return
 
@@ -484,6 +533,12 @@ class MapView(ft.View):
 						"Ocurrió un error al aplicar los filtros. "
 						"Favor de intentarlo de nuevo más tarde."
 					)
+
+					logger.info("Hidding loading splash screen...")
+					self.cont_splash.visible = False
+					self.splash.visible = False
+					self.page.update()
+
 					self.page.open(self.dlg_error)
 					return
 
@@ -507,12 +562,19 @@ class MapView(ft.View):
 					self.create_circle_marker(radius=self.page.session.get("map_sld_value"))
 				)
 
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
 				self.page.update()
 
 			else:
 				logger.warning("Location permissions are not granted. Asking for permissions...")
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
+				self.page.update()
+
 				self.page.open(self.dlg_request_location_permission)
-				return
 
 		except Exception as e:
 			logger.error(f"Error applying filters: {e}")
@@ -521,12 +583,21 @@ class MapView(ft.View):
 				"Ocurrió un error al aplicar los filtros. "
 				"Favor de intentarlo de nuevo más tarde."
 			)
+
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			self.page.update()
 			self.page.open(self.dlg_error)
 
 	def clean_filters(self, _: ft.ControlEvent) -> None:
 		try:
-			logger.info("Cleaning filters process started...")
+			logger.info("Showing loading splash screen...")
+			self.cont_splash.visible = True
+			self.splash.visible = True
+			self.page.update()
 
+			logger.info("Cleaning filters process started...")
 			logger.info("Checking location permissions...")
 			if self.gl.is_location_service_enabled():
 				logger.info("Location permissions granted")
@@ -554,6 +625,12 @@ class MapView(ft.View):
 						logger.warning("No places found")
 						self.dlg_error.title.value = "Sin resultados"
 						self.dlg_error.content.value = "No se encontró ningún lugar turístico con los filtros aplicados."
+
+						logger.info("Hidding loading splash screen...")
+						self.cont_splash.visible = False
+						self.splash.visible = False
+						self.page.update()
+
 						self.page.open(self.dlg_error)
 						return
 
@@ -572,6 +649,11 @@ class MapView(ft.View):
 						"Ocurrió un error al aplicar los filtros. "
 						"Favor de intentarlo de nuevo más tarde."
 					)
+
+					logger.info("Hidding loading splash screen...")
+					self.cont_splash.visible = False
+					self.splash.visible = False
+					self.page.update()
 					self.page.open(self.dlg_error)
 					return
 
@@ -595,12 +677,19 @@ class MapView(ft.View):
 					self.create_circle_marker(radius=self.page.session.get("map_sld_value"))
 				)
 
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
 				self.page.update()
 
 			else:
 				logger.warning("Location permissions are not granted. Asking for permissions...")
+
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
+				self.page.update()
 				self.page.open(self.dlg_request_location_permission)
-				return
 
 		except Exception as e:
 			logger.error(f"Error applying filters: {e}")
@@ -609,6 +698,11 @@ class MapView(ft.View):
 				"Ocurrió un error al aplicar los filtros. "
 				"Favor de intentarlo de nuevo más tarde."
 			)
+
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			self.page.update()
 			self.page.open(self.dlg_error)
 
 	def handle_map_click(self, event: map.MapTapEvent) -> None:

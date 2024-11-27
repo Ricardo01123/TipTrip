@@ -5,6 +5,7 @@ from logging import Logger, getLogger
 from components.bars import *
 from resources.config import *
 from resources.functions import *
+from components.splash import Splash
 from components.place_card import PlaceCard
 from resources.styles import txt_messages_style
 
@@ -218,6 +219,18 @@ class HomeView(ft.View):
 			)
 		)
 
+		# Splash components
+		self.splash = Splash(page=self.page)
+		self.splash.visible = False
+		self.page.overlay.append(self.splash)
+		self.cont_splash = ft.Container(
+			expand=True,
+			width=self.page.width,
+			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
+			content=None,
+			visible=False
+		)
+
 		# View native attributes
 		super().__init__(
 			route='/',
@@ -248,54 +261,69 @@ class HomeView(ft.View):
 					)
 				),
 				ft.Container(
+					expand=True,
 					width=self.page.width,
-					height=TXT_CONT_SIZE,
-					margin=ft.margin.symmetric(vertical=10),
-					content=ft.Row(
+					content=ft.Stack(
 						controls=[
-							ft.Container(expand=1),
 							ft.Container(
-								expand=8,
-								bgcolor=ft.colors.WHITE,
-								padding=ft.padding.symmetric(horizontal=(SPACING / 2)),
-								border_radius=ft.border_radius.all(value=RADIUS),
-								shadow=ft.BoxShadow(
-									blur_radius=(BLUR / 2),
-									offset=ft.Offset(0, 2),
-									color=ft.colors.GREY
-								),
-								content=ft.Row(
-									alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-									spacing=None,
+								content=ft.Column(
 									controls=[
 										ft.Container(
-											expand=4,
-											content=self.txt_place_searcher,
+											width=self.page.width,
+											height=TXT_CONT_SIZE,
+											margin=ft.margin.symmetric(vertical=10),
+											content=ft.Row(
+												controls=[
+													ft.Container(expand=1),
+													ft.Container(
+														expand=8,
+														bgcolor=ft.colors.WHITE,
+														padding=ft.padding.symmetric(horizontal=(SPACING / 2)),
+														border_radius=ft.border_radius.all(value=RADIUS),
+														shadow=ft.BoxShadow(
+															blur_radius=(BLUR / 2),
+															offset=ft.Offset(0, 2),
+															color=ft.colors.GREY
+														),
+														content=ft.Row(
+															alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+															spacing=None,
+															controls=[
+																ft.Container(
+																	expand=4,
+																	content=self.txt_place_searcher,
+																),
+																ft.Container(
+																	expand=1,
+																	content=ft.CircleAvatar(
+																		bgcolor=ft.colors.WHITE,
+																		radius=SPACING,
+																		content=ft.Icon(
+																			name=ft.icons.FILTER_LIST,
+																			color=ft.colors.BLACK
+																		)
+																	),
+																	on_click=lambda _: self.page.open(self.dlg_sites_filter)
+																)
+															]
+														)
+													),
+													ft.Container(expand=1),
+												]
+											)
 										),
+										self.cont_pagination,
 										ft.Container(
-											expand=1,
-											content=ft.CircleAvatar(
-												bgcolor=ft.colors.WHITE,
-												radius=SPACING,
-												content=ft.Icon(
-													name=ft.icons.FILTER_LIST,
-													color=ft.colors.BLACK
-												)
-											),
-											on_click=lambda _: self.page.open(self.dlg_sites_filter)
+											expand=True,
+											width=self.page.width,
+											content=self.lv_places_list
 										)
 									]
 								)
 							),
-							ft.Container(expand=1),
+							self.cont_splash
 						]
 					)
-				),
-				self.cont_pagination,
-				ft.Container(
-					expand=True,
-					width=self.page.width,
-					content=self.lv_places_list
 				)
 			],
 			bottom_appbar=BottomBar(page=self.page, logger=logger, current_route='/')
@@ -459,10 +487,18 @@ class HomeView(ft.View):
 
 	def activate_or_desactivate_distance_filter(self, _: ft.ControlEvent) -> None:
 		self.page.close(self.dlg_sites_filter)
+		logger.info("Showing loading splash screen...")
+		self.cont_splash.visible = True
+		self.splash.visible = True
+		self.page.update()
 
 		if not self.chk_distance.value:
 			logger.info("Deactivating distance filter...")
 			self.sld_distance.disabled = True
+
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
 			self.page.update()
 
 			logger.info("Storing new distance filter value and coordinates in session...")
@@ -474,18 +510,20 @@ class HomeView(ft.View):
 			logger.info("Checking location permissions...")
 			if is_location_permission_enabled(gl=self.gl, logger=logger):
 				logger.info("Location permissions granted. Getting current coordinates")
-				# current_position: ft.GeolocatorPosition = self.gl.get_current_position()
-				# self.page.session.set(key="current_latitude", value=current_position.latitude)
-				# self.page.session.set(key="current_longitude", value=current_position.longitude)
-				# logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
-				self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
-				self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
+				current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+				self.page.session.set(key="current_latitude", value=current_position.latitude)
+				self.page.session.set(key="current_longitude", value=current_position.longitude)
+				logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
 
 				logger.info("Verifying if user's location is inside CDMX coordinates...")
 				if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
 					logger.info("User's location is inside CDMX coordinates. Activating distance filter...")
 					self.sld_distance.disabled = False
 					self.chk_distance.value = True
+
+					logger.info("Hidding loading splash screen...")
+					self.cont_splash.visible = False
+					self.splash.visible = False
 					self.page.update()
 
 					logger.info("Storing new distance filter values in session...")
@@ -504,6 +542,12 @@ class HomeView(ft.View):
 							"por lo que no se puede aplicar el filtro de cercanía."
 						)
 					)
+
+					logger.info("Hidding loading splash screen...")
+					self.cont_splash.visible = False
+					self.splash.visible = False
+					self.page.update()
+
 					self.page.open(self.dlg_location)
 
 			else:
@@ -515,20 +559,28 @@ class HomeView(ft.View):
 						"necesitamos que permitas el acceso a tu ubicación."
 					)
 				)
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
+				self.page.update()
+
 				self.page.open(self.dlg_request_location_permission)
 
 	def request_location_permission(self, _: ft.ControlEvent) -> None:
 		self.page.close(self.dlg_request_location_permission)
 
+		logger.info("Showing loading splash screen...")
+		self.cont_splash.visible = True
+		self.splash.visible = True
+		self.page.update()
+
 		logger.info("Requesting location permissions...")
 		if request_location_permissions(self.gl, logger):
 			logger.info("Location permissions granted. Getting current coordinates...")
-			self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
-			self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
-			# current_position: ft.GeolocatorPosition = self.gl.get_current_position()
-			# self.page.session.set(key="current_latitude", value=current_position.latitude)
-			# self.page.session.set(key="current_longitude", value=current_position.longitude)
-			# logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+			current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+			self.page.session.set(key="current_latitude", value=current_position.latitude)
+			self.page.session.set(key="current_longitude", value=current_position.longitude)
+			logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
 
 			logger.info("Verifying if user's location is inside CDMX coordinates...")
 			if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
@@ -540,6 +592,10 @@ class HomeView(ft.View):
 				self.chk_distance.value = True
 				self.sld_distance.disabled = False
 				self.sld_distance.value = self.page.session.get("sld_value")
+
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
 				self.page.update()
 
 				self.page.open(self.dlg_sites_filter)
@@ -552,6 +608,10 @@ class HomeView(ft.View):
 
 				self.chk_distance.value = False
 				self.sld_distance.disabled = True
+
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
 				self.page.update()
 
 				self.dlg_location.title = ft.Text("Ubicación fuera de CDMX")
@@ -567,6 +627,10 @@ class HomeView(ft.View):
 			self.page.session.set(key="sld_value", value=7)
 			self.chk_distance.value = False
 			self.sld_distance.disabled = True
+
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
 			self.page.update()
 
 			logger.info("Opening location permissions failed dialog...")
@@ -590,6 +654,11 @@ class HomeView(ft.View):
 
 	def apply_filters(self, _: ft.ControlEvent) -> None:
 		try:
+			logger.info("Showing loading splash screen...")
+			self.cont_splash.visible = True
+			self.splash.visible = True
+			self.page.update()
+
 			logger.info("Applying filters...")
 			self.page.close(self.dlg_sites_filter)
 
@@ -601,12 +670,10 @@ class HomeView(ft.View):
 			logger.info("Checking location permissions...")
 			if is_location_permission_enabled(gl=self.gl, logger=logger):
 				logger.info("Location permissions granted. Getting current coordinates...")
-				self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
-				self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
-				# current_position: ft.GeolocatorPosition = self.gl.get_current_position()
-				# self.page.session.set(key="current_latitude", value=current_position.latitude)
-				# self.page.session.set(key="current_longitude", value=current_position.longitude)
-				# logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+				current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+				self.page.session.set(key="current_latitude", value=current_position.latitude)
+				self.page.session.set(key="current_longitude", value=current_position.longitude)
+				logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
 
 			else:
 				logger.warning("Location permissions are not granted. Continuing without distance filter...")
@@ -635,7 +702,17 @@ class HomeView(ft.View):
 			self.set_page_indexes()
 			self.update_pagination_data(self.page.session.get("places_data"))
 
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			self.page.update()
+
 		except Exception as e:
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			self.page.update()
+
 			logger.error(f"Error applying filters: {e}")
 			self.dlg_error.title.value = "Error al aplicar filtros"
 			self.dlg_error.content.value = (
@@ -646,6 +723,11 @@ class HomeView(ft.View):
 
 	def clean_filters(self, _: ft.ControlEvent) -> None:
 		try:
+			logger.info("Showing loading splash screen...")
+			self.cont_splash.visible = True
+			self.splash.visible = True
+			self.page.update()
+
 			logger.info("Cleaning filters process started...")
 			self.page.close(self.dlg_sites_filter)
 
@@ -663,12 +745,10 @@ class HomeView(ft.View):
 			logger.info("Checking location permissions...")
 			if is_location_permission_enabled(gl=self.gl, logger=logger):
 				logger.info("Location permissions granted. Getting current coordinates")
-				# current_position: ft.GeolocatorPosition = self.gl.get_current_position()
-				# self.page.session.set(key="current_latitude", value=current_position.latitude)
-				# self.page.session.set(key="current_longitude", value=current_position.longitude)
-				# logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
-				self.page.session.set(key="current_latitude", value=19.510658078783983) #! Comment or remove for production
-				self.page.session.set(key="current_longitude", value=-99.14676104825199) #! Comment or remove for production
+				current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+				self.page.session.set(key="current_latitude", value=current_position.latitude)
+				self.page.session.set(key="current_longitude", value=current_position.longitude)
+				logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
 
 			else:
 				logger.warning("Location permissions are not granted. Continuing without distance filter...")
@@ -697,7 +777,17 @@ class HomeView(ft.View):
 			self.set_page_indexes()
 			self.update_pagination_data(self.page.session.get("places_data"))
 
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			self.page.update()
+
 		except Exception as e:
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			self.page.update()
+
 			logger.error(f"Error cleaning filters: {e}")
 			self.dlg_error.title.value = "Error al limpiar filtros"
 			self.dlg_error.content.value = (
@@ -707,12 +797,27 @@ class HomeView(ft.View):
 			self.page.open(self.dlg_error)
 
 	def check_if_open_map(self, _: ft.ControlEvent) -> None:
+		logger.info("Showing loading splash screen...")
+		self.cont_splash.visible = True
+		self.splash.visible = True
+		self.page.update()
+
 		logger.info("Checking location permissions...")
 		if self.gl.is_location_service_enabled():
 			logger.info("Location permissions are granted...")
 			go_to_view(self.page, logger=logger, route="/map")
 
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			self.page.update()
+
 		else:
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			self.page.update()
+
 			logger.warning("Location permissions are not granted...")
 			logger.info("Requesting location permissions...")
 			self.dlg_request_location_permission.content = ft.Text(

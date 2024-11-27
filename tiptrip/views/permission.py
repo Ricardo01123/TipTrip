@@ -5,6 +5,7 @@ from logging import Logger, getLogger
 from resources.config import *
 from resources.styles import *
 from resources.functions import *
+from components.splash import Splash
 from components.titles import MainTitle
 
 
@@ -37,6 +38,17 @@ class PermissionsView(ft.View):
 			**btn_secondary_style,
 		)
 
+		# Splash components
+		self.splash = Splash(page=self.page)
+		self.page.overlay.append(self.splash)
+		self.cont_splash = ft.Container(
+			expand=True,
+			width=self.page.width,
+			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
+			content=None,
+			visible=False
+		)
+
 		# View native attributes
 		super().__init__(
 			route="/permissions",
@@ -44,51 +56,65 @@ class PermissionsView(ft.View):
 			padding=ft.padding.all(value=0.0),
 			controls=[
 				ft.Container(
-					content=ft.Column(
-						scroll=ft.ScrollMode.HIDDEN,
+					expand=True,
+					content=ft.Stack(
 						controls=[
 							ft.Container(
-								content=ft.IconButton(
-									icon=ft.icons.ARROW_BACK,
-									icon_color=ft.colors.BLACK,
-									on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/sign_in"),
-								)
-							),
-							MainTitle(
-								subtitle="Permisos de ubicación",
-								top_margin=(SPACING * 2),
-							),
-							ft.Container(
-								margin=ft.margin.only(top=(SPACING * 3)),
-								content=ft.Text(
-									value=(
-										"Para utilizar las funcionalidades de recomendación de sitios "
-										"turísticos cercanos a tu posición actual, así como para disfrutar "
-										"del mapa interactivo, es necesario otorgar los permisos de ubicación.\n\n"
-										"Puedes continuar sin otorgarlos, pero dichas funcionalidades "
-										"no estarán disponibles hasta que permitas el uso de tu ubicación."
-									),
-									color=ft.colors.BLACK
-								)
-							),
-							ft.Container(
-								margin=ft.margin.only(top=(SPACING * 3)),
+								height=self.page.height,
 								content=ft.Column(
+									scroll=ft.ScrollMode.HIDDEN,
 									controls=[
-										self.btn_yes,
-										ft.Divider(color=ft.colors.TRANSPARENT),
-										self.btn_no
+										ft.Container(
+											content=ft.IconButton(
+												icon=ft.icons.ARROW_BACK,
+												icon_color=ft.colors.BLACK,
+												on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/sign_in"),
+											)
+										),
+										MainTitle(
+											subtitle="Permisos de ubicación",
+											top_margin=(SPACING * 2),
+										),
+										ft.Container(
+											margin=ft.margin.only(top=(SPACING * 3)),
+											content=ft.Text(
+												value=(
+													"Para utilizar las funcionalidades de recomendación de sitios "
+													"turísticos cercanos a tu posición actual, así como para disfrutar "
+													"del mapa interactivo, es necesario otorgar los permisos de ubicación.\n\n"
+													"Puedes continuar sin otorgarlos, pero dichas funcionalidades "
+													"no estarán disponibles hasta que permitas el uso de tu ubicación."
+												),
+												color=ft.colors.BLACK
+											)
+										),
+										ft.Container(
+											margin=ft.margin.only(top=(SPACING * 3)),
+											content=ft.Column(
+												controls=[
+													self.btn_yes,
+													ft.Divider(color=ft.colors.TRANSPARENT),
+													self.btn_no
+												]
+											)
+										),
 									]
-								)
+								),
+								**cont_main_style
 							),
+							self.cont_splash
 						]
-					),
-					**cont_main_style
+					)
 				)
 			]
 		)
 
 	def btn_yes_clicked(self, _: ft.ControlEvent) -> None:
+		logger.info("Showing loading splash screen...")
+		self.cont_splash.visible = True
+		self.splash.visible = True
+		self.page.update()
+
 		logger.info("Checking location permissions...")
 		if request_location_permissions(self.gl, logger):
 			logger.info("Location permissions granted. Getting current coordinates...")
@@ -117,9 +143,19 @@ class PermissionsView(ft.View):
 				)
 			)
 
-		go_to_view(page=self.page, logger=logger, route='/')
+			go_to_view(page=self.page, logger=logger, route='/')
+
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			self.page.update()
 
 	def btn_no_clicked(self, _: ft.ControlEvent) -> None:
+		logger.info("Showing loading splash screen...")
+		self.cont_splash.visible = True
+		self.splash.visible = True
+		self.page.update()
+
 		logger.warning("Location permissions are not granted. Continuing without coordinates...")
 		self.page.session.set(key="current_latitude", value=None)
 		self.page.session.set(key="current_longitude", value=None)
@@ -128,3 +164,8 @@ class PermissionsView(ft.View):
 		self.page.session.set(key="chk_distance_value", value=False)
 
 		go_to_view(page=self.page, logger=logger, route='/')
+
+		logger.info("Hidding loading splash screen...")
+		self.cont_splash.visible = False
+		self.splash.visible = False
+		self.page.update()
