@@ -152,6 +152,10 @@ class FavoritesView(ft.View):
 			headers={
 				"Content-Type": "application/json",
 				"Authorization": f"Bearer {self.page.session.get('session_token')}"
+			},
+			json={
+				"current_latitude": self.page.session.get("current_latitude"),
+				"current_longitude": self.page.session.get("current_longitude")
 			}
 		)
 
@@ -169,6 +173,7 @@ class FavoritesView(ft.View):
 					image_link=get_place_image(favorite["name"]),
 					is_favorite=True,
 					punctuation=favorite["punctuation"],
+					distance=favorite["distance"],
 				)
 				for favorite in favorites
 			]

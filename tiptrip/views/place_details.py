@@ -220,6 +220,10 @@ class PlaceDetailsView(ft.View):
 			headers={
 				"Content-Type": "application/json",
 				"Authorization": f"Bearer {self.page.session.get('session_token')}"
+			},
+			json={
+				"current_latitude": self.page.session.get("current_latitude"),
+				"current_longitude": self.page.session.get("current_longitude")
 			}
 		)
 
@@ -257,6 +261,7 @@ class PlaceDetailsView(ft.View):
 		result: list = []
 
 		if any([
+			self.place_data["distance"],
 			self.place_data["info"]["schedules"],
 			self.place_data["info"]["prices"],
 			self.place_data["address"]["street_number"],
@@ -268,6 +273,28 @@ class PlaceDetailsView(ft.View):
 		]):
 			info: ft.Column = ft.Column()
 
+			if self.place_data["distance"]:
+				info.controls.append(
+					ft.Container(
+						content=ft.Column(
+							controls=[
+								ft.Container(
+									content=ft.Text(
+										value=f"Distancia de mí:",
+										weight=ft.FontWeight.BOLD,
+										color=ft.colors.BLACK
+									)
+								),
+								ft.Container(
+									content=ft.Text(
+										value=f"{self.place_data['distance']:.2f} km",
+										color=ft.colors.BLACK
+									)
+								)
+							]
+						)
+					)
+				)
 			if self.place_data["info"]["schedules"]:
 				info.controls.append(
 					ft.Container(
