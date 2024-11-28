@@ -6,6 +6,7 @@ from logging import Logger, getLogger
 
 from components.bars import *
 from resources.config import *
+from components.splash import Splash
 from resources.functions import go_to_view
 from resources.styles import btn_secondary_style, btn_danger_style
 
@@ -29,10 +30,13 @@ class AccountView(ft.View):
 			),
 			actions=[
 				ft.TextButton(
-					"Cancelar",
+					text="Cancelar",
 					on_click=lambda _: self.page.close(self.dlg_confirm_delete_account)
 				),
-				ft.TextButton("Aceptar", on_click=self.delete_account)
+				ft.TextButton(
+					text="Aceptar",
+					on_click=self.delete_account
+				)
 			],
 			actions_alignment=ft.MainAxisAlignment.END,
 			on_dismiss=lambda _: self.page.close(self.dlg_confirm_delete_account)
@@ -57,7 +61,10 @@ class AccountView(ft.View):
 				)
 			),
 			actions=[
-				ft.TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
+				ft.TextButton(
+					text="Aceptar",
+					on_click=lambda _: self.page.close(self.dlg_error)
+				),
 			],
 			actions_alignment=ft.MainAxisAlignment.END,
 			on_dismiss=lambda _: self.page.close(self.dlg_error)
@@ -66,8 +73,20 @@ class AccountView(ft.View):
 			width=self.page.width,
 			icon=ft.icons.DELETE,
 			text="Eliminar cuenta",
-			on_click=self.btn_delete_user_clicked,
+			on_click=lambda _: self.page.open(self.dlg_confirm_delete_account),
 			**btn_danger_style
+		)
+
+		# Splash components
+		self.splash = Splash(page=self.page)
+		self.splash.visible = False
+		self.page.overlay.append(self.splash)
+		self.cont_splash = ft.Container(
+			expand=True,
+			width=self.page.width,
+			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
+			content=None,
+			visible=False
 		)
 
 		# View native attributes
@@ -208,7 +227,7 @@ class AccountView(ft.View):
 									width=self.page.width,
 									icon=ft.icons.EDIT,
 									text="Editar perfil",
-									on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/update_user"),
+									on_click=self.go_to_update_user,
 									**btn_secondary_style
 								)
 							),
@@ -241,15 +260,41 @@ class AccountView(ft.View):
 		else:
 			return f"{name[:2].upper()}"
 
-	def btn_delete_user_clicked(self, _: ft.ControlEvent) -> None:
-		logger.info("Delete user button clicked")
-		self.page.open(self.dlg_confirm_delete_account)
+	def go_to_update_user(self, _: ft.ControlEvent) -> None:
+		logger.info("Showing loading splash screen...")
+		self.cont_splash.visible = True
+		self.splash.visible = True
+		self.page.update()
+
+		go_to_view(page=self.page, logger=logger, route="/update_user"),
+
+		logger.info("Hidding loading splash screen...")
+		self.cont_splash.visible = False
+		self.splash.visible = False
+		self.page.update()
 
 	def handle_ok_account_deleted(self, _: ft.ControlEvent) -> None:
 		self.page.close(self.dlg_account_deleted)
+		logger.info("Showing loading splash screen...")
+		self.cont_splash.visible = True
+		self.splash.visible = True
+		self.page.update()
+
 		go_to_view(page=self.page, logger=logger, route="/sign_in")
 
+		logger.info("Hidding loading splash screen...")
+		self.cont_splash.visible = False
+		self.splash.visible = False
+		self.page.update()
+
 	def delete_account(self, _: ft.ControlEvent) -> None:
+		self.page.close(self.dlg_confirm_delete_account)
+
+		logger.info("Showing loading splash screen...")
+		self.cont_splash.visible = True
+		self.splash.visible = True
+		self.page.update()
+
 		logger.info("Making request to delete account...")
 		response: Response = delete(
 			url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
@@ -261,9 +306,20 @@ class AccountView(ft.View):
 
 		if response.status_code == 200:
 			logger.info("Account deleted successfully")
+
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			self.page.update()
+
 			self.page.open(self.dlg_account_deleted)
 
 		else:
 			logger.error("Error deleting account")
-			self.page.close(self.dlg_confirm_delete_account)
+
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			self.page.update()
+
 			self.page.open(self.dlg_error)

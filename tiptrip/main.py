@@ -37,7 +37,8 @@ def main(page: ft.Page) -> None:
 		page.views.clear()
 
 		# Opening view
-		page.views.append(SignInView(page))
+		page.views.append(LoadingView(page))
+
 		# Other views
 		match page.route:
 			# Loading view

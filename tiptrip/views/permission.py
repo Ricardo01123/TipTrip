@@ -1,5 +1,4 @@
 import flet as ft
-from requests import post, Response
 from logging import Logger, getLogger
 
 from resources.config import *

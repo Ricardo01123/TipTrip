@@ -11,6 +11,7 @@ from resources.texts import *
 from resources.config import *
 from resources.functions import *
 from components.bars import TopBar
+from components.splash import Splash
 from components.message import Message
 from components.audio_player import AudioPlayer
 from resources.styles import txt_messages_style
@@ -178,6 +179,17 @@ class ChatbotView(ft.View):
 			on_dismiss=lambda _: self.page.close(self.dlg_error)
 		)
 
+		# Splash components
+		self.splash = Splash(page=self.page)
+		self.page.overlay.append(self.splash)
+		self.cont_splash = ft.Container(
+			expand=True,
+			width=self.page.width,
+			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
+			content=None,
+			visible=False
+		)
+
 		# View native attributes
 		super().__init__(
 			route="/chatbot",
@@ -285,6 +297,11 @@ class ChatbotView(ft.View):
 
 			else:
 				if not "ERROR" in message:
+					logger.info("Showing loading splash screen...")
+					self.cont_splash.visible = True
+					self.splash.visible = True
+					self.page.update()
+
 					logger.info("Calling the back-end agent to process the user message...")
 					response: Response = post(
 						url=f"{BACK_END_URL}/{AGENT_ENDPOINT}/{self.page.session.get('id')}",
@@ -305,6 +322,12 @@ class ChatbotView(ft.View):
 						logger.info("Checking chosen response format...")
 						if not self.swt_audio.value:
 							logger.info("Agent response is only text")
+
+							logger.info("Hidding loading splash screen...")
+							self.cont_splash.visible = False
+							self.splash.visible = False
+							self.page.update()
+
 							logger.info("Replacing last agent message with agent response message...")
 							self.lv_chat.controls[-1].controls[0].content = Message(
 								is_bot=True,
@@ -344,7 +367,17 @@ class ChatbotView(ft.View):
 							logger.info("Replacing last agent message...")
 							self.lv_chat.controls[-1].controls[0].content = self.audio_players[-1]
 
+							logger.info("Hidding loading splash screen...")
+							self.cont_splash.visible = False
+							self.splash.visible = False
+							self.page.update()
+
 					else:
+						logger.info("Hidding loading splash screen...")
+						self.cont_splash.visible = False
+						self.splash.visible = False
+						self.page.update()
+
 						logger.info(f"Agent endpoint response received {response.status_code}: {response.json()}")
 						logger.info("Agent response is NOT ok. Replacing last agent message with error message...")
 						self.lv_chat.controls[-1].controls[0].content = Message(
@@ -387,6 +420,11 @@ class ChatbotView(ft.View):
 						if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
 							logger.info("User's location is inside CDMX coordinates. Saving user's location inside DB...")
 
+							logger.info("Showing loading splash screen...")
+							self.cont_splash.visible = True
+							self.splash.visible = True
+							self.page.update()
+
 							response: Response = post(
 								url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
 								headers={
@@ -402,6 +440,12 @@ class ChatbotView(ft.View):
 							if response.status_code == 201:
 								logger.info("User's coordinates saved successfully")
 								sleep(2)
+
+								logger.info("Hidding loading splash screen...")
+								self.cont_splash.visible = False
+								self.splash.visible = False
+								self.page.update()
+
 								break
 
 							else:
@@ -414,7 +458,14 @@ class ChatbotView(ft.View):
 										"Favor de intentarlo de nuevo más tarde."
 									)
 								)
+
+								logger.info("Hidding loading splash screen...")
+								self.cont_splash.visible = False
+								self.splash.visible = False
+								self.page.update()
+
 								self.lv_chat.update()
+
 								return
 
 						else:
@@ -432,10 +483,6 @@ class ChatbotView(ft.View):
 
 					else:
 						logger.warning("Location permissions are not granted. Opening location permissions dialog...")
-						# logger.info("Removing last bot message...")
-						# self.lv_chat.controls.pop()
-						# self.lv_chat.update()
-
 						logger.info("Opening request location permissions dialog...")
 						self.dlg_request_location_permission.title = ft.Text("Permisos de ubicación")
 						self.dlg_request_location_permission.content = ft.Text(
@@ -504,6 +551,11 @@ class ChatbotView(ft.View):
 			stream.close()
 			audio.terminate()
 
+			logger.info("Showing loading splash screen...")
+			self.cont_splash.visible = True
+			self.splash.visible = True
+			self.page.update()
+
 			logger.info("Saving audio file...")
 			with wave.open(join(TEMP_ABSPATH, TEMP_FILE_NAME), "wb") as file:
 				file.setnchannels(CHANNELS)
@@ -532,10 +584,110 @@ class ChatbotView(ft.View):
 				user_message: str = response.json()["text"]
 				logger.info(f"Speech captured: {user_message}")
 				self.add_message(is_bot=False, message=user_message.capitalize())
-
-				logger.info("Adding agent message...")
 				self.add_message(is_bot=True, message="Buscando información...")
 				self.page.update()
+
+				logger.info("Checking if the agent needs user's location...")
+				user_message = self.lv_chat.controls[-2].controls[1].content.content.value
+				for phrase in LOCATION_PHRASES:
+					if phrase in user_message.lower():
+						logger.info("Agent is asking for user location. Checking location permissions...")
+						if is_location_permission_enabled(gl=self.gl, logger=logger):
+							logger.info("Location permissions granted. Getting current coordinates...")
+							current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+							self.page.session.set(key="current_latitude", value=current_position.latitude)
+							self.page.session.set(key="current_longitude", value=current_position.longitude)
+							logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+
+							logger.info("Verifying if user's location is inside CDMX coordinates...")
+							if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
+								logger.info("User's location is inside CDMX coordinates. Saving user's location inside DB...")
+
+								response: Response = post(
+									url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
+									headers={
+										"Content-Type": "application/json",
+										"Authorization": f"Bearer {self.page.session.get('session_token')}"
+									},
+									json={
+										"latitude": self.page.session.get("current_latitude"),
+										"longitude": self.page.session.get("current_longitude")
+									}
+								)
+
+								if response.status_code == 201:
+									logger.info("User's coordinates saved successfully")
+									sleep(2)
+
+									logger.info("Hidding loading splash screen...")
+									self.cont_splash.visible = False
+									self.splash.visible = False
+									self.page.update()
+
+									break
+
+								else:
+									logger.warning(f"Error saving user's coordinates: {response.json()}")
+									logger.info("Replacing last agent message with error message...")
+									self.lv_chat.controls[-1].controls[0].content = Message(
+										is_bot=True,
+										message=(
+											"Ocurrió un error al solicitar información de lugares cercanos a tu ubicación actual. "
+											"Favor de intentarlo de nuevo más tarde."
+										)
+									)
+
+									logger.info("Hidding loading splash screen...")
+									self.cont_splash.visible = False
+									self.splash.visible = False
+									self.page.update()
+
+									self.lv_chat.update()
+									return
+
+							else:
+								logger.warning("User's location is outside CDMX coordinates. ")
+								logger.info("Replacing last agent message with error message...")
+
+								logger.info("Hidding loading splash screen...")
+								self.cont_splash.visible = False
+								self.splash.visible = False
+								self.page.update()
+
+								self.lv_chat.controls[-1].controls[0].content = Message(
+									is_bot=True,
+									message=(
+										"Tu ubicación actual se encuentra fuera de los límites de la Ciudad de México, "
+										"por lo que no se puede realizar la búsqueda de información de lugares cercanos a tu ubicación actual."
+									)
+								)
+								self.lv_chat.update()
+								return
+
+						else:
+							logger.warning("Location permissions are not granted. Opening location permissions dialog...")
+							logger.info("Opening request location permissions dialog...")
+							self.dlg_request_location_permission.title = ft.Text("Permisos de ubicación")
+							self.dlg_request_location_permission.content = ft.Text(
+								value=(
+									"Para obtener información sobre lugares cercanos a tu ubicación actual, "
+									"necesitamos que permitas el acceso a tu ubicación."
+								)
+							)
+
+							logger.info("Hidding loading splash screen...")
+							self.cont_splash.visible = False
+							self.splash.visible = False
+							self.page.update()
+
+							self.page.open(self.dlg_request_location_permission)
+							return
+
+				self.add_message(
+					is_bot=True,
+					message=self.lv_chat.controls[-2].controls[1].content.content.value,
+					must_anwser=True
+				)
 
 			else:
 				self.add_message(is_bot=False, message="SPEECH_RECOGNITION_ERROR")
