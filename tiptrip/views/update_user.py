@@ -8,7 +8,6 @@ from logging import Logger, getLogger
 
 from components.bars import *
 from resources.config import *
-from components.splash import Splash
 from resources.functions import go_to_view
 from resources.styles import btn_primary_style, btn_secondary_style, txt_style
 
@@ -108,18 +107,6 @@ class UpdateUserView(ft.View):
 		)
 		self.page.overlay.append(self.dlg_user_image)
 
-		# Splash components
-		self.splash = Splash(page=self.page)
-		self.splash.visible = False
-		self.page.overlay.append(self.splash)
-		self.cont_splash = ft.Container(
-			expand=True,
-			width=self.page.width,
-			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
-			content=None,
-			visible=False
-		)
-
 		# View native attributes
 		super().__init__(
 			route="/update_user",
@@ -129,112 +116,103 @@ class UpdateUserView(ft.View):
 			controls=[
 				TopBar(page=self.page, leading=True, logger=logger),
 				ft.Container(
-					expand=True,
 					width=self.page.width,
+					alignment=ft.alignment.center,
+					padding=ft.padding.only(
+						left=SPACING,
+						right=SPACING,
+						bottom=SPACING,
+					),
 					content=ft.Stack(
+						width=PROFILE_IMAGE_DIMENSIONS,
+						height=PROFILE_IMAGE_DIMENSIONS,
 						controls=[
-							ft.Container(
-								width=self.page.width,
-								alignment=ft.alignment.center,
-								padding=ft.padding.only(
-									left=SPACING,
-									right=SPACING,
-									bottom=SPACING,
+							ft.CircleAvatar(
+								radius=(SPACING * 4),
+								foreground_image_src="/user.jpg",
+								background_image_src="/user.jpg",
+								content=ft.Text(
+									value=self.format_image_name(self.page.session.get("username"))
 								),
-								content=ft.Stack(
-									width=PROFILE_IMAGE_DIMENSIONS,
-									height=PROFILE_IMAGE_DIMENSIONS,
-									controls=[
-										ft.CircleAvatar(
-											radius=(SPACING * 4),
-											foreground_image_src="/user.jpg",
-											background_image_src="/user.jpg",
-											content=ft.Text(
-												value=self.format_image_name(self.page.session.get("username"))
-											),
-										),
-										ft.Container(
-											alignment=ft.alignment.bottom_right,
-											content=ft.CircleAvatar(
-												bgcolor=SECONDARY_COLOR,
-												radius=SPACING,
-												content=ft.IconButton(
-													icon=ft.icons.EDIT,
-													icon_color=ft.colors.WHITE,
-													on_click=lambda _: self.dlg_user_image.pick_files(
-														file_type=ft.FilePickerFileType.IMAGE,
-														allowed_extensions=["jpg", "jpeg", "png"]
-													)
-												)
-											)
-										)
-									]
-								)
 							),
 							ft.Container(
-								expand=True,
-								width=self.page.width,
-								bgcolor=ft.colors.WHITE,
-								padding=ft.padding.all(value=SPACING),
-								border_radius=ft.border_radius.only(
-									top_left=RADIUS,
-									top_right=RADIUS
+								alignment=ft.alignment.bottom_right,
+								content=ft.CircleAvatar(
+									bgcolor=SECONDARY_COLOR,
+									radius=SPACING,
+									content=ft.IconButton(
+										icon=ft.icons.EDIT,
+										icon_color=ft.colors.WHITE,
+										on_click=lambda _: self.dlg_user_image.pick_files(
+											file_type=ft.FilePickerFileType.IMAGE,
+											allowed_extensions=["jpg", "jpeg", "png"]
+										)
+									)
+								)
+							)
+						]
+					)
+				),
+				ft.Container(
+					expand=True,
+					width=self.page.width,
+					bgcolor=ft.colors.WHITE,
+					padding=ft.padding.all(value=SPACING),
+					border_radius=ft.border_radius.only(
+						top_left=RADIUS,
+						top_right=RADIUS
+					),
+					shadow=ft.BoxShadow(
+						blur_radius=(BLUR / 2),
+						offset=ft.Offset(0, -2),
+						color=ft.colors.BLACK
+					),
+					content=ft.Column(
+						spacing=(SPACING / 2),
+						controls=[
+							ft.Text(
+								value=(
+									"Cambia o ingresa los datos que deseas actualizar.\n"
+									"Los campos de contraseña pueden permanecer "
+									"vacíos si no deseas cambiarlos."
 								),
-								shadow=ft.BoxShadow(
-									blur_radius=(BLUR / 2),
-									offset=ft.Offset(0, -2),
-									color=ft.colors.BLACK
-								),
+								color=ft.colors.BLACK
+							),
+							ft.Container(
 								content=ft.Column(
 									spacing=(SPACING / 2),
 									controls=[
-										ft.Text(
-											value=(
-												"Cambia o ingresa los datos que deseas actualizar.\n"
-												"Los campos de contraseña pueden permanecer "
-												"vacíos si no deseas cambiarlos."
-											),
-											color=ft.colors.BLACK
+										ft.Container(
+											height=TXT_CONT_SIZE,
+											content=self.txt_username,
 										),
 										ft.Container(
-											content=ft.Column(
-												spacing=(SPACING / 2),
-												controls=[
-													ft.Container(
-														height=TXT_CONT_SIZE,
-														content=self.txt_username,
-													),
-													ft.Container(
-														height=TXT_CONT_SIZE,
-														content=self.txt_email,
-													),
-													ft.Container(
-														height=TXT_CONT_SIZE,
-														content=self.txt_password,
-													),
-													ft.Container(
-														height=TXT_CONT_SIZE,
-														content=self.txt_confirm_password,
-													),
-													ft.Container(
-														content=self.lbl_pwd_match
-													)
-												]
-											)
+											height=TXT_CONT_SIZE,
+											content=self.txt_email,
 										),
 										ft.Container(
-											content=ft.Column(
-												controls=[
-													self.btn_submit,
-													ft.Divider(color=ft.colors.TRANSPARENT),
-													self.btn_back
-												]
-											)
+											height=TXT_CONT_SIZE,
+											content=self.txt_password,
+										),
+										ft.Container(
+											height=TXT_CONT_SIZE,
+											content=self.txt_confirm_password,
+										),
+										ft.Container(
+											content=self.lbl_pwd_match
 										)
 									]
 								)
 							),
-							self.cont_splash
+							ft.Container(
+								content=ft.Column(
+									controls=[
+										self.btn_submit,
+										ft.Divider(color=ft.colors.TRANSPARENT),
+										self.btn_back
+									]
+								)
+							)
 						]
 					)
 				)
@@ -297,11 +275,6 @@ class UpdateUserView(ft.View):
 				self.page.open(self.dlg_error)
 
 			else:
-				logger.info("Showing loading splash screen...")
-				self.cont_splash.visible = True
-				self.splash.visible = True
-				self.page.update()
-
 				logger.info("Making request to update user...")
 				response: Response = put(
 					url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
@@ -321,11 +294,6 @@ class UpdateUserView(ft.View):
 					self.txt_password.value = ""
 					self.txt_confirm_password.value = ""
 
-					logger.info("Hidding loading splash screen...")
-					self.cont_splash.visible = False
-					self.splash.visible = False
-					self.page.update()
-
 					self.page.open(self.dlg_updated_data)
 
 				else:
@@ -338,20 +306,10 @@ class UpdateUserView(ft.View):
 						)
 					)
 
-					logger.info("Hidding loading splash screen...")
-					self.cont_splash.visible = False
-					self.splash.visible = False
-					self.page.update()
-
 					self.page.open(self.dlg_error)
 
 	def btn_back_clicked(self, _: ft.ControlEvent) -> None:
 		logger.info("Back button clicked, discarding changes...")
-
-		logger.info("Showing loading splash screen...")
-		self.cont_splash.visible = True
-		self.splash.visible = True
-		self.page.update()
 
 		logger.info("Cleaning fields...")
 		self.txt_password.value = ""
@@ -359,18 +317,8 @@ class UpdateUserView(ft.View):
 
 		go_to_view(page=self.page, logger=logger, route="/account")
 
-		logger.info("Hidding loading splash screen...")
-		self.cont_splash.visible = False
-		self.splash.visible = False
-		self.page.update()
-
 	def save_new_user_image(self, event: ft.FilePickerResultEvent) -> None:
 		logger.info("Processing new image selected...")
-
-		logger.info("Showing loading splash screen...")
-		self.cont_splash.visible = True
-		self.splash.visible = True
-		self.page.update()
 
 		if event.files:
 			if event.files[0].path:
@@ -378,11 +326,6 @@ class UpdateUserView(ft.View):
 				extension: str = event.files[0].name.split(".")[-1]
 				copyfile(event.files[0].path, join(ASSETS_ABSPATH, f"user.{extension}"))
 				logger.info("New image saved successfully.")
-
-				logger.info("Hidding loading splash screen...")
-				self.cont_splash.visible = False
-				self.splash.visible = False
-				self.page.update()
 
 				self.page.open(self.dlg_updated_image)
 
@@ -396,46 +339,15 @@ class UpdateUserView(ft.View):
 					)
 				)
 
-				logger.info("Hidding loading splash screen...")
-				self.cont_splash.visible = False
-				self.splash.visible = False
-				self.page.update()
-
 				self.page.open(self.dlg_error)
 		else:
 			logger.info("No image selected. Aborting...")
 
-		logger.info("Hidding loading splash screen...")
-		self.cont_splash.visible = False
-		self.splash.visible = False
-		self.page.update()
-
 	def handle_dlg_updated_data(self, _: ft.ControlEvent) -> None:
 		self.page.close(self.dlg_updated_data)
-
-		logger.info("Showing loading splash screen...")
-		self.cont_splash.visible = True
-		self.splash.visible = True
-		self.page.update()
-
-		go_to_view(page=self.page, logger=logger, route="/account"),
-
-		logger.info("Hidding loading splash screen...")
-		self.cont_splash.visible = False
-		self.splash.visible = False
-		self.page.update()
+		go_to_view(page=self.page, logger=logger, route="/account")
 
 	def handle_dlg_updated_image(self, _: ft.ControlEvent) -> None:
 		self.page.close(self.dlg_updated_image)
 
-		logger.info("Showing loading splash screen...")
-		self.cont_splash.visible = True
-		self.splash.visible = True
-		self.page.update()
-
-		go_to_view(page=self.page, logger=logger, route="/account"),
-
-		logger.info("Hidding loading splash screen...")
-		self.cont_splash.visible = False
-		self.splash.visible = False
-		self.page.update()
+		go_to_view(page=self.page, logger=logger, route="/account")

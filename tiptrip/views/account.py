@@ -6,7 +6,6 @@ from logging import Logger, getLogger
 
 from components.bars import *
 from resources.config import *
-from components.splash import Splash
 from resources.functions import go_to_view
 from resources.styles import btn_secondary_style, btn_danger_style
 
@@ -77,18 +76,6 @@ class AccountView(ft.View):
 			**btn_danger_style
 		)
 
-		# Splash components
-		self.splash = Splash(page=self.page)
-		self.splash.visible = False
-		self.page.overlay.append(self.splash)
-		self.cont_splash = ft.Container(
-			expand=True,
-			width=self.page.width,
-			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
-			content=None,
-			visible=False
-		)
-
 		# View native attributes
 		super().__init__(
 			route="/account",
@@ -98,153 +85,144 @@ class AccountView(ft.View):
 			controls=[
 				TopBar(page=self.page, leading=True, logger=logger),
 				ft.Container(
+					width=self.page.width,
+					alignment=ft.alignment.center,
+					padding=ft.padding.only(
+						left=SPACING,
+						right=SPACING,
+						bottom=SPACING,
+					),
+					content=ft.CircleAvatar(
+						radius=(SPACING * 4),
+						background_image_src=self.user_image,
+						foreground_image_src=self.user_image,
+						content=ft.Text(
+							value=self.format_image_name(self.page.session.get("username"))
+						),
+					)
+				),
+				ft.Container(
 					expand=True,
 					width=self.page.width,
-					content=ft.Stack(
+					bgcolor=ft.colors.WHITE,
+					padding=ft.padding.only(
+						top=(SPACING * 2),
+						right=SPACING,
+						bottom=SPACING,
+						left=SPACING,
+					),
+					border_radius=ft.border_radius.only(
+						top_left=RADIUS,
+						top_right=RADIUS
+					),
+					shadow=ft.BoxShadow(
+						blur_radius=(BLUR / 2),
+						offset=ft.Offset(0, -2),
+						color=ft.colors.BLACK
+					),
+					content=ft.Column(
+						width=self.page.width,
+						alignment=ft.MainAxisAlignment.START,
+						spacing=SPACING,
 						controls=[
 							ft.Container(
-								width=self.page.width,
-								alignment=ft.alignment.center,
-								padding=ft.padding.only(
-									left=SPACING,
-									right=SPACING,
-									bottom=SPACING,
-								),
-								content=ft.CircleAvatar(
-									radius=(SPACING * 4),
-									background_image_src=self.user_image,
-									foreground_image_src=self.user_image,
-									content=ft.Text(
-										value=self.format_image_name(self.page.session.get("username"))
-									),
-								)
-							),
-							ft.Container(
-								expand=True,
-								width=self.page.width,
+								height=80,
 								bgcolor=ft.colors.WHITE,
-								padding=ft.padding.only(
-									top=(SPACING * 2),
-									right=SPACING,
-									bottom=SPACING,
-									left=SPACING,
+								padding=ft.padding.symmetric(
+									vertical=(SPACING / 2),
+									horizontal=SPACING
 								),
-								border_radius=ft.border_radius.only(
-									top_left=RADIUS,
-									top_right=RADIUS
+								border_radius=ft.border_radius.all(
+									value=RADIUS
 								),
 								shadow=ft.BoxShadow(
-									blur_radius=(BLUR / 2),
-									offset=ft.Offset(0, -2),
-									color=ft.colors.BLACK
+									blur_radius=LOW_BLUR,
+									color=ft.colors.GREY_500
 								),
 								content=ft.Column(
-									width=self.page.width,
-									alignment=ft.MainAxisAlignment.START,
-									spacing=SPACING,
+									alignment=ft.MainAxisAlignment.CENTER,
+									spacing=0,
 									controls=[
 										ft.Container(
-											height=80,
-											bgcolor=ft.colors.WHITE,
-											padding=ft.padding.symmetric(
-												vertical=(SPACING / 2),
-												horizontal=SPACING
+											expand=1,
+											width=self.page.width,
+											alignment=ft.alignment.bottom_left,
+											content=ft.Text(
+												value=self.page.session.get("username"),
+												color=ft.colors.BLACK,
+												weight=ft.FontWeight.BOLD,
+												size=20,
 											),
-											border_radius=ft.border_radius.all(
-												value=RADIUS
-											),
-											shadow=ft.BoxShadow(
-												blur_radius=LOW_BLUR,
-												color=ft.colors.GREY_500
-											),
-											content=ft.Column(
-												alignment=ft.MainAxisAlignment.CENTER,
-												spacing=0,
-												controls=[
-													ft.Container(
-														expand=1,
-														width=self.page.width,
-														alignment=ft.alignment.bottom_left,
-														content=ft.Text(
-															value=self.page.session.get("username"),
-															color=ft.colors.BLACK,
-															weight=ft.FontWeight.BOLD,
-															size=20,
-														),
-													),
-													ft.Container(
-														expand=1,
-														width=self.page.width,
-														alignment=ft.alignment.top_left,
-														content=ft.Text(
-															value="Nombre de usuario",
-															color=ft.colors.BLACK
-														),
-													)
-												]
-											)
 										),
 										ft.Container(
-											height=80,
-											bgcolor=ft.colors.WHITE,
-											padding=ft.padding.symmetric(
-												vertical=(SPACING / 2),
-												horizontal=SPACING
+											expand=1,
+											width=self.page.width,
+											alignment=ft.alignment.top_left,
+											content=ft.Text(
+												value="Nombre de usuario",
+												color=ft.colors.BLACK
 											),
-											border_radius=ft.border_radius.all(
-												value=RADIUS
-											),
-											shadow=ft.BoxShadow(
-												blur_radius=LOW_BLUR,
-												color=ft.colors.GREY_500
-											),
-											content=ft.Column(
-												alignment=ft.MainAxisAlignment.CENTER,
-												spacing=0,
-												controls=[
-													ft.Container(
-														expand=1,
-														width=self.page.width,
-														alignment=ft.alignment.bottom_left,
-														content=ft.Text(
-															value=self.page.session.get("created_at"),
-															color=ft.colors.BLACK,
-															size=18,
-														),
-													),
-													ft.Container(
-														expand=1,
-														width=self.page.width,
-														alignment=ft.alignment.top_left,
-														content=ft.Text(
-															value="Fecha de creación de la cuenta",
-															color=ft.colors.BLACK,
-														),
-													)
-												]
-											)
-										),
-										ft.Container(
-											margin=ft.margin.only(top=SPACING),
-											padding=ft.padding.symmetric(horizontal=SPACING),
-											alignment=ft.alignment.center,
-											content=ft.ElevatedButton(
-												width=self.page.width,
-												icon=ft.icons.EDIT,
-												text="Editar perfil",
-												on_click=self.go_to_update_user,
-												**btn_secondary_style
-											)
-										),
-										ft.Container(
-											padding=ft.padding.symmetric(horizontal=SPACING),
-											alignment=ft.alignment.center,
-											content=self.btn_delete_user
 										)
 									]
 								)
 							),
-							self.cont_splash
+							ft.Container(
+								height=80,
+								bgcolor=ft.colors.WHITE,
+								padding=ft.padding.symmetric(
+									vertical=(SPACING / 2),
+									horizontal=SPACING
+								),
+								border_radius=ft.border_radius.all(
+									value=RADIUS
+								),
+								shadow=ft.BoxShadow(
+									blur_radius=LOW_BLUR,
+									color=ft.colors.GREY_500
+								),
+								content=ft.Column(
+									alignment=ft.MainAxisAlignment.CENTER,
+									spacing=0,
+									controls=[
+										ft.Container(
+											expand=1,
+											width=self.page.width,
+											alignment=ft.alignment.bottom_left,
+											content=ft.Text(
+												value=self.page.session.get("created_at"),
+												color=ft.colors.BLACK,
+												size=18,
+											),
+										),
+										ft.Container(
+											expand=1,
+											width=self.page.width,
+											alignment=ft.alignment.top_left,
+											content=ft.Text(
+												value="Fecha de creación de la cuenta",
+												color=ft.colors.BLACK,
+											),
+										)
+									]
+								)
+							),
+							ft.Container(
+								margin=ft.margin.only(top=SPACING),
+								padding=ft.padding.symmetric(horizontal=SPACING),
+								alignment=ft.alignment.center,
+								content=ft.ElevatedButton(
+									width=self.page.width,
+									icon=ft.icons.EDIT,
+									text="Editar perfil",
+									on_click=self.go_to_update_user,
+									**btn_secondary_style
+								)
+							),
+							ft.Container(
+								padding=ft.padding.symmetric(horizontal=SPACING),
+								alignment=ft.alignment.center,
+								content=self.btn_delete_user
+							)
 						]
 					)
 				)
@@ -270,39 +248,14 @@ class AccountView(ft.View):
 			return f"{name[:2].upper()}"
 
 	def go_to_update_user(self, _: ft.ControlEvent) -> None:
-		logger.info("Showing loading splash screen...")
-		self.cont_splash.visible = True
-		self.splash.visible = True
-		self.page.update()
-
-		go_to_view(page=self.page, logger=logger, route="/update_user"),
-
-		logger.info("Hidding loading splash screen...")
-		self.cont_splash.visible = False
-		self.splash.visible = False
-		self.page.update()
+		go_to_view(page=self.page, logger=logger, route="/update_user")
 
 	def handle_ok_account_deleted(self, _: ft.ControlEvent) -> None:
 		self.page.close(self.dlg_account_deleted)
-		logger.info("Showing loading splash screen...")
-		self.cont_splash.visible = True
-		self.splash.visible = True
-		self.page.update()
-
 		go_to_view(page=self.page, logger=logger, route="/sign_in")
-
-		logger.info("Hidding loading splash screen...")
-		self.cont_splash.visible = False
-		self.splash.visible = False
-		self.page.update()
 
 	def delete_account(self, _: ft.ControlEvent) -> None:
 		self.page.close(self.dlg_confirm_delete_account)
-
-		logger.info("Showing loading splash screen...")
-		self.cont_splash.visible = True
-		self.splash.visible = True
-		self.page.update()
 
 		logger.info("Making request to delete account...")
 		response: Response = delete(
@@ -315,20 +268,8 @@ class AccountView(ft.View):
 
 		if response.status_code == 200:
 			logger.info("Account deleted successfully")
-
-			logger.info("Hidding loading splash screen...")
-			self.cont_splash.visible = False
-			self.splash.visible = False
-			self.page.update()
-
 			self.page.open(self.dlg_account_deleted)
 
 		else:
 			logger.error("Error deleting account")
-
-			logger.info("Hidding loading splash screen...")
-			self.cont_splash.visible = False
-			self.splash.visible = False
-			self.page.update()
-
 			self.page.open(self.dlg_error)
