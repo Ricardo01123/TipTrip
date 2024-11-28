@@ -129,103 +129,112 @@ class UpdateUserView(ft.View):
 			controls=[
 				TopBar(page=self.page, leading=True, logger=logger),
 				ft.Container(
-					width=self.page.width,
-					alignment=ft.alignment.center,
-					padding=ft.padding.only(
-						left=SPACING,
-						right=SPACING,
-						bottom=SPACING,
-					),
-					content=ft.Stack(
-						width=PROFILE_IMAGE_DIMENSIONS,
-						height=PROFILE_IMAGE_DIMENSIONS,
-						controls=[
-							ft.CircleAvatar(
-								radius=(SPACING * 4),
-								foreground_image_src="/user.jpg",
-								background_image_src="/user.jpg",
-								content=ft.Text(
-									value=self.format_image_name(self.page.session.get("username"))
-								),
-							),
-							ft.Container(
-								alignment=ft.alignment.bottom_right,
-								content=ft.CircleAvatar(
-									bgcolor=SECONDARY_COLOR,
-									radius=SPACING,
-									content=ft.IconButton(
-										icon=ft.icons.EDIT,
-										icon_color=ft.colors.WHITE,
-										on_click=lambda _: self.dlg_user_image.pick_files(
-											file_type=ft.FilePickerFileType.IMAGE,
-											allowed_extensions=["jpg", "jpeg", "png"]
-										)
-									)
-								)
-							)
-						]
-					)
-				),
-				ft.Container(
 					expand=True,
 					width=self.page.width,
-					bgcolor=ft.colors.WHITE,
-					padding=ft.padding.all(value=SPACING),
-					border_radius=ft.border_radius.only(
-						top_left=RADIUS,
-						top_right=RADIUS
-					),
-					shadow=ft.BoxShadow(
-						blur_radius=(BLUR / 2),
-						offset=ft.Offset(0, -2),
-						color=ft.colors.BLACK
-					),
-					content=ft.Column(
-						spacing=(SPACING / 2),
+					content=ft.Stack(
 						controls=[
-							ft.Text(
-								value=(
-									"Cambia o ingresa los datos que deseas actualizar.\n"
-									"Los campos de contraseña pueden permanecer "
-									"vacíos si no deseas cambiarlos."
+							ft.Container(
+								width=self.page.width,
+								alignment=ft.alignment.center,
+								padding=ft.padding.only(
+									left=SPACING,
+									right=SPACING,
+									bottom=SPACING,
 								),
-								color=ft.colors.BLACK
+								content=ft.Stack(
+									width=PROFILE_IMAGE_DIMENSIONS,
+									height=PROFILE_IMAGE_DIMENSIONS,
+									controls=[
+										ft.CircleAvatar(
+											radius=(SPACING * 4),
+											foreground_image_src="/user.jpg",
+											background_image_src="/user.jpg",
+											content=ft.Text(
+												value=self.format_image_name(self.page.session.get("username"))
+											),
+										),
+										ft.Container(
+											alignment=ft.alignment.bottom_right,
+											content=ft.CircleAvatar(
+												bgcolor=SECONDARY_COLOR,
+												radius=SPACING,
+												content=ft.IconButton(
+													icon=ft.icons.EDIT,
+													icon_color=ft.colors.WHITE,
+													on_click=lambda _: self.dlg_user_image.pick_files(
+														file_type=ft.FilePickerFileType.IMAGE,
+														allowed_extensions=["jpg", "jpeg", "png"]
+													)
+												)
+											)
+										)
+									]
+								)
 							),
 							ft.Container(
+								expand=True,
+								width=self.page.width,
+								bgcolor=ft.colors.WHITE,
+								padding=ft.padding.all(value=SPACING),
+								border_radius=ft.border_radius.only(
+									top_left=RADIUS,
+									top_right=RADIUS
+								),
+								shadow=ft.BoxShadow(
+									blur_radius=(BLUR / 2),
+									offset=ft.Offset(0, -2),
+									color=ft.colors.BLACK
+								),
 								content=ft.Column(
 									spacing=(SPACING / 2),
 									controls=[
-										ft.Container(
-											height=TXT_CONT_SIZE,
-											content=self.txt_username,
+										ft.Text(
+											value=(
+												"Cambia o ingresa los datos que deseas actualizar.\n"
+												"Los campos de contraseña pueden permanecer "
+												"vacíos si no deseas cambiarlos."
+											),
+											color=ft.colors.BLACK
 										),
 										ft.Container(
-											height=TXT_CONT_SIZE,
-											content=self.txt_email,
+											content=ft.Column(
+												spacing=(SPACING / 2),
+												controls=[
+													ft.Container(
+														height=TXT_CONT_SIZE,
+														content=self.txt_username,
+													),
+													ft.Container(
+														height=TXT_CONT_SIZE,
+														content=self.txt_email,
+													),
+													ft.Container(
+														height=TXT_CONT_SIZE,
+														content=self.txt_password,
+													),
+													ft.Container(
+														height=TXT_CONT_SIZE,
+														content=self.txt_confirm_password,
+													),
+													ft.Container(
+														content=self.lbl_pwd_match
+													)
+												]
+											)
 										),
 										ft.Container(
-											height=TXT_CONT_SIZE,
-											content=self.txt_password,
-										),
-										ft.Container(
-											height=TXT_CONT_SIZE,
-											content=self.txt_confirm_password,
-										),
-										ft.Container(
-											content=self.lbl_pwd_match
+											content=ft.Column(
+												controls=[
+													self.btn_submit,
+													ft.Divider(color=ft.colors.TRANSPARENT),
+													self.btn_back
+												]
+											)
 										)
 									]
 								)
 							),
-							ft.Container(
-								content=ft.Column(
-									controls=[
-										self.btn_submit,
-										ft.Divider(color=ft.colors.TRANSPARENT),
-										self.btn_back
-									]
-								)
-							)
+							self.cont_splash
 						]
 					)
 				)

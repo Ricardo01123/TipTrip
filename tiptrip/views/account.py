@@ -98,144 +98,153 @@ class AccountView(ft.View):
 			controls=[
 				TopBar(page=self.page, leading=True, logger=logger),
 				ft.Container(
-					width=self.page.width,
-					alignment=ft.alignment.center,
-					padding=ft.padding.only(
-						left=SPACING,
-						right=SPACING,
-						bottom=SPACING,
-					),
-					content=ft.CircleAvatar(
-						radius=(SPACING * 4),
-						background_image_src=self.user_image,
-						foreground_image_src=self.user_image,
-						content=ft.Text(
-							value=self.format_image_name(self.page.session.get("username"))
-						),
-					)
-				),
-				ft.Container(
 					expand=True,
 					width=self.page.width,
-					bgcolor=ft.colors.WHITE,
-					padding=ft.padding.only(
-						top=(SPACING * 2),
-						right=SPACING,
-						bottom=SPACING,
-						left=SPACING,
-					),
-					border_radius=ft.border_radius.only(
-						top_left=RADIUS,
-						top_right=RADIUS
-					),
-					shadow=ft.BoxShadow(
-						blur_radius=(BLUR / 2),
-						offset=ft.Offset(0, -2),
-						color=ft.colors.BLACK
-					),
-					content=ft.Column(
-						width=self.page.width,
-						alignment=ft.MainAxisAlignment.START,
-						spacing=SPACING,
+					content=ft.Stack(
 						controls=[
 							ft.Container(
-								height=80,
-								bgcolor=ft.colors.WHITE,
-								padding=ft.padding.symmetric(
-									vertical=(SPACING / 2),
-									horizontal=SPACING
-								),
-								border_radius=ft.border_radius.all(
-									value=RADIUS
-								),
-								shadow=ft.BoxShadow(
-									blur_radius=LOW_BLUR,
-									color=ft.colors.GREY_500
-								),
-								content=ft.Column(
-									alignment=ft.MainAxisAlignment.CENTER,
-									spacing=0,
-									controls=[
-										ft.Container(
-											expand=1,
-											width=self.page.width,
-											alignment=ft.alignment.bottom_left,
-											content=ft.Text(
-												value=self.page.session.get("username"),
-												color=ft.colors.BLACK,
-												weight=ft.FontWeight.BOLD,
-												size=20,
-											),
-										),
-										ft.Container(
-											expand=1,
-											width=self.page.width,
-											alignment=ft.alignment.top_left,
-											content=ft.Text(
-												value="Nombre de usuario",
-												color=ft.colors.BLACK
-											),
-										)
-									]
-								)
-							),
-							ft.Container(
-								height=80,
-								bgcolor=ft.colors.WHITE,
-								padding=ft.padding.symmetric(
-									vertical=(SPACING / 2),
-									horizontal=SPACING
-								),
-								border_radius=ft.border_radius.all(
-									value=RADIUS
-								),
-								shadow=ft.BoxShadow(
-									blur_radius=LOW_BLUR,
-									color=ft.colors.GREY_500
-								),
-								content=ft.Column(
-									alignment=ft.MainAxisAlignment.CENTER,
-									spacing=0,
-									controls=[
-										ft.Container(
-											expand=1,
-											width=self.page.width,
-											alignment=ft.alignment.bottom_left,
-											content=ft.Text(
-												value=self.page.session.get("created_at"),
-												color=ft.colors.BLACK,
-												size=18,
-											),
-										),
-										ft.Container(
-											expand=1,
-											width=self.page.width,
-											alignment=ft.alignment.top_left,
-											content=ft.Text(
-												value="Fecha de creación de la cuenta",
-												color=ft.colors.BLACK,
-											),
-										)
-									]
-								)
-							),
-							ft.Container(
-								margin=ft.margin.only(top=SPACING),
-								padding=ft.padding.symmetric(horizontal=SPACING),
+								width=self.page.width,
 								alignment=ft.alignment.center,
-								content=ft.ElevatedButton(
+								padding=ft.padding.only(
+									left=SPACING,
+									right=SPACING,
+									bottom=SPACING,
+								),
+								content=ft.CircleAvatar(
+									radius=(SPACING * 4),
+									background_image_src=self.user_image,
+									foreground_image_src=self.user_image,
+									content=ft.Text(
+										value=self.format_image_name(self.page.session.get("username"))
+									),
+								)
+							),
+							ft.Container(
+								expand=True,
+								width=self.page.width,
+								bgcolor=ft.colors.WHITE,
+								padding=ft.padding.only(
+									top=(SPACING * 2),
+									right=SPACING,
+									bottom=SPACING,
+									left=SPACING,
+								),
+								border_radius=ft.border_radius.only(
+									top_left=RADIUS,
+									top_right=RADIUS
+								),
+								shadow=ft.BoxShadow(
+									blur_radius=(BLUR / 2),
+									offset=ft.Offset(0, -2),
+									color=ft.colors.BLACK
+								),
+								content=ft.Column(
 									width=self.page.width,
-									icon=ft.icons.EDIT,
-									text="Editar perfil",
-									on_click=self.go_to_update_user,
-									**btn_secondary_style
+									alignment=ft.MainAxisAlignment.START,
+									spacing=SPACING,
+									controls=[
+										ft.Container(
+											height=80,
+											bgcolor=ft.colors.WHITE,
+											padding=ft.padding.symmetric(
+												vertical=(SPACING / 2),
+												horizontal=SPACING
+											),
+											border_radius=ft.border_radius.all(
+												value=RADIUS
+											),
+											shadow=ft.BoxShadow(
+												blur_radius=LOW_BLUR,
+												color=ft.colors.GREY_500
+											),
+											content=ft.Column(
+												alignment=ft.MainAxisAlignment.CENTER,
+												spacing=0,
+												controls=[
+													ft.Container(
+														expand=1,
+														width=self.page.width,
+														alignment=ft.alignment.bottom_left,
+														content=ft.Text(
+															value=self.page.session.get("username"),
+															color=ft.colors.BLACK,
+															weight=ft.FontWeight.BOLD,
+															size=20,
+														),
+													),
+													ft.Container(
+														expand=1,
+														width=self.page.width,
+														alignment=ft.alignment.top_left,
+														content=ft.Text(
+															value="Nombre de usuario",
+															color=ft.colors.BLACK
+														),
+													)
+												]
+											)
+										),
+										ft.Container(
+											height=80,
+											bgcolor=ft.colors.WHITE,
+											padding=ft.padding.symmetric(
+												vertical=(SPACING / 2),
+												horizontal=SPACING
+											),
+											border_radius=ft.border_radius.all(
+												value=RADIUS
+											),
+											shadow=ft.BoxShadow(
+												blur_radius=LOW_BLUR,
+												color=ft.colors.GREY_500
+											),
+											content=ft.Column(
+												alignment=ft.MainAxisAlignment.CENTER,
+												spacing=0,
+												controls=[
+													ft.Container(
+														expand=1,
+														width=self.page.width,
+														alignment=ft.alignment.bottom_left,
+														content=ft.Text(
+															value=self.page.session.get("created_at"),
+															color=ft.colors.BLACK,
+															size=18,
+														),
+													),
+													ft.Container(
+														expand=1,
+														width=self.page.width,
+														alignment=ft.alignment.top_left,
+														content=ft.Text(
+															value="Fecha de creación de la cuenta",
+															color=ft.colors.BLACK,
+														),
+													)
+												]
+											)
+										),
+										ft.Container(
+											margin=ft.margin.only(top=SPACING),
+											padding=ft.padding.symmetric(horizontal=SPACING),
+											alignment=ft.alignment.center,
+											content=ft.ElevatedButton(
+												width=self.page.width,
+												icon=ft.icons.EDIT,
+												text="Editar perfil",
+												on_click=self.go_to_update_user,
+												**btn_secondary_style
+											)
+										),
+										ft.Container(
+											padding=ft.padding.symmetric(horizontal=SPACING),
+											alignment=ft.alignment.center,
+											content=self.btn_delete_user
+										)
+									]
 								)
 							),
-							ft.Container(
-								padding=ft.padding.symmetric(horizontal=SPACING),
-								alignment=ft.alignment.center,
-								content=self.btn_delete_user
-							)
+							self.cont_splash
 						]
 					)
 				)

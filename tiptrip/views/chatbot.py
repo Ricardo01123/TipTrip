@@ -11,7 +11,6 @@ from resources.texts import *
 from resources.config import *
 from resources.functions import *
 from components.bars import TopBar
-from components.splash import Splash
 from components.message import Message
 from components.audio_player import AudioPlayer
 from resources.styles import txt_messages_style
@@ -179,17 +178,6 @@ class ChatbotView(ft.View):
 			on_dismiss=lambda _: self.page.close(self.dlg_error)
 		)
 
-		# Splash components
-		self.splash = Splash(page=self.page)
-		self.page.overlay.append(self.splash)
-		self.cont_splash = ft.Container(
-			expand=True,
-			width=self.page.width,
-			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
-			content=None,
-			visible=False
-		)
-
 		# View native attributes
 		super().__init__(
 			route="/chatbot",
@@ -200,7 +188,6 @@ class ChatbotView(ft.View):
 				TopBar(page=self.page, leading=True, logger=logger),
 				ft.Container(
 					width=self.page.width,
-					# height=50,
 					bgcolor=MAIN_COLOR,
 					border_radius=ft.border_radius.only(
 						bottom_left=RADIUS,
@@ -297,11 +284,6 @@ class ChatbotView(ft.View):
 
 			else:
 				if not "ERROR" in message:
-					logger.info("Showing loading splash screen...")
-					self.cont_splash.visible = True
-					self.splash.visible = True
-					self.page.update()
-
 					logger.info("Calling the back-end agent to process the user message...")
 					response: Response = post(
 						url=f"{BACK_END_URL}/{AGENT_ENDPOINT}/{self.page.session.get('id')}",
@@ -322,11 +304,6 @@ class ChatbotView(ft.View):
 						logger.info("Checking chosen response format...")
 						if not self.swt_audio.value:
 							logger.info("Agent response is only text")
-
-							logger.info("Hidding loading splash screen...")
-							self.cont_splash.visible = False
-							self.splash.visible = False
-							self.page.update()
 
 							logger.info("Replacing last agent message with agent response message...")
 							self.lv_chat.controls[-1].controls[0].content = Message(
@@ -367,17 +344,7 @@ class ChatbotView(ft.View):
 							logger.info("Replacing last agent message...")
 							self.lv_chat.controls[-1].controls[0].content = self.audio_players[-1]
 
-							logger.info("Hidding loading splash screen...")
-							self.cont_splash.visible = False
-							self.splash.visible = False
-							self.page.update()
-
 					else:
-						logger.info("Hidding loading splash screen...")
-						self.cont_splash.visible = False
-						self.splash.visible = False
-						self.page.update()
-
 						logger.info(f"Agent endpoint response received {response.status_code}: {response.json()}")
 						logger.info("Agent response is NOT ok. Replacing last agent message with error message...")
 						self.lv_chat.controls[-1].controls[0].content = Message(
@@ -420,11 +387,6 @@ class ChatbotView(ft.View):
 						if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
 							logger.info("User's location is inside CDMX coordinates. Saving user's location inside DB...")
 
-							logger.info("Showing loading splash screen...")
-							self.cont_splash.visible = True
-							self.splash.visible = True
-							self.page.update()
-
 							response: Response = post(
 								url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
 								headers={
@@ -440,12 +402,6 @@ class ChatbotView(ft.View):
 							if response.status_code == 201:
 								logger.info("User's coordinates saved successfully")
 								sleep(2)
-
-								logger.info("Hidding loading splash screen...")
-								self.cont_splash.visible = False
-								self.splash.visible = False
-								self.page.update()
-
 								break
 
 							else:
@@ -459,13 +415,7 @@ class ChatbotView(ft.View):
 									)
 								)
 
-								logger.info("Hidding loading splash screen...")
-								self.cont_splash.visible = False
-								self.splash.visible = False
-								self.page.update()
-
 								self.lv_chat.update()
-
 								return
 
 						else:
@@ -551,11 +501,6 @@ class ChatbotView(ft.View):
 			stream.close()
 			audio.terminate()
 
-			logger.info("Showing loading splash screen...")
-			self.cont_splash.visible = True
-			self.splash.visible = True
-			self.page.update()
-
 			logger.info("Saving audio file...")
 			with wave.open(join(TEMP_ABSPATH, TEMP_FILE_NAME), "wb") as file:
 				file.setnchannels(CHANNELS)
@@ -618,12 +563,6 @@ class ChatbotView(ft.View):
 								if response.status_code == 201:
 									logger.info("User's coordinates saved successfully")
 									sleep(2)
-
-									logger.info("Hidding loading splash screen...")
-									self.cont_splash.visible = False
-									self.splash.visible = False
-									self.page.update()
-
 									break
 
 								else:
@@ -637,22 +576,12 @@ class ChatbotView(ft.View):
 										)
 									)
 
-									logger.info("Hidding loading splash screen...")
-									self.cont_splash.visible = False
-									self.splash.visible = False
-									self.page.update()
-
 									self.lv_chat.update()
 									return
 
 							else:
 								logger.warning("User's location is outside CDMX coordinates. ")
 								logger.info("Replacing last agent message with error message...")
-
-								logger.info("Hidding loading splash screen...")
-								self.cont_splash.visible = False
-								self.splash.visible = False
-								self.page.update()
 
 								self.lv_chat.controls[-1].controls[0].content = Message(
 									is_bot=True,
@@ -674,11 +603,6 @@ class ChatbotView(ft.View):
 									"necesitamos que permitas el acceso a tu ubicación."
 								)
 							)
-
-							logger.info("Hidding loading splash screen...")
-							self.cont_splash.visible = False
-							self.splash.visible = False
-							self.page.update()
 
 							self.page.open(self.dlg_request_location_permission)
 							return
