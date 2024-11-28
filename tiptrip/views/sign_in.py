@@ -138,7 +138,7 @@ class SignInView(ft.View):
 																	color=ft.colors.BLACK
 																)
 															),
-															on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/change_password")
+															on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/verify_user")
 														)
 													)
 												]

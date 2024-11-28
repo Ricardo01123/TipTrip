@@ -410,13 +410,13 @@ class SignUpView(ft.View):
 			self.chk_tyc.value
 		]):
 			if self.lbl_pwd_match.visible:
-				logger.info("Passwords do not match. Aborting process...")
+				logger.warning("Passwords do not match. Aborting process...")
 				self.dlg_error.title = ft.Text(value="Las contraseñas no coinciden")
 				self.dlg_error.content = ft.Text(value="Las contraseñas no coinciden. Favor de verificarlas.")
 				self.page.open(self.dlg_error)
 
 			elif not match(pattern=RGX_EMAIL, string=self.txt_email.value):
-				logger.info("Invalid email format. Aborting process...")
+				logger.warning("Invalid email format. Aborting process...")
 				self.dlg_error.title = ft.Text(value="Formato de correo inválido")
 				self.dlg_error.content = ft.Text(value="El correo electrónico ingresado no es válido. Favor de verificarlo.")
 				self.page.open(self.dlg_error)

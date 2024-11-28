@@ -23,7 +23,7 @@ class UpdateUserView(ft.View):
 		# Custom components
 		self.dlg_updated_data: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=ft.Text("Datos actulizados"),
+			title=ft.Text("Datos actualizados"),
 			content=ft.Text("Sus datos han sido actualizados correctamente."),
 			actions=[
 				ft.TextButton("Aceptar", on_click=self.handle_dlg_updated_data),
@@ -349,5 +349,4 @@ class UpdateUserView(ft.View):
 
 	def handle_dlg_updated_image(self, _: ft.ControlEvent) -> None:
 		self.page.close(self.dlg_updated_image)
-
 		go_to_view(page=self.page, logger=logger, route="/account")

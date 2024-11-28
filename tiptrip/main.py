@@ -17,6 +17,7 @@ from views.account import AccountView
 from views.favorites import FavoritesView
 from views.update_user import UpdateUserView
 from views.permission import PermissionsView
+from views.verify_user import VerifyUserView
 from views.place_details import PlaceDetailsView
 from views.change_password import ChangePasswordView
 from views.privacy_politics import PrivacyPoliticsView
@@ -46,6 +47,7 @@ def main(page: ft.Page) -> None:
 			# Login views
 			case "/sign_in": page.views.append(SignInView(page))
 			case "/sign_up": page.views.append(SignUpView(page))
+			case "/verify_user": page.views.append(VerifyUserView(page))
 			case "/change_password": page.views.append(ChangePasswordView(page))
 			case "/privacy_politics": page.views.append(PrivacyPoliticsView(page))
 			case "/terms_conditions": page.views.append(TermsConditionsView(page))
