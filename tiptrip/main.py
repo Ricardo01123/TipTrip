@@ -30,8 +30,6 @@ logger: Logger = getLogger(PROJECT_NAME)
 
 def main(page: ft.Page) -> None:
 	page.title = "Tip Trip"
-	page.window.width = 412
-	page.window.height = 915
 
 	logger.info(f"Starting app's basic configurations...")
 	def route_change(_: ft.RouteChangeEvent) -> None:
@@ -82,8 +80,8 @@ def main(page: ft.Page) -> None:
 ft.app(main, assets_dir="assets")
 
 logger.info("Ending app execution, deleting temporal audio files if exists...")
-if exists(join(TEMP_ABSPATH, TEMP_FILE_NAME)):
-	remove(join(TEMP_ABSPATH, TEMP_FILE_NAME))
+if exists(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME)):
+	remove(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME))
 
-if exists(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME)):
-	remove(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME))
+if exists(join(TEMP_ABSPATH, TEMP_AGENT_AUDIO_FILENAME)):
+	remove(join(TEMP_ABSPATH, TEMP_AGENT_AUDIO_FILENAME))

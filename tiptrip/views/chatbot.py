@@ -2,7 +2,6 @@ import wave
 import flet as ft
 from time import sleep
 from os.path import join
-from pyaudio import PyAudio
 from requests import post, Response
 from logging import Logger, getLogger
 from base64 import b64encode, b64decode
@@ -35,6 +34,18 @@ class ChatbotView(ft.View):
 			on_error=lambda error: logger.error(f"Geolocator error: {error}"),
 		)
 		self.page.overlay.append(self.gl)
+
+		# Audio recorder components
+		self.audio_recorder: ft.AudioRecorder = ft.AudioRecorder(
+			channels_num=CHANNELS,
+			sample_rate=SAMPLING_RATE,
+			audio_encoder=ft.AudioEncoder.WAV,
+			auto_gain=True,
+			cancel_echo=True,
+			suppress_noise=True
+			# on_state_changed=handle_state_change,
+		)
+		self.page.overlay.append(self.audio_recorder)
 
 		# Settings components
 		self.swt_audio: ft.Switch = ft.Switch(
@@ -154,18 +165,27 @@ class ChatbotView(ft.View):
 			actions_alignment=ft.MainAxisAlignment.END,
 			on_dismiss=lambda _: self.page.close(self.dlg_request_location_permission)
 		)
-		self.dlg_location: ft.AlertDialog = ft.AlertDialog(
+		self.dlg_request_audio_permission: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=ft.Text(""),
-			content=ft.Text(""),
-			actions_alignment=ft.MainAxisAlignment.END,
+			title=ft.Text(value="Permisos de micrófono"),
+			content=ft.Text(
+				value=(
+					"Para poder enviar mensajes de voz al agente conversacional, "
+					"necesitamos que permitas el acceso a tu micrófono."
+				)
+			),
 			actions=[
 				ft.TextButton(
+					text="Cancelar",
+					on_click=self.request_audio_permission_denied
+				),
+				ft.TextButton(
 					text="Aceptar",
-					on_click=lambda _: self.page.close(self.dlg_location)
+					on_click=self.request_audio_permission
 				)
 			],
-			on_dismiss=lambda _: self.page.close(self.dlg_location)
+			actions_alignment=ft.MainAxisAlignment.END,
+			on_dismiss=lambda _: self.page.close(self.dlg_request_audio_permission)
 		)
 		self.dlg_error: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
@@ -240,7 +260,7 @@ class ChatbotView(ft.View):
 
 	def validate(self, _: ft.ControlEvent) -> None:
 		if self.txt_message.value == "":
-			self.record_flag = True
+			# self.record_flag = True
 			self.cont_icon.content = self.cca_mic
 			self.cont_icon.on_click = self.cca_mic_clicked
 		else:
@@ -323,7 +343,7 @@ class ChatbotView(ft.View):
 							audio_binary = b64decode(audio_data["audio"])
 
 							logger.info("Saving as temporary audio file...")
-							with wave.open(join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME), "wb") as file:
+							with wave.open(join(TEMP_ABSPATH, TEMP_AGENT_AUDIO_FILENAME), "wb") as file:
 								file.setnchannels(audio_data["nchannels"])
 								file.setsampwidth(audio_data["sampwidth"])
 								file.setframerate(audio_data["framerate"])
@@ -336,7 +356,7 @@ class ChatbotView(ft.View):
 							self.audio_players.append(
 								AudioPlayer(
 									page=self.page,
-									src=join(TEMP_ABSPATH, RECEIVED_TEMP_FILE_NAME),
+									src=join(TEMP_ABSPATH, TEMP_AGENT_AUDIO_FILENAME),
 									components_width=self.page.width
 								)
 							)
@@ -451,33 +471,14 @@ class ChatbotView(ft.View):
 			)
 
 	def cca_mic_clicked(self, _: ft.ControlEvent) -> None:
-		logger.info("Microphone button clicked")
-		if self.record_flag:
-			logger.info("Disabling authorization for audio recording...")
-			self.record_flag = False
+		if not self.record_flag:
+			logger.info("Recording audio process started...")
 
-			logger.info("Changing UI components to initial state...")
-			self.txt_message.value = ""
-			self.cca_mic.bgcolor = MAIN_COLOR
-			self.cca_mic.content = ft.Icon(
-				name=ft.icons.MIC,
-				color=ft.colors.WHITE,
-				size=25
-			)
-			self.page.update()
-		else:
-			logger.info("Establishing audio configuration...")
-			audio: PyAudio = PyAudio()
-			stream = audio.open(
-				format=FORMAT,
-				channels=CHANNELS,
-				rate=SAMPLING_RATE,
-				input=True,
-				frames_per_buffer=CHUNK
-			)
-
-			logger.info("Establishing authorization for audio recording...")
-			self.record_flag = True
+			logger.info("Asking for audio permissions if not granted...")
+			if not self.audio_recorder.has_permission(wait_timeout=60.0):
+				logger.warning("Audio permissions are not granted. Opening audio permissions dialog...")
+				self.page.open(self.dlg_request_audio_permission)
+				return
 
 			logger.info("Changing UI components to recording state...")
 			self.txt_message.value = "Grabando audio..."
@@ -490,29 +491,29 @@ class ChatbotView(ft.View):
 			self.page.update()
 
 			logger.info("Starting audio recording...")
-			frames: list = []
-			while self.record_flag:
-				logger.info("Listening...")
-				data: bytes = stream.read(CHUNK)
-				frames.append(data)
+			self.record_flag = True
+			self.audio_recorder.start_recording(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME))
 
-			logger.info("Ending audio recording...")
-			stream.stop_stream()
-			stream.close()
-			audio.terminate()
+		else:
+			logger.info("Changing UI components to initial state...")
+			self.txt_message.value = ""
+			self.cca_mic.bgcolor = MAIN_COLOR
+			self.cca_mic.content = ft.Icon(
+				name=ft.icons.MIC,
+				color=ft.colors.WHITE,
+				size=25
+			)
+			self.page.update()
 
-			logger.info("Saving audio file...")
-			with wave.open(join(TEMP_ABSPATH, TEMP_FILE_NAME), "wb") as file:
-				file.setnchannels(CHANNELS)
-				file.setsampwidth(audio.get_sample_size(FORMAT))
-				file.setframerate(SAMPLING_RATE)
-				file.writeframes(b"".join(frames))
+			logger.info("Stopping audio recording...")
+			self.record_flag = False
+			self.audio_recorder.stop_recording()
 
 			logger.info("Encoding audio file...")
-			with open(join(TEMP_ABSPATH, TEMP_FILE_NAME), "rb") as audio_file:
+			with open(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME), "rb") as audio_file:
 				encoded_audio_data: str = b64encode(audio_file.read()).decode("utf-8")
 
-			logger.info("Calling Backend API for speech recognition...")
+			logger.info("Speech recognition process started...")
 			response: Response = post(
 				url=f"{BACK_END_URL}/{ASR_ENDPOINT}",
 				headers={
@@ -615,6 +616,47 @@ class ChatbotView(ft.View):
 
 			else:
 				self.add_message(is_bot=False, message="SPEECH_RECOGNITION_ERROR")
+
+	def request_audio_permission(self, _: ft.ControlEvent) -> None:
+		self.page.close(self.dlg_request_audio_permission)
+		logger.info("Requesting audio permissions...")
+
+		logger.info("Asking for audio permissions...")
+		if self.audio_recorder.has_permission(wait_timeout=60.0):
+			logger.info("Audio permissions granted. Changing UI components to recording state...")
+			self.txt_message.value = "Grabando audio..."
+			self.cca_mic.bgcolor = ft.colors.RED
+			self.cca_mic.content = ft.Icon(
+				name=ft.icons.STOP,
+				color=ft.colors.WHITE,
+				size=25
+			)
+			self.page.update()
+
+			logger.info("Starting audio recording...")
+			self.audio_recorder.start_recording(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME))
+			self.record_flag = True
+
+		else:
+			logger.warning("Audio permissions denied. Replacing last agent message with error message...")
+			self.add_message(
+				is_bot=True,
+				message=(
+					"No se han otorgado los permisos de micrófono, por lo que no se "
+					"pueden enviar mensajes de voz al agente conversacional."
+				)
+			)
+
+	def request_audio_permission_denied(self, _: ft.ControlEvent) -> None:
+		self.page.close(self.dlg_request_audio_permission)
+		logger.warning("Audio permissions denied. Replacing last agent message with error message...")
+		self.add_message(
+			is_bot=True,
+			message=(
+				"No se han otorgado los permisos de micrófono, por lo que no se "
+				"pueden enviar mensajes de voz al agente conversacional."
+			)
+		)
 
 	def swt_audio_changed(self, _: ft.ControlEvent) -> None:
 		if self.swt_audio.value:

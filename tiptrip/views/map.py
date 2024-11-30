@@ -270,18 +270,17 @@ class MapView(ft.View):
 		)
 
 		logger.info("Evaluating response...")
-		data: dict = response.json()
-		if response.status_code == 200 and data["places"] != []:
+		if response.status_code == 200:
 			places: list = response.json()["places"]
 			logger.info(f"Obtained a total of {len(places)} places...")
 			return places
 
-		elif response.status_code == 204 or data["places"] == []:
+		elif response.status_code == 204:
 			logger.warning("No places found...")
 			return []
 
 		else:
-			logger.error(f"Places endpoint response received {response.status_code}: {data}")
+			logger.error(f"Places endpoint response received {response.status_code}: {response.json()}")
 			return None
 
 	def create_map(self) -> map.Map:

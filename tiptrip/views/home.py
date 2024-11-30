@@ -421,9 +421,6 @@ class HomeView(ft.View):
 		self.current_page = 0
 		self.total_items = len(items)
 		self.total_pages = (self.total_items + self.items_per_page - 1) // self.items_per_page
-		# if self.total_pages == 0:
-		# 	self.cont_pagination.visible = False
-		# else:
 		self.lbl_actual_page.value = f"Página {self.current_page + 1} de {self.total_pages}"
 		self.page.update()
 
@@ -446,9 +443,6 @@ class HomeView(ft.View):
 		else:
 			self.current_page = self.total_pages - 1
 
-		# if self.total_pages == 0:
-		# 	self.cont_pagination.visible = False
-		# else:
 		self.lbl_actual_page.value = f"Página {self.current_page + 1} de {self.total_pages}"
 
 		self.set_page_indexes()
@@ -461,9 +455,6 @@ class HomeView(ft.View):
 		else:
 			self.current_page = 0
 
-		# if self.total_pages == 0:
-		# 	self.cont_pagination.visible = False
-		# else:
 		self.lbl_actual_page.value = f"Página {self.current_page + 1} de {self.total_pages}"
 
 		self.set_page_indexes()

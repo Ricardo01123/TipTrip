@@ -1,5 +1,4 @@
 import flet as ft
-from time import sleep
 from os import listdir
 from logging import Logger
 from os.path import join, exists
@@ -87,10 +86,7 @@ def is_location_permission_enabled(gl: ft.Geolocator, logger: Logger) -> bool:
 def request_location_permissions(gl: ft.Geolocator, logger: Logger) -> bool:
 	try:
 		logger.info("Opening device's location settings...")
-		# TODO: CHANGE FOR OPENING LOCATION SETTINGS
 		gl.request_permission(wait_timeout=60)
-		# gl.open_location_settings()
-		sleep(5)
 
 		logger.info("Validating location permissions...")
 		if is_location_permission_enabled(gl, logger):

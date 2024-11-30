@@ -1,6 +1,5 @@
 from os import getcwd
 from os.path import join
-from pyaudio import paInt16
 
 
 # Names
@@ -43,8 +42,7 @@ LOGGING_FORMAT: str = "[%(asctime)s] %(levelname)s in %(name)s: %(message)s"
 RGX_EMAIL: str = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
 # Back-End API
-# BACK_END_URL: str = "http://145.223.74.225:5000"
-BACK_END_URL: str = "http://127.0.0.1:5000"
+BACK_END_URL: str = "http://145.223.74.225:5000"
 PLACES_ENDPOINT: str = "places"
 USERS_ENDPOINT: str = "users"
 AUTH_USER_ENDPOINT: str = "users/auth"
@@ -53,12 +51,11 @@ AGENT_ENDPOINT: str = "models/agent"
 ASR_ENDPOINT: str = "models/asr"
 
 # Chatbot audio file
-FORMAT: int = paInt16
 CHANNELS: int = 1
 CHUNK: int = 1_024
 SAMPLING_RATE: int = 16_000
-TEMP_FILE_NAME: str = "temp_audio.wav"
-RECEIVED_TEMP_FILE_NAME: str = "received_temp_audio.wav"
+TEMP_USER_AUDIO_FILENAME: str = "temp_user_audio.wav"
+TEMP_AGENT_AUDIO_FILENAME: str = "temp_agent_audio.wav"
 
 # Geolocation variables
 CDXM_MIN_LATITUDE: float = 19 + 3 / 60
