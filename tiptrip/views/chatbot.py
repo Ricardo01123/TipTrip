@@ -107,8 +107,12 @@ class ChatbotView(ft.View):
 
 		# ListView (Chat) components
 		self.txt_message: ft.TextField = ft.TextField(
-			hint_text="Escribe un mensaje",
+			label="Escribe un mensaje",
 			on_change=self.validate,
+			multiline=True,
+			shift_enter=True,
+			max_length=250,
+			max_lines=10,
 			**txt_messages_style
 		)
 		self.lv_chat: ft.ListView = ft.ListView(
@@ -256,7 +260,10 @@ class ChatbotView(ft.View):
 									color=ft.Colors.BLACK12
 								),
 								alignment=ft.alignment.center_left,
-								content=self.txt_message
+								content=ft.Column(
+									scroll=ft.ScrollMode.HIDDEN,
+									controls=[self.txt_message]
+								)
 							),
 							self.cont_icon,
 						]

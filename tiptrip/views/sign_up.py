@@ -21,17 +21,20 @@ class SignUpView(ft.View):
 		# Custom components
 		self.txt_username: ft.TextField = ft.TextField(
 			prefix_icon=ft.Icons.ACCOUNT_CIRCLE,
-			hint_text="Nombre de usuario",
+			label="Nombre de usuario",
+			hint_text="Fernanda",
+			autofocus=True,
 			**txt_style
 		)
 		self.txt_email: ft.TextField = ft.TextField(
 			prefix_icon=ft.Icons.EMAIL,
-			hint_text="Correo electrónico",
+			label="Correo electrónico",
+			hint_text="ejemplo@ejemplo.com",
 			**txt_style
 		)
 		self.txt_password: ft.TextField = ft.TextField(
 			prefix_icon=ft.Icons.LOCK,
-			hint_text="Contraseña",
+			label="Contraseña",
 			password=True,
 			can_reveal_password=True,
 			on_change=self.validate,
@@ -39,7 +42,7 @@ class SignUpView(ft.View):
 		)
 		self.txt_confirm_password: ft.TextField = ft.TextField(
 			prefix_icon=ft.Icons.LOCK,
-			hint_text="Confirmar contraseña",
+			label="Confirmar contraseña",
 			password=True,
 			can_reveal_password=True,
 			on_change=self.validate,

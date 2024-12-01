@@ -21,7 +21,9 @@ class VerifyUserView(ft.View):
 		# Custom components
 		self.txt_email: ft.TextField = ft.TextField(
 			prefix_icon=ft.Icons.EMAIL,
-			hint_text="Correo electrónico",
+			label="Correo electrónico",
+			hint_text="ejemplo@ejemplo.com",
+			autofocus=True,
 			**txt_style
 		)
 		self.lbl_email_required: ft.Text = ft.Text(

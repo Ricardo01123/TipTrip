@@ -29,12 +29,14 @@ class SignInView(ft.View):
 		# Custom components
 		self.txt_email: ft.TextField = ft.TextField(
 			prefix_icon=ft.Icons.EMAIL,
-			hint_text="Correo electrónico",
+			label="Correo electrónico",
+			hint_text="ejemplo@ejemplo.com",
+			autofocus=True,
 			**txt_style
 		)
 		self.txt_password: ft.TextField = ft.TextField(
 			prefix_icon=ft.Icons.LOCK,
-			hint_text="Contraseña",
+			label="Contraseña",
 			password=True,
 			can_reveal_password=True,
 			**txt_style

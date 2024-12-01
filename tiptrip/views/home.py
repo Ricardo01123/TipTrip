@@ -31,7 +31,7 @@ class HomeView(ft.View):
 		# Filters components
 		self.txt_place_searcher: ft.TextField = ft.TextField(
 			prefix_icon=ft.Icons.SEARCH,
-			hint_text="Busca un sitio turístico",
+			label="Busca un sitio turístico",
 			on_change=self.search_place,
 			**txt_messages_style
 		)

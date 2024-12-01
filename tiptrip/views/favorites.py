@@ -29,7 +29,7 @@ class FavoritesView(ft.View):
 
 		self.txt_favorite_searcher: ft.TextField = ft.TextField(
 			prefix_icon=ft.Icons.SEARCH,
-			hint_text="Busca un sitio favorito",
+			label="Busca un sitio favorito",
 			on_change=self.search_favorite,
 			**txt_messages_style
 		)

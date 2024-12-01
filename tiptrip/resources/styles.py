@@ -10,28 +10,26 @@ cont_main_style: dict[str, Any] = {
 	"margin": ft.margin.all(value=SPACING),
 	"padding": ft.padding.all(value=SPACING),
 	"border_radius": ft.border_radius.all(value=RADIUS),
-	"shadow": ft.BoxShadow(blur_radius=LOW_BLUR),
+	"shadow": ft.BoxShadow(blur_radius=LOW_BLUR)
 }
 
 
 txt_style: dict[str, Any] = {
-	"height": 45,
-	"label": None,
 	"text_size": 19,
+	"label_style": ft.TextStyle(color=ft.Colors.BLACK),
+	"filled": False,
 	"color": ft.Colors.BLACK,
-	"hint_style": ft.TextStyle(color=ft.Colors.GREY_600),
-	"cursor_color": SECONDARY_COLOR,
+	"border_color": ft.Colors.TRANSPARENT,
 	"focused_border_color": SECONDARY_COLOR,
-	"border": ft.InputBorder.UNDERLINE
+	"focused_color": SECONDARY_COLOR
 }
 
 
 txt_messages_style: dict[str, Any] = {
-	"height": 45,
-	"label": None,
 	"text_size": 19,
+	"label_style": ft.TextStyle(color=ft.Colors.BLACK),
+	"filled": False,
 	"color": ft.Colors.BLACK,
-	"hint_style": ft.TextStyle(color=ft.Colors.GREY_600),
 	"cursor_color": SECONDARY_COLOR,
 	"focused_border_color": SECONDARY_COLOR,
 	"border": ft.InputBorder.NONE

@@ -20,7 +20,8 @@ class ChangePasswordView(ft.View):
 		# Custom components
 		self.txt_password: ft.TextField = ft.TextField(
 			prefix_icon=ft.Icons.LOCK,
-			hint_text="Contraseña",
+			label="Contraseña",
+			autofocus=True,
 			password=True,
 			can_reveal_password=True,
 			on_change=self.validate,
@@ -28,7 +29,7 @@ class ChangePasswordView(ft.View):
 		)
 		self.txt_confirm_password: ft.TextField = ft.TextField(
 			prefix_icon=ft.Icons.LOCK,
-			hint_text="Confirmar contraseña",
+			label="Confirmar contraseña",
 			password=True,
 			can_reveal_password=True,
 			on_change=self.validate,
