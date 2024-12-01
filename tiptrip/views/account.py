@@ -1,12 +1,13 @@
 import flet as ft
 from os import listdir
+from os.path import join
 from requests import delete, Response
 from logging import Logger, getLogger
 
 
 from components.bars import *
 from resources.config import *
-from resources.functions import go_to_view
+from resources.functions import go_to_view, get_user_image
 from resources.styles import btn_secondary_style, btn_danger_style
 
 
@@ -17,7 +18,7 @@ class AccountView(ft.View):
 	def __init__(self, page: ft.Page) -> None:
 		# Custom attributes
 		self.page = page
-		self.user_image: str = self.get_user_image()
+		self.user_image: str = get_user_image()
 
 		# Custom components
 		self.dlg_confirm_delete_account: ft.AlertDialog = ft.AlertDialog(
@@ -87,18 +88,21 @@ class AccountView(ft.View):
 				ft.Container(
 					width=self.page.width,
 					alignment=ft.alignment.center,
-					padding=ft.padding.only(
-						left=SPACING,
-						right=SPACING,
-						bottom=SPACING,
-					),
-					content=ft.CircleAvatar(
-						radius=(SPACING * 4),
-						background_image_src=self.user_image,
-						foreground_image_src=self.user_image,
-						content=ft.Text(
-							value=self.format_image_name(self.page.session.get("username"))
-						),
+					padding=ft.padding.only(bottom=SPACING),
+					content=(
+						ft.Image(
+							width=(PROFILE_IMAGE_DIMENSIONS * 2),
+							height=(PROFILE_IMAGE_DIMENSIONS * 2),
+							src=self.user_image,
+							fit=ft.ImageFit.FILL,
+							repeat=ft.ImageRepeat.NO_REPEAT,
+							border_radius=ft.border_radius.all(value=PROFILE_IMAGE_DIMENSIONS),
+							error_content=ft.Icon(
+								name=ft.Icons.ACCOUNT_CIRCLE,
+								color=ft.Colors.BLACK,
+								size=300,
+							)
+						)
 					)
 				),
 				ft.Container(
@@ -124,6 +128,7 @@ class AccountView(ft.View):
 						width=self.page.width,
 						alignment=ft.MainAxisAlignment.START,
 						spacing=SPACING,
+						scroll=ft.ScrollMode.HIDDEN,
 						controls=[
 							ft.Container(
 								height=80,
@@ -229,23 +234,6 @@ class AccountView(ft.View):
 			],
 			bottom_appbar=BottomBar(page=self.page, logger=logger, current_route="/account")
 		)
-
-	def get_user_image(self) -> str:
-		files: list[str] = listdir(ASSETS_ABSPATH)
-		logger.info(f"Found files: {files}")
-		for file in files:
-			if file.startswith("user"):
-				name: str = f"/{file}"
-				return name
-		else:
-			return ""
-
-	def format_image_name(self, name: str) -> str:
-		if " " in name:
-			name, last_name = name.split(" ")
-			return f"{name[0].upper()}{last_name[0].upper()}"
-		else:
-			return f"{name[:2].upper()}"
 
 	def go_to_update_user(self, _: ft.ControlEvent) -> None:
 		go_to_view(page=self.page, logger=logger, route="/update_user")

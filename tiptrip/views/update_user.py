@@ -8,7 +8,7 @@ from logging import Logger, getLogger
 
 from components.bars import *
 from resources.config import *
-from resources.functions import go_to_view
+from resources.functions import go_to_view, get_user_image
 from resources.styles import btn_primary_style, btn_secondary_style, txt_style
 
 
@@ -19,6 +19,7 @@ class UpdateUserView(ft.View):
 	def __init__(self, page: ft.Page) -> None:
 		# Custom attributes
 		self.page = page
+		self.user_image: str = get_user_image()
 
 		# Custom components
 		self.dlg_updated_data: ft.AlertDialog = ft.AlertDialog(
@@ -127,22 +128,35 @@ class UpdateUserView(ft.View):
 						bottom=SPACING,
 					),
 					content=ft.Stack(
-						width=PROFILE_IMAGE_DIMENSIONS,
-						height=PROFILE_IMAGE_DIMENSIONS,
+						height=((PROFILE_IMAGE_DIMENSIONS * 2) + SPACING),
 						controls=[
-							ft.CircleAvatar(
-								radius=(SPACING * 4),
-								foreground_image_src="/user.jpg",
-								background_image_src="/user.jpg",
-								content=ft.Text(
-									value=self.format_image_name(self.page.session.get("username"))
-								),
+							ft.Container(
+								width=self.page.width,
+								alignment=ft.alignment.center,
+								padding=ft.padding.only(bottom=SPACING),
+								content=(
+									ft.Image(
+										width=(PROFILE_IMAGE_DIMENSIONS * 2),
+										height=(PROFILE_IMAGE_DIMENSIONS * 2),
+										src=self.user_image,
+										fit=ft.ImageFit.FILL,
+										repeat=ft.ImageRepeat.NO_REPEAT,
+										border_radius=ft.border_radius.all(value=PROFILE_IMAGE_DIMENSIONS),
+										error_content=ft.Icon(
+											name=ft.Icons.ACCOUNT_CIRCLE,
+											color=ft.Colors.BLACK,
+											size=(PROFILE_IMAGE_DIMENSIONS * 2),
+										)
+									)
+								)
 							),
 							ft.Container(
-								alignment=ft.alignment.bottom_right,
+								expand=True,
+								right=(SPACING * 3),
+								bottom=SPACING,
 								content=ft.CircleAvatar(
 									bgcolor=SECONDARY_COLOR,
-									radius=SPACING,
+									radius=(SPACING * 2),
 									content=ft.IconButton(
 										icon=ft.Icons.EDIT,
 										icon_color=ft.Colors.WHITE,
@@ -171,19 +185,21 @@ class UpdateUserView(ft.View):
 						color=ft.Colors.BLACK
 					),
 					content=ft.Column(
+						scroll=ft.ScrollMode.HIDDEN,
 						spacing=(SPACING / 2),
 						controls=[
 							ft.Text(
 								value=(
-									"Cambia o ingresa los datos que deseas actualizar.\n"
+									"Cambia o ingresa los datos que deseas actualizar. "
 									"Los campos de contraseña pueden permanecer "
 									"vacíos si no deseas cambiarlos."
 								),
-								color=ft.Colors.BLACK
+								color=ft.Colors.BLACK,
+								text_align=ft.TextAlign.JUSTIFY
 							),
 							ft.Container(
 								content=ft.Column(
-									spacing=(SPACING / 2),
+									# spacing=(SPACING / 2),
 									controls=[
 										ft.Container(
 											height=TXT_CONT_SIZE,
@@ -211,7 +227,6 @@ class UpdateUserView(ft.View):
 								content=ft.Column(
 									controls=[
 										self.btn_submit,
-										ft.Divider(color=ft.Colors.TRANSPARENT),
 										self.btn_back
 									]
 								)
@@ -341,8 +356,8 @@ class UpdateUserView(ft.View):
 						"Favor de intentarlo de nuevo más tarde."
 					)
 				)
-
 				self.page.open(self.dlg_error)
+
 		else:
 			logger.info("No image selected. Aborting...")
 

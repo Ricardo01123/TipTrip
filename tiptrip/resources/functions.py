@@ -1,7 +1,7 @@
 import flet as ft
 from os import listdir
+from os.path import join
 from logging import Logger
-from os.path import join, exists
 
 from resources.config import *
 
@@ -104,3 +104,12 @@ def is_inside_cdmx(current_position: tuple[float, float]) -> bool:
 		CDXM_MIN_LONGITUDE <= current_position[1] <= CDXM_MAX_LONGITUDE:
 		return True
 	return False
+
+# General functions
+def get_user_image() -> str:
+	files: list[str] = listdir(ASSETS_ABSPATH)
+	for file in files:
+		if file.startswith("user"):
+			return file
+
+	return "None"
