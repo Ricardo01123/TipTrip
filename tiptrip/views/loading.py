@@ -13,7 +13,7 @@ class LoadingView(ft.View):
 		# View native attributes
 		super().__init__(
 			route="/loading",
-			bgcolor=ft.colors.WHITE,
+			bgcolor=ft.Colors.WHITE,
 			padding=ft.padding.all(value=0.0),
 			controls=[
 				ft.Container(
@@ -36,16 +36,16 @@ class LoadingView(ft.View):
 								content=ft.Text(
 									value=PROJECT_NAME,
 									size=45,
-									color=ft.colors.WHITE,
+									color=ft.Colors.WHITE,
 									text_align=ft.TextAlign.CENTER
 								)
 							),
 							ft.Container(
 								width=self.page.width,
 								content=ft.Icon(
-									name=ft.icons.FMD_GOOD_OUTLINED,
+									name=ft.Icons.FMD_GOOD_OUTLINED,
 									size=300,
-									color=ft.colors.WHITE
+									color=ft.Colors.WHITE
 								)
 							),
 							ft.Container(
@@ -53,7 +53,7 @@ class LoadingView(ft.View):
 								content=ft.Text(
 									value="Cargando...",
 									size=30,
-									color=ft.colors.WHITE,
+									color=ft.Colors.WHITE,
 									text_align=ft.TextAlign.CENTER
 								)
 							)
@@ -67,7 +67,7 @@ class LoadingView(ft.View):
 					content=ft.Text(
 						value=f"Consejo: {choice(ADVICES)}",
 						size=20,
-						color=ft.colors.BLACK,
+						color=ft.Colors.BLACK,
 						text_align=ft.TextAlign.CENTER
 					)
 				)

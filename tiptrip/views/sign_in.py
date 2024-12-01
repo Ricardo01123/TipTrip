@@ -28,12 +28,12 @@ class SignInView(ft.View):
 
 		# Custom components
 		self.txt_email: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.EMAIL,
+			prefix_icon=ft.Icons.EMAIL,
 			hint_text="Correo electrónico",
 			**txt_style
 		)
 		self.txt_password: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.LOCK,
+			prefix_icon=ft.Icons.LOCK,
 			hint_text="Contraseña",
 			password=True,
 			can_reveal_password=True,
@@ -41,12 +41,12 @@ class SignInView(ft.View):
 		)
 		self.lbl_email_required: ft.Text = ft.Text(
 			value="Campo requerido *",
-			style=ft.TextStyle(color=ft.colors.RED),
+			style=ft.TextStyle(color=ft.Colors.RED),
 			visible=False
 		)
 		self.lbl_password_required: ft.Text = ft.Text(
 			value="Campo requerido *",
-			style=ft.TextStyle(color=ft.colors.RED),
+			style=ft.TextStyle(color=ft.Colors.RED),
 			visible=False
 		)
 		self.dlg_not_found: ft.AlertDialog = ft.AlertDialog(
@@ -91,7 +91,7 @@ class SignInView(ft.View):
 		self.cont_splash = ft.Container(
 			expand=True,
 			width=self.page.width,
-			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
+			bgcolor=ft.Colors.with_opacity(0.2, ft.Colors.BLACK),
 			content=None,
 			visible=False
 		)
@@ -113,9 +113,10 @@ class SignInView(ft.View):
 									controls=[
 										MainTitle(
 											subtitle="Iniciar sesión",
-											top_margin=(SPACING * 2),
+											top_margin=SPACING,
 										),
 										ft.Container(
+											expand_loose=True,
 											margin=ft.margin.only(top=(SPACING * 2)),
 											content=ft.Column(
 												spacing=(SPACING / 2),
@@ -135,7 +136,7 @@ class SignInView(ft.View):
 															content=ft.Container(
 																content=ft.Text(
 																	value="¿Olvidaste tu contraseña?",
-																	color=ft.colors.BLACK
+																	color=ft.Colors.BLACK
 																)
 															),
 															on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/verify_user")
@@ -145,11 +146,11 @@ class SignInView(ft.View):
 											)
 										),
 										ft.Container(
-											margin=ft.margin.only(top=(SPACING * 3)),
+											margin=ft.margin.only(top=(SPACING * 2)),
 											content=ft.Column(
 												controls=[
 													self.btn_submit,
-													ft.Divider(color=ft.colors.TRANSPARENT),
+													ft.Divider(color=ft.Colors.TRANSPARENT),
 													self.btn_sign_up
 												]
 											)
@@ -163,7 +164,7 @@ class SignInView(ft.View):
 													"[aquí](https://www.google.com)."
 												),
 												md_style_sheet=ft.MarkdownStyleSheet(
-													p_text_style=ft.TextStyle(color=ft.colors.BLACK)
+													p_text_style=ft.TextStyle(color=ft.Colors.BLACK)
 												),
 												on_tap_link=lambda _: go_to_view(page=self.page, logger=logger, route="/privacy_politics")
 											)
@@ -211,8 +212,8 @@ class SignInView(ft.View):
 				url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
 				headers={"Content-Type": "application/json"},
 				json={
-					"mail": self.txt_email.value,
-					"password": self.txt_password.value
+					"mail": self.txt_email.value.strip(),
+					"password": self.txt_password.value.strip()
 				}
 			)
 
@@ -230,13 +231,13 @@ class SignInView(ft.View):
 				self.page.session.set(key="created_at", value=data["created_at"])
 				# Home variables
 				self.page.session.set(key="places_data", value=None)
-				self.page.session.set(key="drd_classification_value", value="")
-				self.page.session.set(key="drd_municipality_value", value="")
+				self.page.session.set(key="drd_classification_value", value="Seleccionar todas")
+				self.page.session.set(key="drd_municipality_value", value="Seleccionar todas")
 				self.page.session.set(key="sld_value", value=7)
 				# Map variables
 				self.page.session.set(key="map_places_data", value=None)
 				self.page.session.set(key="map_sld_value", value=7)
-				self.page.session.set(key="map_drd_value", value="")
+				self.page.session.set(key="map_drd_value", value="Seleccionar todas")
 
 				logger.info("Cleaning text fields...")
 				self.txt_email.value = ""

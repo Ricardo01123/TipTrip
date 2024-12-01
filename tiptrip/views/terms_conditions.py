@@ -38,14 +38,14 @@ class TermsConditionsView(ft.View):
 						controls=[
 							ft.Container(
 								content=ft.IconButton(
-									icon=ft.icons.ARROW_BACK,
-									icon_color=ft.colors.BLACK,
+									icon=ft.Icons.ARROW_BACK,
+									icon_color=ft.Colors.BLACK,
 									on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/sign_up"),
 								)
 							),
 							MainTitle(
-								top_margin=(SPACING / 2),
-								subtitle="Términos y condiciones"
+								subtitle="Términos y condiciones",
+								top_margin=10
 							),
 							ft.Container(
 								expand=True,
@@ -55,7 +55,8 @@ class TermsConditionsView(ft.View):
 										ft.Container(
 											content=ft.Text(
 												value=TERMS_CONDITIONS,
-												color=ft.colors.BLACK
+												color=ft.Colors.BLACK,
+												text_align=ft.TextAlign.JUSTIFY
 											)
 										)
 									]

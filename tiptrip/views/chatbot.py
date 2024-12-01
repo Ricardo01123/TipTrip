@@ -51,28 +51,35 @@ class ChatbotView(ft.View):
 		self.swt_audio: ft.Switch = ft.Switch(
 			value=True,
 			adaptive=True,
-			active_color=ft.colors.WHITE,
+			active_color=ft.Colors.WHITE,
 			active_track_color=SECONDARY_COLOR,
 			on_change=self.swt_audio_changed
 		)
 		self.ext_settings: ft.ExpansionTile = ft.ExpansionTile(
 			trailing=ft.Icon(
-				name=ft.icons.KEYBOARD_ARROW_DOWN,
-				color=ft.colors.BLACK,
+				name=ft.Icons.KEYBOARD_ARROW_DOWN,
+				color=ft.Colors.BLACK,
 				size=22
 			),
 			title=ft.Text(
 				value="Configuraciones de chat",
-				color=ft.colors.BLACK,
+				color=ft.Colors.BLACK,
 				size=16
 			),
 			tile_padding=ft.padding.symmetric(horizontal=SPACING),
 			controls=[
-				ft.ListTile(
-					content_padding=ft.padding.symmetric(horizontal=SPACING),
-					title=ft.Text(
+				ft.Container(
+					bgcolor=ft.Colors.TRANSPARENT,
+					padding=ft.padding.only(
+						top=SPACING,
+						left=SPACING,
+						right=SPACING,
+						bottom=0
+					),
+					alignment=ft.alignment.center_left,
+					content=ft.Text(
 						value="Respuestas del chatbot usando:",
-						color=ft.colors.BLACK,
+						color=ft.Colors.BLACK,
 						size=16
 					)
 				),
@@ -83,13 +90,13 @@ class ChatbotView(ft.View):
 						controls=[
 							ft.Text(
 								value="Texto",
-								color=ft.colors.BLACK,
+								color=ft.Colors.BLACK,
 								size=16
 							),
 							self.swt_audio,
 							ft.Text(
 								value="Audio",
-								color=ft.colors.BLACK,
+								color=ft.Colors.BLACK,
 								size=16
 							)
 						]
@@ -124,19 +131,19 @@ class ChatbotView(ft.View):
 		)
 		self.cca_mic: ft.CircleAvatar = ft.CircleAvatar(
 			bgcolor=MAIN_COLOR,
-			radius=SPACING,
+			radius=(SPACING * 2),
 			content=ft.Icon(
-				name=ft.icons.MIC,
-				color=ft.colors.WHITE,
+				name=ft.Icons.MIC,
+				color=ft.Colors.WHITE,
 				size=25
 			)
 		)
 		self.cca_send: ft.CircleAvatar = ft.CircleAvatar(
 			bgcolor=MAIN_COLOR,
-			radius=SPACING,
+			radius=(SPACING * 2),
 			content=ft.Icon(
-				name=ft.icons.SEND,
-				color=ft.colors.WHITE,
+				name=ft.Icons.SEND,
+				color=ft.Colors.WHITE,
 				size=25
 			)
 		)
@@ -201,7 +208,7 @@ class ChatbotView(ft.View):
 		# View native attributes
 		super().__init__(
 			route="/chatbot",
-			bgcolor=ft.colors.WHITE,
+			bgcolor=ft.Colors.WHITE,
 			padding=ft.padding.all(value=0.0),
 			spacing=0,
 			controls=[
@@ -215,7 +222,7 @@ class ChatbotView(ft.View):
 					),
 					shadow=ft.BoxShadow(
 						blur_radius=BLUR,
-						color=ft.colors.GREY_800
+						color=ft.Colors.GREY_800
 					),
 					content=self.ext_settings
 				),
@@ -236,7 +243,7 @@ class ChatbotView(ft.View):
 							ft.Container(
 								expand=5,
 								height=TXT_CONT_SIZE,
-								bgcolor=ft.colors.WHITE,
+								bgcolor=ft.Colors.WHITE,
 								padding=ft.padding.symmetric(
 									horizontal=SPACING
 								),
@@ -246,7 +253,7 @@ class ChatbotView(ft.View):
 								shadow=ft.BoxShadow(
 									blur_radius=(BLUR / 2),
 									offset=ft.Offset(0, 2),
-									color=ft.colors.BLACK12
+									color=ft.Colors.BLACK12
 								),
 								alignment=ft.alignment.center_left,
 								content=self.txt_message
@@ -373,7 +380,7 @@ class ChatbotView(ft.View):
 						)
 
 		logger.info("Updating live view components...")
-		self.lv_chat.update()
+		self.page.update()
 
 	def cca_send_clicked(self, _: ft.ControlEvent) -> None:
 		if self.txt_message.value == "" or self.txt_message.value.isspace():
@@ -435,7 +442,7 @@ class ChatbotView(ft.View):
 									)
 								)
 
-								self.lv_chat.update()
+								self.page.update()
 								return
 
 						else:
@@ -448,7 +455,7 @@ class ChatbotView(ft.View):
 									"por lo que no se puede realizar la búsqueda de información de lugares cercanos a tu ubicación actual."
 								)
 							)
-							self.lv_chat.update()
+							self.page.update()
 							return
 
 					else:
@@ -482,10 +489,10 @@ class ChatbotView(ft.View):
 
 			logger.info("Changing UI components to recording state...")
 			self.txt_message.value = "Grabando audio..."
-			self.cca_mic.bgcolor = ft.colors.RED
+			self.cca_mic.bgcolor = ft.Colors.RED
 			self.cca_mic.content = ft.Icon(
-				name=ft.icons.STOP,
-				color=ft.colors.WHITE,
+				name=ft.Icons.SEND,
+				color=ft.Colors.WHITE,
 				size=25
 			)
 			self.page.update()
@@ -499,8 +506,8 @@ class ChatbotView(ft.View):
 			self.txt_message.value = ""
 			self.cca_mic.bgcolor = MAIN_COLOR
 			self.cca_mic.content = ft.Icon(
-				name=ft.icons.MIC,
-				color=ft.colors.WHITE,
+				name=ft.Icons.MIC,
+				color=ft.Colors.WHITE,
 				size=25
 			)
 			self.page.update()
@@ -577,7 +584,7 @@ class ChatbotView(ft.View):
 										)
 									)
 
-									self.lv_chat.update()
+									self.page.update()
 									return
 
 							else:
@@ -591,7 +598,7 @@ class ChatbotView(ft.View):
 										"por lo que no se puede realizar la búsqueda de información de lugares cercanos a tu ubicación actual."
 									)
 								)
-								self.lv_chat.update()
+								self.page.update()
 								return
 
 						else:
@@ -625,10 +632,10 @@ class ChatbotView(ft.View):
 		if self.audio_recorder.has_permission(wait_timeout=60.0):
 			logger.info("Audio permissions granted. Changing UI components to recording state...")
 			self.txt_message.value = "Grabando audio..."
-			self.cca_mic.bgcolor = ft.colors.RED
+			self.cca_mic.bgcolor = ft.Colors.RED
 			self.cca_mic.content = ft.Icon(
-				name=ft.icons.STOP,
-				color=ft.colors.WHITE,
+				name=ft.Icons.STOP,
+				color=ft.Colors.WHITE,
 				size=25
 			)
 			self.page.update()
@@ -714,7 +721,7 @@ class ChatbotView(ft.View):
 				)
 			)
 
-		self.lv_chat.update()
+		self.page.update()
 
 	def request_location_permission_denied(self, _: ft.ControlEvent) -> None:
 		self.page.close(self.dlg_request_location_permission)
@@ -729,4 +736,4 @@ class ChatbotView(ft.View):
 				"Por favor intenta de nuevo con una pregunta diferente."
 			)
 		)
-		self.lv_chat.update()
+		self.page.update()

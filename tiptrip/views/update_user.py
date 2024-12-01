@@ -52,19 +52,19 @@ class UpdateUserView(ft.View):
 			on_dismiss=lambda _: self.page.close(self.dlg_error)
 		)
 		self.txt_username: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.ACCOUNT_CIRCLE,
+			prefix_icon=ft.Icons.ACCOUNT_CIRCLE,
 			hint_text="Nuevo nombre de usuario",
 			value=self.page.session.get("username"),
 			**txt_style
 		)
 		self.txt_email: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.EMAIL,
+			prefix_icon=ft.Icons.EMAIL,
 			hint_text="Nuevo correo electrónico",
 			value=self.page.session.get("email"),
 			**txt_style
 		)
 		self.txt_password: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.LOCK,
+			prefix_icon=ft.Icons.LOCK,
 			hint_text="Nueva contraseña",
 			password=True,
 			can_reveal_password=True,
@@ -72,7 +72,7 @@ class UpdateUserView(ft.View):
 			**txt_style
 		)
 		self.txt_confirm_password: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.LOCK,
+			prefix_icon=ft.Icons.LOCK,
 			hint_text="Confirmar nueva contraseña",
 			password=True,
 			can_reveal_password=True,
@@ -81,7 +81,7 @@ class UpdateUserView(ft.View):
 		)
 		self.lbl_pwd_match: ft.Text = ft.Text(
 			value = "Las contraseñas no coinciden.",
-			style=ft.TextStyle(color=ft.colors.RED),
+			style=ft.TextStyle(color=ft.Colors.RED),
 			visible=False
 		)
 		self.btn_submit: ft.ElevatedButton = ft.ElevatedButton(
@@ -141,8 +141,8 @@ class UpdateUserView(ft.View):
 									bgcolor=SECONDARY_COLOR,
 									radius=SPACING,
 									content=ft.IconButton(
-										icon=ft.icons.EDIT,
-										icon_color=ft.colors.WHITE,
+										icon=ft.Icons.EDIT,
+										icon_color=ft.Colors.WHITE,
 										on_click=lambda _: self.dlg_user_image.pick_files(
 											file_type=ft.FilePickerFileType.IMAGE,
 											allowed_extensions=["jpg", "jpeg", "png"]
@@ -156,7 +156,7 @@ class UpdateUserView(ft.View):
 				ft.Container(
 					expand=True,
 					width=self.page.width,
-					bgcolor=ft.colors.WHITE,
+					bgcolor=ft.Colors.WHITE,
 					padding=ft.padding.all(value=SPACING),
 					border_radius=ft.border_radius.only(
 						top_left=RADIUS,
@@ -165,7 +165,7 @@ class UpdateUserView(ft.View):
 					shadow=ft.BoxShadow(
 						blur_radius=(BLUR / 2),
 						offset=ft.Offset(0, -2),
-						color=ft.colors.BLACK
+						color=ft.Colors.BLACK
 					),
 					content=ft.Column(
 						spacing=(SPACING / 2),
@@ -176,7 +176,7 @@ class UpdateUserView(ft.View):
 									"Los campos de contraseña pueden permanecer "
 									"vacíos si no deseas cambiarlos."
 								),
-								color=ft.colors.BLACK
+								color=ft.Colors.BLACK
 							),
 							ft.Container(
 								content=ft.Column(
@@ -208,7 +208,7 @@ class UpdateUserView(ft.View):
 								content=ft.Column(
 									controls=[
 										self.btn_submit,
-										ft.Divider(color=ft.colors.TRANSPARENT),
+										ft.Divider(color=ft.Colors.TRANSPARENT),
 										self.btn_back
 									]
 								)

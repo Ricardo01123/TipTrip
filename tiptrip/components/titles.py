@@ -14,7 +14,7 @@ class MainTitle(ft.Container):
 						content=ft.Text(
 							value=PROJECT_NAME,
 							size=PROJECT_NAME_SIZE,
-							color=ft.colors.BLACK
+							color=ft.Colors.BLACK
 						),
 					),
 					ft.Container(
@@ -22,7 +22,7 @@ class MainTitle(ft.Container):
 						content=ft.Text(
 							value=subtitle,
 							size=PAGE_SUBTITLE_SIZE,
-							color=ft.colors.BLACK
+							color=ft.Colors.BLACK
 						)
 					)
 				]

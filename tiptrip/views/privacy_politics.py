@@ -38,23 +38,26 @@ class PrivacyPoliticsView(ft.View):
 						controls=[
 							ft.Container(
 								content=ft.IconButton(
-									icon=ft.icons.ARROW_BACK,
-									icon_color=ft.colors.BLACK,
+									icon=ft.Icons.ARROW_BACK,
+									icon_color=ft.Colors.BLACK,
 									on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/sign_in"),
 								)
 							),
 							MainTitle(
 								subtitle="Política de Privacidad",
-								top_margin=(SPACING / 2)
+								top_margin=10
 							),
 							ft.Container(
-								margin=ft.margin.only(top=SPACING),
+								expand=True,
 								content=ft.Column(
 									scroll=ft.ScrollMode.HIDDEN,
 									controls=[
-										ft.Text(
-											value=PRIVACY_POLITICS,
-											color=ft.colors.BLACK
+										ft.Container(
+											content=ft.Text(
+												value=PRIVACY_POLITICS,
+												color=ft.Colors.BLACK,
+												text_align=ft.TextAlign.JUSTIFY
+											)
 										)
 									]
 								)

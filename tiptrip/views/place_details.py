@@ -23,9 +23,9 @@ class PlaceDetailsView(ft.View):
 		# Custom components
 		self.saved_iconbutton: ft.IconButton = ft.IconButton(
 			icon=(
-				ft.icons.BOOKMARKS
+				ft.Icons.BOOKMARKS
 				if self.place_data["is_favorite"]
-				else ft.icons.BOOKMARKS_OUTLINED
+				else ft.Icons.BOOKMARKS_OUTLINED
 			),
 			icon_color=SECONDARY_COLOR,
 			icon_size=25,
@@ -34,17 +34,17 @@ class PlaceDetailsView(ft.View):
 		self.data_tabs: ft.Tabs = ft.Tabs(
 			selected_index=0,
 			animation_duration=300,
-			divider_color=ft.colors.TRANSPARENT,
-			indicator_color=ft.colors.TRANSPARENT,
+			divider_color=ft.Colors.TRANSPARENT,
+			indicator_color=ft.Colors.TRANSPARENT,
 			label_color=MAIN_COLOR,
-			unselected_label_color=ft.colors.BLACK,
+			unselected_label_color=ft.Colors.BLACK,
 			tabs=self.fill_data_tabs()
 		)
 
 		# View native attributes
 		super().__init__(
 			route="/place_details",
-			bgcolor=ft.colors.WHITE,
+			bgcolor=ft.Colors.WHITE,
 			padding=ft.padding.all(value=0.0),
 			spacing=0,
 			controls=[
@@ -59,7 +59,7 @@ class PlaceDetailsView(ft.View):
 					),
 					shadow=ft.BoxShadow(
 						blur_radius=BLUR,
-						color=ft.colors.GREY_800
+						color=ft.Colors.GREY_800
 					),
 				),
 				ft.Container(
@@ -73,7 +73,7 @@ class PlaceDetailsView(ft.View):
 					),
 					content=ft.Container(
 						height=90,
-						bgcolor=ft.colors.WHITE,
+						bgcolor=ft.Colors.WHITE,
 						padding=ft.padding.symmetric(
 							vertical=(SPACING / 2),
 							horizontal=SPACING
@@ -81,7 +81,7 @@ class PlaceDetailsView(ft.View):
 						border_radius=ft.border_radius.all(value=RADIUS),
 						shadow=ft.BoxShadow(
 							blur_radius=LOW_BLUR,
-							color=ft.colors.GREY_500
+							color=ft.Colors.GREY_500
 						),
 						content=(
 							self.place_data
@@ -150,8 +150,8 @@ class PlaceDetailsView(ft.View):
 																expand=1,
 																alignment=ft.alignment.center_right,
 																content=ft.Icon(
-																	name=ft.icons.STAR_BORDER,
-																	color=ft.colors.WHITE,
+																	name=ft.Icons.STAR_BORDER,
+																	color=ft.Colors.WHITE,
 																	size=18
 																)
 															),
@@ -160,7 +160,7 @@ class PlaceDetailsView(ft.View):
 																alignment=ft.alignment.center_left,
 																content=ft.Text(
 																	value=self.place_data["info"]["punctuation"],
-																	color=ft.colors.WHITE,
+																	color=ft.Colors.WHITE,
 																	size=18
 																)
 															)
@@ -190,7 +190,7 @@ class PlaceDetailsView(ft.View):
 				),
 				ft.Container(
 					expand=True,
-					bgcolor=ft.colors.WHITE,
+					bgcolor=ft.Colors.WHITE,
 					padding=ft.padding.symmetric(
 						vertical=(SPACING / 2),
 						horizontal=SPACING,
@@ -202,7 +202,7 @@ class PlaceDetailsView(ft.View):
 					shadow=ft.BoxShadow(
 						blur_radius=LOW_BLUR,
 						offset=ft.Offset(0, -2),
-						color=ft.colors.BLACK
+						color=ft.Colors.BLACK
 					),
 					content=ft.Column(
 						expand=True,
@@ -237,7 +237,7 @@ class PlaceDetailsView(ft.View):
 				alignment=ft.alignment.center,
 				content=ft.Text(
 					value="No se encontró información del sitio turístico seleccionado.",
-					color=ft.colors.BLACK,
+					color=ft.Colors.BLACK,
 					size=30
 				)
 			)
@@ -252,7 +252,7 @@ class PlaceDetailsView(ft.View):
 						"turístico seleccionado.\n"
 						"Favor de intentarlo de nuevo más tarde."
 					),
-					color=ft.colors.BLACK,
+					color=ft.Colors.BLACK,
 					size=35
 				)
 			)
@@ -282,13 +282,13 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"Distancia de mí:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK
 									)
 								),
 								ft.Container(
 									content=ft.Text(
 										value=f"{self.place_data['distance']:.2f} km",
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK
 									)
 								)
 							]
@@ -304,13 +304,14 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nHorarios:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK
 									)
 								),
 								ft.Container(
 									content=ft.Text(
 										value=self.place_data["info"]["schedules"],
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK,
+										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -327,13 +328,14 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nCostos:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK
 									)
 								),
 								ft.Container(
 									content=ft.Text(
 										value=self.place_data["info"]["prices"],
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK,
+										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -356,7 +358,7 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nDirección:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK
 									)
 								),
 								ft.Container(
@@ -368,7 +370,8 @@ class PlaceDetailsView(ft.View):
 											f"{self.place_data['address']['municipality']}, "
 											f"{self.place_data['address']['state']}."
 										),
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK,
+										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -385,13 +388,14 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nReferencias para llegar:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK
 									)
 								),
 								ft.Container(
 									content=ft.Text(
 										value=self.place_data["address"]["how_to_arrive"],
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK,
+										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -413,7 +417,8 @@ class PlaceDetailsView(ft.View):
 					content=ft.Container(
 						content=ft.Text(
 							value=self.place_data["info"]["description"],
-							color=ft.colors.BLACK
+							color=ft.Colors.BLACK,
+							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -426,7 +431,8 @@ class PlaceDetailsView(ft.View):
 					content=ft.Container(
 						content=ft.Text(
 							value=self.place_data["reviews"]["historic"],
-							color=ft.colors.BLACK
+							color=ft.Colors.BLACK,
+							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -439,7 +445,8 @@ class PlaceDetailsView(ft.View):
 					content=ft.Container(
 						content=ft.Text(
 							value=self.place_data["reviews"]["general"],
-							color=ft.colors.BLACK
+							color=ft.Colors.BLACK,
+							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -452,7 +459,8 @@ class PlaceDetailsView(ft.View):
 					content=ft.Container(
 						content=ft.Text(
 							value=self.place_data["info"]["services"],
-							color=ft.colors.BLACK
+							color=ft.Colors.BLACK,
+							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -465,7 +473,8 @@ class PlaceDetailsView(ft.View):
 					content=ft.Container(
 						content=ft.Text(
 							value=self.place_data["info"]["activities"],
-							color=ft.colors.BLACK
+							color=ft.Colors.BLACK,
+							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -478,7 +487,8 @@ class PlaceDetailsView(ft.View):
 					content=ft.Container(
 						content=ft.Text(
 							value=self.place_data["info"]["permanent_exhibitions"],
-							color=ft.colors.BLACK
+							color=ft.Colors.BLACK,
+							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -491,7 +501,8 @@ class PlaceDetailsView(ft.View):
 					content=ft.Container(
 						content=ft.Text(
 							value=self.place_data["info"]["temporal_exhibitions"],
-							color=ft.colors.BLACK
+							color=ft.Colors.BLACK,
+							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -514,13 +525,14 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nCorreo electrónico:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK
 									)
 								),
 								ft.Container(
 									content=ft.Text(
 										value=self.place_data["info"]["mail"],
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK,
+										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -537,13 +549,13 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nTeléfono:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK
 									)
 								),
 								ft.Container(
 									content=ft.Text(
 										value=self.place_data["info"]["phone"],
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK
 									)
 								)
 							]
@@ -560,13 +572,14 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nPágina web:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK
 									)
 								),
 								ft.Container(
 									content=ft.Text(
 										value=self.place_data["info"]["website"],
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK,
+										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -583,13 +596,14 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nPágina del gobierno (SIC):",
 										weight=ft.FontWeight.BOLD,
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK
 									)
 								),
 								ft.Container(
 									content=ft.Text(
 										value=self.place_data["info"]["sic_website"],
-										color=ft.colors.BLACK
+										color=ft.Colors.BLACK,
+										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -611,7 +625,7 @@ class PlaceDetailsView(ft.View):
 					content=ft.Container(
 						content=ft.Text(
 							value="No se encontró información",
-							color=ft.colors.BLACK
+							color=ft.Colors.BLACK
 						)
 					)
 				)
@@ -620,16 +634,20 @@ class PlaceDetailsView(ft.View):
 		return result
 
 	def get_items(self) -> list:
-		dir: str = format_place_name(self.place_data["info"]["name"])
-		path: str = join(ASSETS_ABSPATH, "places", dir)
-		images: list = listdir(path)
-		if images:
-			return [join("places", dir, image) for image in images]
-		else:
-			return ["/default.png"]
+		image_dir: str = format_place_name(self.place_data["info"]["name"])
+		path: str = join(ASSETS_ABSPATH, "places", image_dir)
+		try:
+			images: list = listdir(path)
+			if images:
+				return [join("places", dir, image) for image in images]
+			else:
+				return ["default.png"]
+
+		except Exception:
+			return ["default.png"]
 
 	def handle_saved_iconbutton(self, _) -> None:
-		if self.saved_iconbutton.icon == ft.icons.BOOKMARKS:
+		if self.saved_iconbutton.icon == ft.Icons.BOOKMARKS:
 			logger.info("Removing place from favorites...")
 			response: Response = delete(
 				url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}/{self.page.session.get('id')}/{self.place_data['id']}",
@@ -641,7 +659,7 @@ class PlaceDetailsView(ft.View):
 
 			if response.status_code == 200:
 				logger.info("Place removed from favorites successfully")
-				self.saved_iconbutton.icon = ft.icons.BOOKMARKS_OUTLINED
+				self.saved_iconbutton.icon = ft.Icons.BOOKMARKS_OUTLINED
 				self.page.update()
 			else:
 				print("Error removing place from favorites")
@@ -668,7 +686,7 @@ class PlaceDetailsView(ft.View):
 
 			if response.status_code == 201:
 				logger.info("Place added to favorites successfully")
-				self.saved_iconbutton.icon = ft.icons.BOOKMARKS
+				self.saved_iconbutton.icon = ft.Icons.BOOKMARKS
 				self.page.update()
 			else:
 				print("Error adding place to favorites")

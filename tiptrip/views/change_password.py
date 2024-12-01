@@ -19,7 +19,7 @@ class ChangePasswordView(ft.View):
 
 		# Custom components
 		self.txt_password: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.LOCK,
+			prefix_icon=ft.Icons.LOCK,
 			hint_text="Contraseña",
 			password=True,
 			can_reveal_password=True,
@@ -27,7 +27,7 @@ class ChangePasswordView(ft.View):
 			**txt_style
 		)
 		self.txt_confirm_password: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.LOCK,
+			prefix_icon=ft.Icons.LOCK,
 			hint_text="Confirmar contraseña",
 			password=True,
 			can_reveal_password=True,
@@ -36,17 +36,17 @@ class ChangePasswordView(ft.View):
 		)
 		self.lbl_password_required: ft.Text = ft.Text(
 			value = "Campo requerido *",
-			style=ft.TextStyle(color=ft.colors.RED),
+			style=ft.TextStyle(color=ft.Colors.RED),
 			visible=False
 		)
 		self.lbl_confirm_password_required: ft.Text = ft.Text(
 			value = "Campo requerido *",
-			style=ft.TextStyle(color=ft.colors.RED),
+			style=ft.TextStyle(color=ft.Colors.RED),
 			visible=False
 		)
 		self.lbl_pwd_match: ft.Text = ft.Text(
 			value = "Las contraseñas no coinciden.",
-			style=ft.TextStyle(color=ft.colors.RED),
+			style=ft.TextStyle(color=ft.Colors.RED),
 			visible=False
 		)
 		self.dlg_updated_data: ft.AlertDialog = ft.AlertDialog(
@@ -88,7 +88,7 @@ class ChangePasswordView(ft.View):
 		self.cont_splash = ft.Container(
 			expand=True,
 			width=self.page.width,
-			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
+			bgcolor=ft.Colors.with_opacity(0.2, ft.Colors.BLACK),
 			content=None,
 			visible=False
 		)
@@ -105,20 +105,22 @@ class ChangePasswordView(ft.View):
 						controls=[
 							ft.Container(
 								height=self.page.height,
+								scroll=ft.ScrollMode.HIDDEN,
 								content=ft.Column(
 									controls=[
 										ft.Container(
 											content=ft.IconButton(
-												icon=ft.icons.ARROW_BACK,
-												icon_color=ft.colors.BLACK,
+												icon=ft.Icons.ARROW_BACK,
+												icon_color=ft.Colors.BLACK,
 												on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/sign_in")
 											)
 										),
 										MainTitle(
 											subtitle="Cambiar contraseña",
-											top_margin=(SPACING * 2)
+											top_margin=10
 										),
 										ft.Container(
+											expand=True,
 											margin=ft.margin.only(top=(SPACING * 2)),
 											content=ft.Column(
 												controls=[
@@ -127,7 +129,7 @@ class ChangePasswordView(ft.View):
 															value=(
 																"Ingresa una nueva contraseña:"
 															),
-															color=ft.colors.BLACK
+															color=ft.Colors.BLACK
 														)
 													),
 													ft.Container(
@@ -145,11 +147,11 @@ class ChangePasswordView(ft.View):
 											)
 										),
 										ft.Container(
-											margin=ft.margin.only(top=(SPACING * 4)),
+											margin=ft.margin.symmetric(vertical=SPACING),
 											content=ft.Column(
 												controls=[
 													self.btn_submit,
-													ft.Divider(color=ft.colors.TRANSPARENT),
+													ft.Divider(color=ft.Colors.TRANSPARENT),
 													self.btn_back
 												]
 											)
@@ -230,7 +232,7 @@ class ChangePasswordView(ft.View):
 						"Content-Type": "application/json",
 						"Authorization": f"Bearer {self.page.session.get('session_token')}"
 					},
-					json={"password": self.txt_password.value}
+					json={"password": self.txt_password.value.strip()}
 				)
 
 				if response.status_code == 201:

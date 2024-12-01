@@ -12,7 +12,7 @@ readme = "TipTrip es una aplicación móvil diseñada para ayudar a los turistas
 
 [tool.poetry.dependencies]
 python = "^3.11"
-flet = "^0.24.1"
+flet = "^0.25.1"
 requests = "^2.32.3"
 geopy = "^2.4.1"
 

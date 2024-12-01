@@ -30,6 +30,8 @@ logger: Logger = getLogger(PROJECT_NAME)
 
 def main(page: ft.Page) -> None:
 	page.title = "Tip Trip"
+	page.window.width = 412 #! COMMENT
+	page.window.height = 915 #! COMMENT
 
 	logger.info(f"Starting app's basic configurations...")
 	def route_change(_: ft.RouteChangeEvent) -> None:

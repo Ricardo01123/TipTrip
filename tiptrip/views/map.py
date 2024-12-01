@@ -51,7 +51,44 @@ class MapView(ft.View):
 				self.create_user_marker()
 			]
 		)
-		self.map = self.create_map()
+		self.map = map.Map(
+			expand=True,
+			initial_center=map.MapLatitudeLongitude(
+				self.page.session.get("current_latitude"),
+				self.page.session.get("current_longitude")
+			),
+			min_zoom=12,
+			max_zoom=19,
+			initial_zoom=13,
+			interaction_configuration=map.MapInteractionConfiguration(
+				flags=map.MapInteractiveFlag.ALL
+			),
+			on_init=lambda _: logger.info("Map initialized successfully"),
+			on_tap=self.handle_map_click,
+			on_event=self.handle_map_event,
+			layers=[
+				map.TileLayer(
+					url_template="https://tile.openstreetmap.org/{z}/{x}/{y}.png",
+					on_image_error=lambda error: logger.error(f"TileLayer (MapLayer) error: {error}"),
+				),
+				map.RichAttribution(
+					attributions=[
+						map.TextSourceAttribution(
+							text="OpenStreetMap Contributors",
+							on_click=lambda e: e.page.launch_url(
+								"https://openstreetmap.org/copyright"
+							),
+						),
+						map.TextSourceAttribution(
+							text="Flet",
+							on_click=lambda e: e.page.launch_url("https://flet.dev"),
+						),
+					]
+				),
+				self.marker_layer,
+				self.circle_layer
+			]
+		)
 
 		# Dialogs components
 		self.dlg_place_info: ft.AlertDialog = ft.AlertDialog(
@@ -154,13 +191,13 @@ class MapView(ft.View):
 		)
 		self.ext_settings: ft.ExpansionTile = ft.ExpansionTile(
 			trailing=ft.Icon(
-				name=ft.icons.KEYBOARD_ARROW_DOWN,
-				color=ft.colors.BLACK,
+				name=ft.Icons.KEYBOARD_ARROW_DOWN,
+				color=ft.Colors.BLACK,
 				size=22
 			),
 			title=ft.Text(
 				value="Filtrar sitios turísticos",
-				color=ft.colors.BLACK,
+				color=ft.Colors.BLACK,
 				size=16
 			),
 			tile_padding=ft.padding.symmetric(horizontal=SPACING),
@@ -169,11 +206,18 @@ class MapView(ft.View):
 					padding=ft.padding.symmetric(horizontal=SPACING),
 					content=self.drd_classification,
 				),
-				ft.ListTile(
-					content_padding=ft.padding.symmetric(horizontal=SPACING),
-					title=ft.Text(
+				ft.Container(
+					bgcolor=ft.Colors.TRANSPARENT,
+					padding=ft.padding.only(
+						top=SPACING,
+						left=SPACING,
+						right=SPACING,
+						bottom=0
+					),
+					alignment=ft.alignment.center_left,
+					content=ft.Text(
 						value="Distancia de mí:",
-						color=ft.colors.BLACK,
+						color=ft.Colors.BLACK,
 						size=16
 					)
 				),
@@ -186,13 +230,13 @@ class MapView(ft.View):
 						controls=[
 							ft.ElevatedButton(
 								bgcolor=SECONDARY_COLOR,
-								color=ft.colors.WHITE,
+								color=ft.Colors.WHITE,
 								text="Limpiar filtros",
 								on_click=self.clean_filters,
 							),
 							ft.ElevatedButton(
 								bgcolor=SECONDARY_COLOR,
-								color=ft.colors.WHITE,
+								color=ft.Colors.WHITE,
 								text="Aplicar filtros",
 								on_click=self.apply_filters,
 							)
@@ -209,7 +253,7 @@ class MapView(ft.View):
 		self.cont_splash = ft.Container(
 			expand=True,
 			width=self.page.width,
-			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
+			bgcolor=ft.Colors.with_opacity(0.2, ft.Colors.BLACK),
 			content=None,
 			visible=False
 		)
@@ -217,13 +261,13 @@ class MapView(ft.View):
 		# View native attributes
 		super().__init__(
 			route = "/map",
-			bgcolor=ft.colors.WHITE,
+			bgcolor=ft.Colors.WHITE,
 			padding=ft.padding.all(value=0.0),
 			spacing=0,
 			floating_action_button=ft.FloatingActionButton(
-				icon=ft.icons.MY_LOCATION,
+				icon=ft.Icons.MY_LOCATION,
 				bgcolor=MAIN_COLOR,
-				foreground_color=ft.colors.WHITE,
+				foreground_color=ft.Colors.WHITE,
 				shape=ft.CircleBorder(),
 				on_click=self.center_user
 			),
@@ -235,7 +279,7 @@ class MapView(ft.View):
 					bgcolor=MAIN_COLOR,
 					shadow=ft.BoxShadow(
 						blur_radius=BLUR,
-						color=ft.colors.GREY_800
+						color=ft.Colors.GREY_800
 					),
 					content=self.ext_settings
 				),
@@ -283,64 +327,20 @@ class MapView(ft.View):
 			logger.error(f"Places endpoint response received {response.status_code}: {response.json()}")
 			return None
 
-	def create_map(self) -> map.Map:
-		logger.info("Creating map...")
-		return map.Map(
-			expand=True,
-			configuration=map.MapConfiguration(
-				initial_center=map.MapLatitudeLongitude(
-					self.page.session.get("current_latitude"),
-					self.page.session.get("current_longitude")
-				),
-				min_zoom=12,
-				max_zoom=19,
-				initial_zoom=13,
-				interaction_configuration=map.MapInteractionConfiguration(
-					flags=map.MapInteractiveFlag.ALL
-				),
-				on_init=lambda _: logger.info("Map initialized successfully"),
-				on_tap=self.handle_map_click,
-				on_event=self.handle_map_event
-			),
-			layers=[
-				map.TileLayer(
-					url_template="https://tile.openstreetmap.org/{z}/{x}/{y}.png",
-					on_image_error=lambda error: logger.error(f"TileLayer (MapLayer) error: {error}"),
-				),
-				map.RichAttribution(
-					# alignment=ft.AttributionAlignment.BOTTOM_LEFT,
-					attributions=[
-						map.TextSourceAttribution(
-							text="OpenStreetMap Contributors",
-							on_click=lambda e: e.page.launch_url(
-								"https://openstreetmap.org/copyright"
-							),
-						),
-						map.TextSourceAttribution(
-							text="Flet",
-							on_click=lambda e: e.page.launch_url("https://flet.dev"),
-						),
-					]
-				),
-				self.marker_layer,
-				self.circle_layer
-			]
-		)
-
 	def create_user_marker(self) -> map.Marker:
 		logger.info("Creating user marker...")
 		return map.Marker(
 			content=ft.Row(
 				controls=[
 					ft.Icon(
-						name=ft.icons.PERSON_PIN_CIRCLE_ROUNDED,
+						name=ft.Icons.PERSON_PIN_CIRCLE_ROUNDED,
 						color=SECONDARY_COLOR,
 						size=30
 					),
 					ft.Text(
 						value="Yo",
 						size=16,
-						color=ft.colors.BLACK,
+						color=ft.Colors.BLACK,
 						weight=ft.FontWeight.BOLD
 					),
 				],
@@ -361,7 +361,7 @@ class MapView(ft.View):
 			),
 			use_radius_in_meter=True,
 			radius=(radius * 1000),
-			color=ft.colors.with_opacity(0.07, ft.colors.BLUE),
+			color=ft.Colors.with_opacity(0.07, ft.Colors.BLUE),
 			border_color=SECONDARY_COLOR,
 			border_stroke_width=4,
 		)
@@ -378,14 +378,14 @@ class MapView(ft.View):
 				content=ft.Row(
 					controls=[
 						ft.Icon(
-							name=ft.icons.LOCATION_ON_ROUNDED,
-							color=ft.colors.RED,
+							name=ft.Icons.LOCATION_ON_ROUNDED,
+							color=ft.Colors.RED,
 							size=30
 						),
 						ft.Text(
 							value=place["info"]["name"],
 							size=16,
-							color=ft.colors.BLACK,
+							color=ft.Colors.BLACK,
 							weight=ft.FontWeight.BOLD,
 							visible=False
 						)
@@ -430,23 +430,25 @@ class MapView(ft.View):
 				logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
 
 				logger.info("Centering map on user coordinates...")
-				if not self.marker_layer.markers == []:
+				if self.marker_layer.markers != []:
 					self.marker_layer.markers.pop()
-				self.map.configuration.initial_center = map.MapLatitudeLongitude(
-					self.page.session.get("current_latitude"),
-					self.page.session.get("current_longitude")
-				)
 				self.marker_layer.markers.append(self.create_user_marker())
 
 				logger.info("Adding circle distance radius marker...")
-				if not self.circle_layer.circles == []:
+				if self.circle_layer.circles != []:
 					self.circle_layer.circles.pop()
 				self.circle_layer.circles.append(
 					self.create_circle_marker(radius=self.page.session.get("map_sld_value"))
 				)
 
-				logger.info("Creating new map...")
-				self.map = self.create_map()
+				logger.info("Moving to user coordinates...")
+				self.map.move_to(
+					destination=map.MapLatitudeLongitude(
+						self.page.session.get("current_latitude"),
+						self.page.session.get("current_longitude")
+					),
+					zoom=13
+				)
 
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
@@ -498,7 +500,7 @@ class MapView(ft.View):
 						distance=self.page.session.get("map_sld_value"),
 						classification=(
 							self.page.session.get("map_drd_value")
-							if self.page.session.get("map_drd_value") != ""
+							if self.page.session.get("map_drd_value") != "Seleccionar todas"
 							else None
 						)
 					)
@@ -603,9 +605,9 @@ class MapView(ft.View):
 
 				logger.info("Cleaning filters...")
 				self.page.session.set(key="map_sld_value", value=7)
-				self.page.session.set(key="map_drd_value", value="")
+				self.page.session.set(key="map_drd_value", value="Seleccionar todas")
 				self.sld_distance.value = 7
-				self.drd_classification.value = ""
+				self.drd_classification.value = "map_drd_value"
 
 				logger.info("Getting places info...")
 				self.page.session.set(
@@ -614,7 +616,7 @@ class MapView(ft.View):
 						distance=100,
 						classification=(
 							self.page.session.get("map_drd_value")
-							if self.page.session.get("map_drd_value") != ""
+							if self.page.session.get("map_drd_value") != "map_drd_value"
 							else None
 						)
 					)

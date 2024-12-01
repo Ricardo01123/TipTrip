@@ -16,10 +16,10 @@ class AudioPlayer(ft.Container):
 			shadow=ft.BoxShadow(
 				blur_radius=(BLUR / 2),
 				offset=ft.Offset(0, 2),
-				color=ft.colors.GREY
+				color=ft.Colors.GREY
 			),
 			padding=ft.padding.all(0),
-			bgcolor=ft.colors.WHITE,
+			bgcolor=ft.Colors.WHITE,
 		)
 
 		self.page: ft.Page = page
@@ -38,21 +38,21 @@ class AudioPlayer(ft.Container):
 		self.page.overlay.append(self.audio)
 
 		self.cca_play: ft.CircleAvatar = ft.CircleAvatar(
-			bgcolor=ft.colors.WHITE,
+			bgcolor=ft.Colors.WHITE,
 			radius=SPACING,
 			content=ft.Icon(
-				name=ft.icons.PLAY_ARROW,
-				color=ft.colors.BLACK,
+				name=ft.Icons.PLAY_ARROW,
+				color=ft.Colors.BLACK,
 				size=50
 			)
 		)
 
 		self.cca_pause: ft.CircleAvatar = ft.CircleAvatar(
-			bgcolor=ft.colors.WHITE,
+			bgcolor=ft.Colors.WHITE,
 			radius=SPACING,
 			content=ft.Icon(
-				name=ft.icons.PAUSE,
-				color=ft.colors.BLACK,
+				name=ft.Icons.PAUSE,
+				color=ft.Colors.BLACK,
 				size=50
 			)
 		)
@@ -143,7 +143,7 @@ class AudioPlayer(ft.Container):
 		logger.info("Updating duration text container...")
 		self.cont_duration.content = ft.Text(
 			value=self.format_duration(self.duration),
-			color=ft.colors.BLACK
+			color=ft.Colors.BLACK
 		)
 		self.page.update()
 
@@ -166,7 +166,7 @@ class AudioPlayer(ft.Container):
 		self.cont_current_position.content = ft.Text("")
 		self.cont_current_position.content = ft.Text(
 			value=self.format_duration(self.current_position),
-			color=ft.colors.BLACK
+			color=ft.Colors.BLACK
 		)
 
 		logger.info("Updating slider value...")

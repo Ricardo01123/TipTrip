@@ -20,17 +20,17 @@ class SignUpView(ft.View):
 
 		# Custom components
 		self.txt_username: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.ACCOUNT_CIRCLE,
+			prefix_icon=ft.Icons.ACCOUNT_CIRCLE,
 			hint_text="Nombre de usuario",
 			**txt_style
 		)
 		self.txt_email: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.EMAIL,
+			prefix_icon=ft.Icons.EMAIL,
 			hint_text="Correo electrónico",
 			**txt_style
 		)
 		self.txt_password: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.LOCK,
+			prefix_icon=ft.Icons.LOCK,
 			hint_text="Contraseña",
 			password=True,
 			can_reveal_password=True,
@@ -38,7 +38,7 @@ class SignUpView(ft.View):
 			**txt_style
 		)
 		self.txt_confirm_password: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.LOCK,
+			prefix_icon=ft.Icons.LOCK,
 			hint_text="Confirmar contraseña",
 			password=True,
 			can_reveal_password=True,
@@ -52,53 +52,61 @@ class SignUpView(ft.View):
 			on_change=self.validate
 		)
 		self.cont_tyc: ft.Container = ft.Container(
-			content=ft.Row(
+			content=ft.ResponsiveRow(
 				alignment=ft.MainAxisAlignment.START,
 				vertical_alignment=ft.CrossAxisAlignment.CENTER,
 				spacing=0,
 				controls=[
-					self.chk_tyc,
-					ft.Markdown(
-						value=(
-							"Acepto los [Términos y Condiciones]"
-							"(https://www.google.com)."
-						),
-						md_style_sheet=ft.MarkdownStyleSheet(
-							p_text_style=ft.TextStyle(color=ft.colors.BLACK)
-						),
-						on_tap_link=lambda _: go_to_view(page=self.page, logger=logger, route="/terms_conditions")
+					ft.Column(
+						col=2,
+						controls=[self.chk_tyc]
+					),
+					ft.Column(
+						col=10,
+						controls=[
+							ft.Markdown(
+								value=(
+									"Acepto los [Términos y Condiciones]"
+									"(https://www.google.com)."
+								),
+								md_style_sheet=ft.MarkdownStyleSheet(
+									p_text_style=ft.TextStyle(color=ft.Colors.BLACK)
+								),
+								on_tap_link=lambda _: go_to_view(page=self.page, logger=logger, route="/terms_conditions")
+							)
+						]
 					)
 				]
 			)
 		)
 		self.lbl_username_required: ft.Text = ft.Text(
 			value = "Campo requerido *",
-			style=ft.TextStyle(color=ft.colors.RED),
+			style=ft.TextStyle(color=ft.Colors.RED),
 			visible=False
 		)
 		self.lbl_email_required: ft.Text = ft.Text(
 			value = "Campo requerido *",
-			style=ft.TextStyle(color=ft.colors.RED),
+			style=ft.TextStyle(color=ft.Colors.RED),
 			visible=False
 		)
 		self.lbl_password_required: ft.Text = ft.Text(
 			value = "Campo requerido *",
-			style=ft.TextStyle(color=ft.colors.RED),
+			style=ft.TextStyle(color=ft.Colors.RED),
 			visible=False
 		)
 		self.lbl_confirm_password_required: ft.Text = ft.Text(
 			value = "Campo requerido *",
-			style=ft.TextStyle(color=ft.colors.RED),
+			style=ft.TextStyle(color=ft.Colors.RED),
 			visible=False
 		)
 		self.lbl_pwd_match: ft.Text = ft.Text(
 			value = "Las contraseñas no coinciden.",
-			style=ft.TextStyle(color=ft.colors.RED),
+			style=ft.TextStyle(color=ft.Colors.RED),
 			visible=False
 		)
 		self.lbl_tyc_required: ft.Text = ft.Text(
 			value = "Los términos y condiciones deben ser aceptados para continuar.",
-			style=ft.TextStyle(color=ft.colors.RED),
+			style=ft.TextStyle(color=ft.Colors.RED),
 			visible=False
 		)
 		self.dlg_success: ft.AlertDialog = ft.AlertDialog(
@@ -146,7 +154,7 @@ class SignUpView(ft.View):
 		self.cont_splash = ft.Container(
 			expand=True,
 			width=self.page.width,
-			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
+			bgcolor=ft.Colors.with_opacity(0.2, ft.Colors.BLACK),
 			content=None,
 			visible=False
 		)
@@ -164,20 +172,21 @@ class SignUpView(ft.View):
 							ft.Container(
 								height=self.page.height,
 								content=ft.Column(
+									scroll=ft.ScrollMode.HIDDEN,
 									controls=[
 										ft.Container(
 											content=ft.IconButton(
-												icon=ft.icons.ARROW_BACK,
-												icon_color=ft.colors.BLACK,
+												icon=ft.Icons.ARROW_BACK,
+												icon_color=ft.Colors.BLACK,
 												on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/sign_in"),
 											)
 										),
 										MainTitle(
 											subtitle="Registrarse",
-											top_margin=(SPACING / 2)
+											top_margin=10
 										),
 										ft.Container(
-											margin=ft.margin.only(top=(SPACING / 2)),
+											margin=ft.margin.only(top=SPACING),
 											content=ft.Column(
 												controls=[
 													ft.Text(
@@ -186,7 +195,7 @@ class SignUpView(ft.View):
 															"datos para crear tu nueva "
 															"cuenta:"
 														),
-														color=ft.colors.BLACK
+														color=ft.Colors.BLACK
 													),
 													ft.Container(
 														content=ft.Column(
@@ -221,11 +230,10 @@ class SignUpView(ft.View):
 											)
 										),
 										ft.Container(
-											margin=ft.margin.only(top=(SPACING / 2)),
+											margin=ft.margin.symmetric(vertical=SPACING),
 											content=ft.Column(
 												controls=[
 													self.btn_submit,
-													# ft.Divider(color=ft.colors.TRANSPARENT),
 													self.btn_back
 												]
 											)
@@ -274,8 +282,8 @@ class SignUpView(ft.View):
 			url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
 			headers={"Content-Type": "application/json"},
 			json={
-				"mail": self.txt_email.value,
-				"password": self.txt_password.value
+				"mail": self.txt_email.value.strip(),
+				"password": self.txt_password.value.strip()
 			}
 		)
 
@@ -432,9 +440,9 @@ class SignUpView(ft.View):
 					url=f"{BACK_END_URL}/{USERS_ENDPOINT}",
 					headers={"Content-Type": "application/json"},
 					json={
-						"username": self.txt_username.value,
-						"mail": self.txt_email.value,
-						"password": self.txt_password.value,
+						"username": self.txt_username.value.strip(),
+						"mail": self.txt_email.value.strip(),
+						"password": self.txt_password.value.strip(),
 					}
 				)
 

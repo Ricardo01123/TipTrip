@@ -20,13 +20,13 @@ class VerifyUserView(ft.View):
 
 		# Custom components
 		self.txt_email: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.EMAIL,
+			prefix_icon=ft.Icons.EMAIL,
 			hint_text="Correo electrónico",
 			**txt_style
 		)
 		self.lbl_email_required: ft.Text = ft.Text(
 			value = "Campo requerido *",
-			style=ft.TextStyle(color=ft.colors.RED),
+			style=ft.TextStyle(color=ft.Colors.RED),
 			visible=False
 		)
 		self.dlg_error: ft.AlertDialog = ft.AlertDialog(
@@ -58,7 +58,7 @@ class VerifyUserView(ft.View):
 		self.cont_splash = ft.Container(
 			expand=True,
 			width=self.page.width,
-			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
+			bgcolor=ft.Colors.with_opacity(0.2, ft.Colors.BLACK),
 			content=None,
 			visible=False
 		)
@@ -70,25 +70,27 @@ class VerifyUserView(ft.View):
 			padding=ft.padding.all(value=0.0),
 			controls=[
 				ft.Container(
-					expand=True,
+					expand_loose=True,
 					content=ft.Stack(
 						controls=[
 							ft.Container(
 								height=self.page.height,
 								content=ft.Column(
+									scroll=ft.ScrollMode.HIDDEN,
 									controls=[
 										ft.Container(
 											content=ft.IconButton(
-												icon=ft.icons.ARROW_BACK,
-												icon_color=ft.colors.BLACK,
+												icon=ft.Icons.ARROW_BACK,
+												icon_color=ft.Colors.BLACK,
 												on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/sign_in")
 											)
 										),
 										MainTitle(
 											subtitle="Verificar usuario",
-											top_margin=(SPACING * 2)
+											top_margin=10
 										),
 										ft.Container(
+											expand=True,
 											margin=ft.margin.only(top=(SPACING * 2)),
 											content=ft.Column(
 												controls=[
@@ -98,7 +100,7 @@ class VerifyUserView(ft.View):
 																"Verifica tu correo electrónico "
 																"para cambiar tu contraseña:"
 															),
-															color=ft.colors.BLACK
+															color=ft.Colors.BLACK
 														)
 													),
 													ft.Container(
@@ -110,11 +112,11 @@ class VerifyUserView(ft.View):
 											)
 										),
 										ft.Container(
-											margin=ft.margin.only(top=(SPACING * 4)),
+											margin=ft.margin.symmetric(vertical=SPACING),
 											content=ft.Column(
 												controls=[
 													self.btn_submit,
-													ft.Divider(color=ft.colors.TRANSPARENT),
+													ft.Divider(color=ft.Colors.TRANSPARENT),
 													self.btn_back
 												]
 											)
@@ -169,7 +171,7 @@ class VerifyUserView(ft.View):
 			response: Response = get(
 				url=f"{BACK_END_URL}/{USERS_ENDPOINT}/verify",
 				headers={"Content-Type": "application/json"},
-				json={"mail": self.txt_email.value}
+				json={"mail": self.txt_email.value.strip()}
 			)
 
 			if response.status_code == 201:

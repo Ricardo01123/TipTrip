@@ -14,8 +14,8 @@ class TopBar(ft.AppBar):
 			bgcolor=MAIN_COLOR,
 			leading=(
 				ft.IconButton(
-					icon=ft.icons.ARROW_BACK,
-					icon_color=ft.colors.BLACK,
+					icon=ft.Icons.ARROW_BACK,
+					icon_color=ft.Colors.BLACK,
 					on_click=lambda _: go_to_view(page=self.page, logger=self.logger, route='/')
 				)
 				if leading == True
@@ -23,12 +23,12 @@ class TopBar(ft.AppBar):
 			),
 			title=ft.Text(
 				value=PROJECT_NAME,
-				color=ft.colors.BLACK
+				color=ft.Colors.BLACK
 			),
 			actions=[
 				ft.IconButton(
-					icon=ft.icons.LOGOUT,
-					icon_color=ft.colors.BLACK,
+					icon=ft.Icons.LOGOUT,
+					icon_color=ft.Colors.BLACK,
 					padding=ft.padding.only(right=SPACING),
 					tooltip="Cerrar sesión",
 					on_click=self.logout
@@ -53,37 +53,37 @@ class BottomBar(ft.BottomAppBar):
 				alignment=ft.MainAxisAlignment.SPACE_EVENLY,
 				controls=[
 					ft.IconButton(
-						icon=ft.icons.HOME,
+						icon=ft.Icons.HOME,
 						icon_color=(
-							ft.colors.WHITE
+							ft.Colors.WHITE
 							if current_route == '/'
-							else ft.colors.BLACK
+							else ft.Colors.BLACK
 						),
 						icon_size=30,
 						on_click=lambda _: go_to_view(page=page, logger=logger, route='/')
 					),
 					ft.IconButton(
-						icon=ft.icons.SUPPORT_AGENT,
-						icon_color=ft.colors.BLACK,
+						icon=ft.Icons.SUPPORT_AGENT,
+						icon_color=ft.Colors.BLACK,
 						icon_size=30,
 						on_click=lambda _: go_to_view(page=page, logger=logger, route="/chatbot")
 					),
 					ft.IconButton(
-						icon=ft.icons.BOOKMARKS,
+						icon=ft.Icons.BOOKMARKS,
 						icon_color=(
-							ft.colors.WHITE
+							ft.Colors.WHITE
 							if current_route == "/favorites"
-							else ft.colors.BLACK
+							else ft.Colors.BLACK
 						),
 						icon_size=30,
 						on_click=lambda _: go_to_view(page=page, logger=logger, route="/favorites")
 					),
 					ft.IconButton(
-						icon=ft.icons.ACCOUNT_CIRCLE,
+						icon=ft.Icons.ACCOUNT_CIRCLE,
 						icon_color=(
-							ft.colors.WHITE
+							ft.Colors.WHITE
 							if current_route == "/account"
-							else ft.colors.BLACK
+							else ft.Colors.BLACK
 						),
 						icon_size=30,
 						on_click=lambda _: go_to_view(page=page, logger=logger, route="/account")

@@ -13,14 +13,14 @@ class Message(ft.Container):
 			shadow=ft.BoxShadow(
 				blur_radius=(BLUR / 2),
 				offset=ft.Offset(0, 2),
-				color=ft.colors.GREY
+				color=ft.Colors.GREY
 			),
 			padding=ft.padding.all(value=(SPACING / 2)),
 			bgcolor=(
-				ft.colors.RED
+				ft.Colors.RED
 				if "ERROR" in message
 				else (
-					ft.colors.WHITE
+					ft.Colors.WHITE
 					if is_bot
 					else SECONDARY_COLOR
 				)
@@ -30,7 +30,7 @@ class Message(ft.Container):
 					value=message,
 					md_style_sheet=ft.MarkdownStyleSheet(
 						p_text_style=ft.TextStyle(
-							color=ft.colors.BLACK,
+							color=ft.Colors.BLACK,
 							size=MESSAGE_TEXT_SIZE
 						)
 					)
@@ -49,7 +49,7 @@ class Message(ft.Container):
 					color=(
 						colors.BLACK
 						if is_bot and "ERROR" not in message
-						else ft.colors.WHITE
+						else ft.Colors.WHITE
 					),
 					size=MESSAGE_TEXT_SIZE
 				)

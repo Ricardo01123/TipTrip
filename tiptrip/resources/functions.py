@@ -13,32 +13,33 @@ def go_to_view(page: ft.Page, logger: Logger, route: str) -> None:
 
 
 # Places functions
-def get_place_image(place_name: str) -> str:
-	dir: str = format_place_name(place_name)
+def get_placecard_image(place_name: str) -> str:
+	image_dir: str = format_place_name(place_name)
 
-	path: str = join(ASSETS_ABSPATH, "places", dir)
-	if exists(path):
+	path: str = join(ASSETS_ABSPATH, "places", image_dir)
+	try:
 		images: list = listdir(path)
 		if images:
-			return join("places", dir, images[0])
+			return join("places", image_dir, images[0])
 		else:
-			return ["/default.png"]
-	else:
-		return ["/default.png"]
+			return "default.png"
+
+	except Exception:
+		return "default.png"
 
 
 def get_place_icon(classification: str) -> str:
 	match classification.lower():
-		case "arquitectura": return ft.icons.LOCATION_CITY
-		case "centro cultural": return ft.icons.PEOPLE_ALT
-		case "centro religioso": return ft.icons.CHURCH
-		case "escultura": return ft.icons.HANDYMAN
-		case "experiencia": return ft.icons.TAG_FACES_ROUNDED
-		case "monumento": return ft.icons.BOOKMARK
-		case "mural": return ft.icons.PALETTE
-		case "museo": return ft.icons.MUSEUM_SHARP
-		case "zona arqueológica": return ft.icons.TEMPLE_HINDU
-		case _: return ft.icons.LOCATION_ON
+		case "arquitectura": return ft.Icons.LOCATION_CITY
+		case "centro cultural": return ft.Icons.PEOPLE_ALT
+		case "centro religioso": return ft.Icons.CHURCH
+		case "escultura": return ft.Icons.HANDYMAN
+		case "experiencia": return ft.Icons.TAG_FACES_ROUNDED
+		case "monumento": return ft.Icons.BOOKMARK
+		case "mural": return ft.Icons.PALETTE
+		case "museo": return ft.Icons.MUSEUM_SHARP
+		case "zona arqueológica": return ft.Icons.TEMPLE_HINDU
+		case _: return ft.Icons.LOCATION_ON
 
 
 def format_place_name(place_name: str) -> str:

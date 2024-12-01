@@ -43,7 +43,7 @@ class PermissionsView(ft.View):
 		self.cont_splash = ft.Container(
 			expand=True,
 			width=self.page.width,
-			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
+			bgcolor=ft.Colors.with_opacity(0.2, ft.Colors.BLACK),
 			content=None,
 			visible=False
 		)
@@ -65,8 +65,8 @@ class PermissionsView(ft.View):
 									controls=[
 										ft.Container(
 											content=ft.IconButton(
-												icon=ft.icons.ARROW_BACK,
-												icon_color=ft.colors.BLACK,
+												icon=ft.Icons.ARROW_BACK,
+												icon_color=ft.Colors.BLACK,
 												on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/sign_in"),
 											)
 										),
@@ -84,7 +84,7 @@ class PermissionsView(ft.View):
 													"Puedes continuar sin otorgarlos, pero dichas funcionalidades "
 													"no estarán disponibles hasta que permitas el uso de tu ubicación."
 												),
-												color=ft.colors.BLACK
+												color=ft.Colors.BLACK
 											)
 										),
 										ft.Container(
@@ -92,7 +92,7 @@ class PermissionsView(ft.View):
 											content=ft.Column(
 												controls=[
 													self.btn_yes,
-													ft.Divider(color=ft.colors.TRANSPARENT),
+													ft.Divider(color=ft.Colors.TRANSPARENT),
 													self.btn_no
 												]
 											)

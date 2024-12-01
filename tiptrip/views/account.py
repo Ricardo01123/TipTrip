@@ -70,7 +70,7 @@ class AccountView(ft.View):
 		)
 		self.btn_delete_user: ft.ElevatedButton = ft.ElevatedButton(
 			width=self.page.width,
-			icon=ft.icons.DELETE,
+			icon=ft.Icons.DELETE,
 			text="Eliminar cuenta",
 			on_click=lambda _: self.page.open(self.dlg_confirm_delete_account),
 			**btn_danger_style
@@ -104,7 +104,7 @@ class AccountView(ft.View):
 				ft.Container(
 					expand=True,
 					width=self.page.width,
-					bgcolor=ft.colors.WHITE,
+					bgcolor=ft.Colors.WHITE,
 					padding=ft.padding.only(
 						top=(SPACING * 2),
 						right=SPACING,
@@ -118,7 +118,7 @@ class AccountView(ft.View):
 					shadow=ft.BoxShadow(
 						blur_radius=(BLUR / 2),
 						offset=ft.Offset(0, -2),
-						color=ft.colors.BLACK
+						color=ft.Colors.BLACK
 					),
 					content=ft.Column(
 						width=self.page.width,
@@ -127,7 +127,7 @@ class AccountView(ft.View):
 						controls=[
 							ft.Container(
 								height=80,
-								bgcolor=ft.colors.WHITE,
+								bgcolor=ft.Colors.WHITE,
 								padding=ft.padding.symmetric(
 									vertical=(SPACING / 2),
 									horizontal=SPACING
@@ -137,7 +137,7 @@ class AccountView(ft.View):
 								),
 								shadow=ft.BoxShadow(
 									blur_radius=LOW_BLUR,
-									color=ft.colors.GREY_500
+									color=ft.Colors.GREY_500
 								),
 								content=ft.Column(
 									alignment=ft.MainAxisAlignment.CENTER,
@@ -149,7 +149,7 @@ class AccountView(ft.View):
 											alignment=ft.alignment.bottom_left,
 											content=ft.Text(
 												value=self.page.session.get("username"),
-												color=ft.colors.BLACK,
+												color=ft.Colors.BLACK,
 												weight=ft.FontWeight.BOLD,
 												size=20,
 											),
@@ -160,7 +160,7 @@ class AccountView(ft.View):
 											alignment=ft.alignment.top_left,
 											content=ft.Text(
 												value="Nombre de usuario",
-												color=ft.colors.BLACK
+												color=ft.Colors.BLACK
 											),
 										)
 									]
@@ -168,7 +168,7 @@ class AccountView(ft.View):
 							),
 							ft.Container(
 								height=80,
-								bgcolor=ft.colors.WHITE,
+								bgcolor=ft.Colors.WHITE,
 								padding=ft.padding.symmetric(
 									vertical=(SPACING / 2),
 									horizontal=SPACING
@@ -178,7 +178,7 @@ class AccountView(ft.View):
 								),
 								shadow=ft.BoxShadow(
 									blur_radius=LOW_BLUR,
-									color=ft.colors.GREY_500
+									color=ft.Colors.GREY_500
 								),
 								content=ft.Column(
 									alignment=ft.MainAxisAlignment.CENTER,
@@ -190,7 +190,7 @@ class AccountView(ft.View):
 											alignment=ft.alignment.bottom_left,
 											content=ft.Text(
 												value=self.page.session.get("created_at"),
-												color=ft.colors.BLACK,
+												color=ft.Colors.BLACK,
 												size=18,
 											),
 										),
@@ -200,7 +200,7 @@ class AccountView(ft.View):
 											alignment=ft.alignment.top_left,
 											content=ft.Text(
 												value="Fecha de creación de la cuenta",
-												color=ft.colors.BLACK,
+												color=ft.Colors.BLACK,
 											),
 										)
 									]
@@ -212,7 +212,7 @@ class AccountView(ft.View):
 								alignment=ft.alignment.center,
 								content=ft.ElevatedButton(
 									width=self.page.width,
-									icon=ft.icons.EDIT,
+									icon=ft.Icons.EDIT,
 									text="Editar perfil",
 									on_click=self.go_to_update_user,
 									**btn_secondary_style

@@ -30,7 +30,7 @@ class HomeView(ft.View):
 
 		# Filters components
 		self.txt_place_searcher: ft.TextField = ft.TextField(
-			prefix_icon=ft.icons.SEARCH,
+			prefix_icon=ft.Icons.SEARCH,
 			hint_text="Busca un sitio turístico",
 			on_change=self.search_place,
 			**txt_messages_style
@@ -82,9 +82,9 @@ class HomeView(ft.View):
 						content=ft.Text(
 							value="Seleccionar distancia:",
 							color=(
-								ft.colors.WHITE
+								ft.Colors.WHITE
 								if self.chk_distance.value
-								else ft.colors.GREY_400
+								else ft.Colors.GREY_400
 							)
 						)
 					),
@@ -184,7 +184,7 @@ class HomeView(ft.View):
 		self.total_pages: int = (self.total_items + self.items_per_page - 1) // self.items_per_page
 		self.lbl_actual_page: ft.Text = ft.Text(
 			value=f"Página {self.current_page + 1} de {self.total_pages}",
-			color=ft.colors.BLACK
+			color=ft.Colors.BLACK
 		)
 		self.cont_pagination: ft.Container = ft.Container(
 			width=self.page.width,
@@ -195,9 +195,9 @@ class HomeView(ft.View):
 					ft.Container(
 						margin=ft.margin.only(left=SPACING - 5),
 						content=ft.Icon(
-							name=ft.icons.ARROW_BACK_IOS_SHARP,
+							name=ft.Icons.ARROW_BACK_IOS_SHARP,
 							size=25,
-							color=ft.colors.BLACK
+							color=ft.Colors.BLACK
 						),
 						on_click=self.previous_page
 					),
@@ -209,9 +209,9 @@ class HomeView(ft.View):
 					ft.Container(
 						margin=ft.margin.only(right=SPACING - 5),
 						content=ft.Icon(
-							name=ft.icons.ARROW_FORWARD_IOS_SHARP,
+							name=ft.Icons.ARROW_FORWARD_IOS_SHARP,
 							size=25,
-							color=ft.colors.BLACK
+							color=ft.Colors.BLACK
 						),
 						on_click=self.next_page
 					)
@@ -226,7 +226,7 @@ class HomeView(ft.View):
 		self.cont_splash = ft.Container(
 			expand=True,
 			width=self.page.width,
-			bgcolor=ft.colors.with_opacity(0.2, ft.colors.BLACK),
+			bgcolor=ft.Colors.with_opacity(0.2, ft.Colors.BLACK),
 			content=None,
 			visible=False
 		)
@@ -234,17 +234,17 @@ class HomeView(ft.View):
 		# View native attributes
 		super().__init__(
 			route='/',
-			bgcolor=ft.colors.WHITE,
+			bgcolor=ft.Colors.WHITE,
 			padding=ft.padding.all(value=0.0),
 			spacing=0,
 			floating_action_button=ft.FloatingActionButton(
-				icon=ft.icons.LOCATION_ON,
+				icon=ft.Icons.LOCATION_ON,
 				bgcolor=SECONDARY_COLOR,
-				foreground_color=ft.colors.WHITE,
+				foreground_color=ft.Colors.WHITE,
 				shape=ft.CircleBorder(),
 				on_click=self.check_if_open_map
 			),
-			floating_action_button_location = ft.FloatingActionButtonLocation.CENTER_DOCKED,
+			floating_action_button_location=ft.FloatingActionButtonLocation.CENTER_DOCKED,
 			controls=[
 				TopBar(page=self.page, leading=False, logger=logger),
 				ft.Container(
@@ -257,7 +257,7 @@ class HomeView(ft.View):
 					),
 					shadow=ft.BoxShadow(
 						blur_radius=BLUR,
-						color=ft.colors.GREY_800
+						color=ft.Colors.GREY_800
 					)
 				),
 				ft.Container(
@@ -277,13 +277,13 @@ class HomeView(ft.View):
 													ft.Container(expand=1),
 													ft.Container(
 														expand=8,
-														bgcolor=ft.colors.WHITE,
+														bgcolor=ft.Colors.WHITE,
 														padding=ft.padding.symmetric(horizontal=(SPACING / 2)),
 														border_radius=ft.border_radius.all(value=RADIUS),
 														shadow=ft.BoxShadow(
 															blur_radius=(BLUR / 2),
 															offset=ft.Offset(0, 2),
-															color=ft.colors.GREY
+															color=ft.Colors.GREY
 														),
 														content=ft.Row(
 															alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
@@ -296,11 +296,11 @@ class HomeView(ft.View):
 																ft.Container(
 																	expand=1,
 																	content=ft.CircleAvatar(
-																		bgcolor=ft.colors.WHITE,
+																		bgcolor=ft.Colors.WHITE,
 																		radius=SPACING,
 																		content=ft.Icon(
-																			name=ft.icons.FILTER_LIST,
-																			color=ft.colors.BLACK
+																			name=ft.Icons.FILTER_LIST,
+																			color=ft.Colors.BLACK
 																		)
 																	),
 																	on_click=lambda _: self.page.open(self.dlg_sites_filter)
@@ -376,7 +376,7 @@ class HomeView(ft.View):
 						f"{place['address']['municipality']}, "
 						f"{place['address']['state']}."
 					),
-					image_link=get_place_image(place["info"]["name"]),
+					image_name=get_placecard_image(place["info"]["name"]),
 					is_favorite=place["is_favorite"],
 					punctuation=place["info"]["punctuation"],
 					distance=place["distance"] if "distance" in place else None
@@ -394,7 +394,7 @@ class HomeView(ft.View):
 							"No se encontró ningún sitio turístico con "
 							"los filtros seleccionados."
 						),
-						color=ft.colors.BLACK,
+						color=ft.Colors.BLACK,
 						size=30
 					)
 				)
@@ -410,7 +410,7 @@ class HomeView(ft.View):
 							"Ocurrió un error al obtener la información de "
 							"los sitios turísticos."
 						),
-						color=ft.colors.BLACK,
+						color=ft.Colors.BLACK,
 						size=30
 					)
 				)
@@ -678,12 +678,12 @@ class HomeView(ft.View):
 					distance=self.page.session.get("sld_value"),
 					classification=(
 						self.page.session.get("drd_classification_value")
-						if self.page.session.get("drd_classification_value") != ""
+						if self.page.session.get("drd_classification_value") != "Seleccionar todas"
 						else None
 					),
 					municipality=(
 						self.page.session.get("drd_municipality_value")
-						if self.page.session.get("drd_municipality_value") != ""
+						if self.page.session.get("drd_municipality_value") != "Seleccionar todas"
 						else None
 					)
 				)
@@ -723,13 +723,13 @@ class HomeView(ft.View):
 			self.page.close(self.dlg_sites_filter)
 
 			logger.info("Storing new clean filters values in session...")
-			self.page.session.set(key="drd_classification_value", value="")
-			self.page.session.set(key="drd_municipality_value", value="")
+			self.page.session.set(key="drd_classification_value", value="Seleccionar todas")
+			self.page.session.set(key="drd_municipality_value", value="Seleccionar todas")
 			self.page.session.set(key="sld_value", value=7)
 
 			logger.info("Cleaning components values...")
-			self.drd_classification.value = ""
-			self.drd_municipality.value = ""
+			self.drd_classification.value = "Seleccionar todas"
+			self.drd_municipality.value = "Seleccionar todas"
 			self.sld_distance.value = 7
 			self.page.update()
 
@@ -753,12 +753,12 @@ class HomeView(ft.View):
 					distance=100,
 					classification=(
 						self.page.session.get("drd_classification_value")
-						if self.page.session.get("drd_classification_value") != ""
+						if self.page.session.get("drd_classification_value") != "Seleccionar todas"
 						else None
 					),
 					municipality=(
 						self.page.session.get("drd_municipality_value")
-						if self.page.session.get("drd_municipality_value") != ""
+						if self.page.session.get("drd_municipality_value") != "Seleccionar todas"
 						else None
 					)
 				)

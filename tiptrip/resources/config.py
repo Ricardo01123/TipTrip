@@ -20,7 +20,7 @@ MAIN_COLOR: str = "#FF7F11"  # orange
 SECONDARY_COLOR: str = "#006E7E"  # blue
 
 # Components variables
-SPACING: int = 25
+SPACING: int = 15
 RADIUS: int = 20
 BLUR: int = 10
 LOW_BLUR: int = 7
@@ -70,6 +70,7 @@ ASSETS_ABSPATH: str = join(PROJECT_DIR_ABSPATH, "assets")
 
 # Places filters variables
 MUNICIPALITIES: list[str] = [
+	"Seleccionar todas",
 	"Álvaro Obregón",
 	"Azcapotzalco",
 	"Benito Juárez",
@@ -90,6 +91,7 @@ MUNICIPALITIES: list[str] = [
 ]
 
 CLASSIFICATIONS: list[str] = [
+	"Seleccionar todas",
 	"Arquitectura",
 	"Centro cultural",
 	"Centro religioso",

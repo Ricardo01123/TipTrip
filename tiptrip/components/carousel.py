@@ -28,18 +28,18 @@ class Carousel(ft.Container):
 			controls=[
 				ft.Container(
 					content=ft.Icon(
-						name=ft.icons.ARROW_BACK_IOS_SHARP,
+						name=ft.Icons.ARROW_BACK_IOS_SHARP,
 						size=25,
-						color=ft.colors.BLACK
+						color=ft.Colors.BLACK
 					),
 					on_click=self.previus_item
 				),
 				self.current_container,
 				ft.Container(
 					content=ft.Icon(
-						name=ft.icons.ARROW_FORWARD_IOS_SHARP,
+						name=ft.Icons.ARROW_FORWARD_IOS_SHARP,
 						size=25,
-						color=ft.colors.BLACK
+						color=ft.Colors.BLACK
 					),
 					on_click=self.next_item
 				),

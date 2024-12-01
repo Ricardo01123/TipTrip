@@ -17,7 +17,7 @@ class PlaceCard(ft.Container):
 			name: str,
 			classification: str,
 			address: str,
-			image_link: str,
+			image_name: str,
 			is_favorite: bool,
 			punctuation: int = None,
 			distance: float = None,
@@ -27,7 +27,7 @@ class PlaceCard(ft.Container):
 		self.place_id: int = id
 
 		super().__init__(
-			bgcolor=ft.colors.WHITE,
+			bgcolor=ft.Colors.WHITE,
 			padding=ft.padding.only(
 				left=(SPACING / 2),
 				top=(SPACING / 2),
@@ -38,16 +38,16 @@ class PlaceCard(ft.Container):
 			shadow=ft.BoxShadow(
 				blur_radius=LOW_BLUR,
 				offset=ft.Offset(0, 3),
-				color=ft.colors.GREY
+				color=ft.Colors.GREY
 			),
 			on_click=self.open_place_details_view
 		)
 
 		self.saved_iconbutton: ft.IconButton = ft.IconButton(
 			icon=(
-				ft.icons.BOOKMARKS
+				ft.Icons.BOOKMARKS
 				if is_favorite
-				else ft.icons.BOOKMARKS_OUTLINED
+				else ft.Icons.BOOKMARKS_OUTLINED
 			),
 			icon_color=SECONDARY_COLOR,
 			icon_size=25,
@@ -86,7 +86,7 @@ class PlaceCard(ft.Container):
 							ft.Container(
 								expand=1,
 								content=ft.Image(
-									src=image_link,
+									src=image_name,
 									fit=ft.ImageFit.FILL,
 									repeat=ft.ImageRepeat.NO_REPEAT,
 									border_radius=ft.border_radius.all(RADIUS)
@@ -121,7 +121,7 @@ class PlaceCard(ft.Container):
 										ft.Container(
 											content=ft.Text(
 												value=address,
-												color=ft.colors.BLACK
+												color=ft.Colors.BLACK
 											)
 										)
 									]
@@ -141,12 +141,12 @@ class PlaceCard(ft.Container):
 									value=(
 										f"Distancia de mí: {distance:.2f} km"
 										if distance is not None
-										else "Distancia de mí: No disponible"
+										else ""
 									),
 									color=(
-										ft.colors.BLACK
+										ft.Colors.BLACK
 										if distance is not None
-										else ft.colors.RED
+										else ft.Colors.WHITE
 									)
 								)
 							),
@@ -155,7 +155,7 @@ class PlaceCard(ft.Container):
 								bgcolor=(
 									SECONDARY_COLOR
 									if punctuation is not None
-									else ft.colors.RED
+									else ft.Colors.RED
 								),
 								border_radius=ft.border_radius.all(
 									value=15
@@ -172,8 +172,8 @@ class PlaceCard(ft.Container):
 												expand=1,
 												alignment=ft.alignment.center_right,
 												content=ft.Icon(
-													name=ft.icons.STAR_BORDER,
-													color=ft.colors.WHITE,
+													name=ft.Icons.STAR_BORDER,
+													color=ft.Colors.WHITE,
 													size=14
 												)
 											),
@@ -182,7 +182,7 @@ class PlaceCard(ft.Container):
 												alignment=ft.alignment.center_left,
 												content=ft.Text(
 													value=punctuation,
-													color=ft.colors.WHITE,
+													color=ft.Colors.WHITE,
 												)
 											)
 										]
@@ -195,8 +195,8 @@ class PlaceCard(ft.Container):
 												),
 												alignment=ft.alignment.center,
 												content=ft.Icon(
-													name=ft.icons.STAR_BORDER,
-													color=ft.colors.WHITE,
+													name=ft.Icons.STAR_BORDER,
+													color=ft.Colors.WHITE,
 													size=14
 												)
 											)
@@ -215,7 +215,7 @@ class PlaceCard(ft.Container):
 		go_to_view(page=self.page, logger=logger, route="/place_details")
 
 	def handle_saved_iconbutton(self, _: ft.ControlEvent) -> None:
-		if self.saved_iconbutton.icon == ft.icons.BOOKMARK:
+		if self.saved_iconbutton.icon == ft.Icons.BOOKMARK:
 			logger.info("Removing place from favorites...")
 			response: Response = delete(
 				url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}/{self.page.session.get('id')}/{self.place_id}",
@@ -227,7 +227,7 @@ class PlaceCard(ft.Container):
 
 			if response.status_code == 200:
 				logger.info("Place removed from favorites successfully")
-				self.saved_iconbutton.icon = ft.icons.BOOKMARKS_OUTLINED
+				self.saved_iconbutton.icon = ft.Icons.BOOKMARKS_OUTLINED
 				self.page.update()
 			else:
 				print("Error removing place from favorites")
@@ -254,7 +254,7 @@ class PlaceCard(ft.Container):
 
 			if response.status_code == 201:
 				logger.info("Place added to favorites successfully")
-				self.saved_iconbutton.icon = ft.icons.BOOKMARKS
+				self.saved_iconbutton.icon = ft.Icons.BOOKMARKS
 				self.page.update()
 			else:
 				print("Error adding place to favorites")
