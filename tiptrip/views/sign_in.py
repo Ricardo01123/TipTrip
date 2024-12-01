@@ -116,7 +116,6 @@ class SignInView(ft.View):
 											top_margin=SPACING,
 										),
 										ft.Container(
-											expand_loose=True,
 											margin=ft.margin.only(top=(SPACING * 2)),
 											content=ft.Column(
 												spacing=(SPACING / 2),

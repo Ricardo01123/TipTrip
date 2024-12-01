@@ -550,10 +550,8 @@ class MapView(ft.View):
 				logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
 
 				logger.info("Centering map on user coordinates...")
-				self.map.configuration.initial_center = map.MapLatitudeLongitude(
-					self.page.session.get("current_latitude"),
-					self.page.session.get("current_longitude")
-				)
+				if self.marker_layer.markers != []:
+					self.marker_layer.markers.pop()
 				self.marker_layer.markers.append(self.create_user_marker())
 
 				logger.info("Adding circle distance radius marker...")
@@ -561,6 +559,15 @@ class MapView(ft.View):
 					self.circle_layer.circles.pop()
 				self.circle_layer.circles.append(
 					self.create_circle_marker(radius=self.page.session.get("map_sld_value"))
+				)
+
+				logger.info("Moving to user coordinates...")
+				self.map.move_to(
+					destination=map.MapLatitudeLongitude(
+						self.page.session.get("current_latitude"),
+						self.page.session.get("current_longitude")
+					),
+					zoom=13
 				)
 
 				logger.info("Hidding loading splash screen...")

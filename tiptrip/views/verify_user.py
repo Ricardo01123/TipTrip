@@ -70,7 +70,7 @@ class VerifyUserView(ft.View):
 			padding=ft.padding.all(value=0.0),
 			controls=[
 				ft.Container(
-					expand_loose=True,
+					expand=True,
 					content=ft.Stack(
 						controls=[
 							ft.Container(

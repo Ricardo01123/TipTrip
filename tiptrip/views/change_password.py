@@ -105,8 +105,8 @@ class ChangePasswordView(ft.View):
 						controls=[
 							ft.Container(
 								height=self.page.height,
-								scroll=ft.ScrollMode.HIDDEN,
 								content=ft.Column(
+									scroll=ft.ScrollMode.HIDDEN,
 									controls=[
 										ft.Container(
 											content=ft.IconButton(
