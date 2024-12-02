@@ -49,7 +49,7 @@ class Carousel(ft.Container):
 	def format_items(self, items: list) -> list:
 		return [
 			ft.Image(
-				src=item,
+				src_base64=item,
 				fit=ft.ImageFit.FILL,
 				repeat=ft.ImageRepeat.NO_REPEAT,
 				border_radius=ft.border_radius.all(value=RADIUS)
@@ -66,7 +66,7 @@ class Carousel(ft.Container):
 		logger.info(f"Moving to item: {self.current_item}")
 
 		self.current_container.content = self.items[self.current_item]
-		logger.info(f"Current item src: {self.current_container.content.src}")
+		# logger.info(f"Current item src: {self.current_container.content.src}")
 		self.page.update()
 
 	def next_item(self, _: ft.ControlEvent) -> None:
@@ -78,5 +78,5 @@ class Carousel(ft.Container):
 		logger.info(f"Moving to item: {self.current_item}")
 
 		self.current_container.content = self.items[self.current_item]
-		logger.info(f"Current item src: {self.current_container.content.src}")
+		# logger.info(f"Current item src: {self.current_container.content.src}")
 		self.page.update()

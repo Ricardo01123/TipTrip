@@ -86,7 +86,7 @@ class PlaceCard(ft.Container):
 							ft.Container(
 								expand=1,
 								content=ft.Image(
-									src=image_name,
+									src_base64=image_name,
 									fit=ft.ImageFit.FILL,
 									repeat=ft.ImageRepeat.NO_REPEAT,
 									border_radius=ft.border_radius.all(RADIUS)
