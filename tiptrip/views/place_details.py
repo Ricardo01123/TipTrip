@@ -8,7 +8,7 @@ from requests import post, delete, Response
 from components.bars import *
 from resources.config import *
 from components.carousel import Carousel
-from resources.functions import get_place_icon
+from resources.functions import format_place_name, get_place_icon
 
 
 logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
@@ -185,7 +185,7 @@ class PlaceDetailsView(ft.View):
 					alignment=ft.alignment.center,
 					content=Carousel(
 						page=self.page,
-						items=self.place_data["images"]
+						items=self.get_items()
 					)
 				),
 				ft.Container(
@@ -632,6 +632,19 @@ class PlaceDetailsView(ft.View):
 			)
 
 		return result
+
+	def get_items(self) -> list:
+		image_dir: str = format_place_name(self.place_data["info"]["name"])
+		path: str = join(ASSETS_ABSPATH, "places", image_dir)
+		try:
+			images: list = listdir(path)
+			if images:
+				return [join("places", dir, image) for image in images]
+			else:
+				return ["default.png"]
+
+		except Exception:
+			return ["default.png"]
 
 	def handle_saved_iconbutton(self, _) -> None:
 		if self.saved_iconbutton.icon == ft.Icons.BOOKMARKS:

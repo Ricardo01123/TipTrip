@@ -376,7 +376,7 @@ class HomeView(ft.View):
 						f"{place['address']['municipality']}, "
 						f"{place['address']['state']}."
 					),
-					image_name=place["images"][0],
+					image_name=get_placecard_image(place["info"]["name"]),
 					is_favorite=place["is_favorite"],
 					punctuation=place["info"]["punctuation"],
 					distance=place["distance"] if "distance" in place else None
