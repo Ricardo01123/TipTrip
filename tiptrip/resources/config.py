@@ -49,6 +49,7 @@ AUTH_USER_ENDPOINT: str = "users/auth"
 FAVORITES_ENDPOINT: str = "users/favorites"
 AGENT_ENDPOINT: str = "models/agent"
 ASR_ENDPOINT: str = "models/asr"
+TTS_ENDPOINT: str = "models/tts"
 
 # Chatbot audio file
 CHANNELS: int = 1

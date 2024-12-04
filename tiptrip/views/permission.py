@@ -137,6 +137,9 @@ class PermissionsView(ft.View):
 				)
 			)
 
+			# Chatbot variables
+			self.page.session.set(key="audio_players", value=[])
+
 			try:
 				go_to_view(page=self.page, logger=logger, route='/')
 			except Exception as e:
@@ -150,6 +153,8 @@ class PermissionsView(ft.View):
 
 		self.page.session.set(key="is_inside_cdmx", value=False)
 		self.page.session.set(key="chk_distance_value", value=False)
+
+		self.page.session.set(key="audio_players", value=[])
 
 		try:
 			go_to_view(page=self.page, logger=logger, route='/')

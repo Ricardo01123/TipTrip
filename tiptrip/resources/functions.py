@@ -109,6 +109,27 @@ def is_inside_cdmx(current_position: tuple[float, float]) -> bool:
 		return True
 	return False
 
+# Model functions
+def split_agent_response(text: str) -> list[str]:
+    result: list = []
+    start: int = 0
+    while start < len(text):
+        end: int = min(start + 1000, len(text))
+
+        if "\n" in text[start:end]:
+            end = text.rfind("\n", start, end) + 1
+        elif end < len(text) and "\n" in text[end:end + 100]:
+            end = text.find("\n", end, end + 100) + 1
+
+        if end <= start:
+            end = start + 1000
+
+        # Añade el segmento y actualiza el inicio
+        result.append(text[start:end].strip())
+        start = end
+
+    return result
+
 # General functions
 def get_user_image() -> str:
 	files: list[str] = listdir(ASSETS_ABSPATH)

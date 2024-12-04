@@ -2,9 +2,11 @@ import wave
 import flet as ft
 from time import sleep
 from os.path import join
-from requests import post, Response
 from logging import Logger, getLogger
 from base64 import b64encode, b64decode
+
+from requests import post, Response
+from requests.exceptions import ConnectTimeout
 
 from resources.texts import *
 from resources.config import *
@@ -23,7 +25,6 @@ class ChatbotView(ft.View):
 		# Custom attributes
 		self.page = page
 		self.record_flag: bool = False
-		self.audio_players: list = []
 
 		# Custom components
 		# Geolocation components
@@ -107,8 +108,7 @@ class ChatbotView(ft.View):
 
 		# ListView (Chat) components
 		self.txt_message: ft.TextField = ft.TextField(
-			hint_text="Escribe un mensaje",
-			hint_style=ft.TextStyle(color=ft.Colors.BLACK),
+			label="Escribe un mensaje",
 			on_change=self.validate,
 			multiline=True,
 			shift_enter=True,
@@ -281,7 +281,11 @@ class ChatbotView(ft.View):
 		else:
 			self.cont_icon.content = self.cca_send
 			self.cont_icon.on_click = self.cca_send_clicked
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def add_message(self, is_bot: bool, message: str, must_anwser: bool = False) -> None:
 		if not is_bot:
@@ -315,22 +319,40 @@ class ChatbotView(ft.View):
 						]
 					)
 				)
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
 			else:
 				if not "ERROR" in message:
 					logger.info("Calling the back-end agent to process the user message...")
-					response: Response = post(
-						url=f"{BACK_END_URL}/{AGENT_ENDPOINT}/{self.page.session.get('id')}",
-						headers={
-							"Content-Type": "application/json",
-							"Authorization": f"Bearer {self.page.session.get('session_token')}"
-						},
-						json={
-							"prompt": self.lv_chat.controls[-2].controls[1].content.content.value,
-							"tts": self.swt_audio.value
-						}
-					)
+					try:
+						response: Response = post(
+							url=f"{BACK_END_URL}/{AGENT_ENDPOINT}/{self.page.session.get('id')}",
+							headers={
+								"Content-Type": "application/json",
+								"Authorization": f"Bearer {self.page.session.get('session_token')}"
+							},
+							json={"prompt": self.lv_chat.controls[-2].controls[1].content.content.value}
+						)
+					except ConnectTimeout:
+						logger.error("Connection timeout while getting favorite places. Replacing last agent message with error message...")
+						self.lv_chat.controls[-1].controls[0].content = Message(
+							is_bot=True,
+							message=(
+								"No se pudo obtener información sobre los sitios turísticos. "
+								"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+							)
+						)
+						try:
+							self.page.update()
+						except Exception as e:
+							logger.error("Error: {e}")
+							self.page.update()
+
+							return
 
 					logger.info("Evaluating the agent response...")
 					if response.status_code == 201:
@@ -343,41 +365,86 @@ class ChatbotView(ft.View):
 							logger.info("Replacing last agent message with agent response message...")
 							self.lv_chat.controls[-1].controls[0].content = Message(
 								is_bot=True,
-								message=response.json()["agent_response"]["text"],
+								message=response.json()["text"],
 							)
 
 						else:
-							logger.info("Agent response is audio messages")
-							data: dict = response.json()
-							logger.info(f"Agent text response: \"{data['agent_response']['text']}\"")
+							logger.info("User is asking for audio messages. Splitting message...")
+							agent_responses: list[str] = split_agent_response(response.json()["text"])
+							for index, agent_response in enumerate(agent_responses):
+								logger.info(f"Processing agent response {index + 1} of {len(agent_responses)}...")
+								logger.info("Calling the tts model to process the agent message...")
+								try:
+									tts_response: Response = post(
+										url=f"{BACK_END_URL}/{TTS_ENDPOINT}",
+										headers={
+											"Content-Type": "application/json",
+											"Authorization": f"Bearer {self.page.session.get('session_token')}"
+										},
+										json={"text": agent_response}
+									)
 
-							logger.info("Getting audio data from agent response...")
-							audio_data: dict = response.json()["agent_response"]["audio_data"]
+								except ConnectTimeout:
+									logger.error("Connection timeout while getting favorite places. Replacing last agent message with error message...")
+									self.lv_chat.controls[-1].controls[0].content = Message(
+										is_bot=True,
+										message=(
+											"No se pudo obtener información sobre los sitios turísticos. "
+											"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+										)
+									)
+									try:
+										self.page.update()
+									except Exception as e:
+										logger.error("Error: {e}")
+										self.page.update()
 
-							logger.info("Decoding audio data...")
-							audio_binary = b64decode(audio_data["audio"])
+										return
 
-							logger.info("Saving as temporary audio file...")
-							with wave.open(join(TEMP_ABSPATH, TEMP_AGENT_AUDIO_FILENAME), "wb") as file:
-								file.setnchannels(audio_data["nchannels"])
-								file.setsampwidth(audio_data["sampwidth"])
-								file.setframerate(audio_data["framerate"])
-								file.setnframes(audio_data["nframes"])
-								# file.setcomptype(audio_data["comp_type"])
-								# file.setcompname(audio_data["comp_name"])
-								file.writeframes(audio_binary)
+								if tts_response.status_code == 201:
+									logger.info("Getting audio data from tts response...")
+									audio_data: dict = tts_response.json()["audio_data"]
 
-							logger.info("Creating new AudioPlayer component and waiting for audio to be loaded...")
-							self.audio_players.append(
-								AudioPlayer(
-									page=self.page,
-									src=join(TEMP_ABSPATH, TEMP_AGENT_AUDIO_FILENAME),
-									components_width=self.page.width
-								)
-							)
+									logger.info("Decoding audio data...")
+									audio_binary: bytes = b64decode(audio_data["audio"])
 
-							logger.info("Replacing last agent message...")
-							self.lv_chat.controls[-1].controls[0].content = self.audio_players[-1]
+									logger.info("Saving as temporary audio file...")
+									with wave.open(join(TEMP_ABSPATH, TEMP_AGENT_AUDIO_FILENAME), "wb") as file:
+										file.setnchannels(audio_data["nchannels"])
+										file.setsampwidth(audio_data["sampwidth"])
+										file.setframerate(audio_data["framerate"])
+										file.setnframes(audio_data["nframes"])
+										# file.setcomptype(audio_data["comp_type"])
+										# file.setcompname(audio_data["comp_name"])
+										file.writeframes(audio_binary)
+
+									logger.info("Creating new AudioPlayer component and waiting for audio to be loaded...")
+									audio_players = self.page.session.get("audio_players")
+									audio_players.append(
+										AudioPlayer(
+											page=self.page,
+											src=join(TEMP_ABSPATH, TEMP_AGENT_AUDIO_FILENAME),
+											components_width=self.page.width
+										)
+									)
+
+									logger.info("Replacing last agent message...")
+									if isinstance(self.lv_chat.controls[-1].controls[0].content, ft.Markdown):
+										self.lv_chat.controls[-1].controls[0].content = audio_players[-1]
+									else:
+										self.lv_chat.controls.append(audio_players[-1])
+
+									self.page.session.set(key="audio_players", value=audio_players)
+
+								else:
+									logger.info(f"TTS endpoint response received {tts_response.status_code}: {tts_response.json()}")
+									logger.info("Replacing last agent message with error text...")
+									if self.lv_chat.controls[-1].controls[0].bgcolor == ft.colors.WHITE:
+										self.lv_chat.controls[-1].controls[0].content = Message(
+											is_bot=True,
+											message="AGENT_ERROR",
+										)
+								sleep(2)
 
 					else:
 						logger.info(f"Agent endpoint response received {response.status_code}: {response.json()}")
@@ -388,7 +455,11 @@ class ChatbotView(ft.View):
 						)
 
 		logger.info("Updating live view components...")
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def cca_send_clicked(self, _: ft.ControlEvent) -> None:
 		if self.txt_message.value == "" or self.txt_message.value.isspace():
@@ -402,7 +473,11 @@ class ChatbotView(ft.View):
 			self.txt_message.value = ""
 			self.cont_icon.content = self.cca_mic
 			self.cont_icon.on_click = self.cca_mic_clicked
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			self.add_message(is_bot=False, message=aux_message)
 			self.add_message(is_bot=True, message="Buscando información...")
@@ -450,8 +525,13 @@ class ChatbotView(ft.View):
 									)
 								)
 
-								self.page.update()
-								return
+								try:
+									self.page.update()
+								except Exception as e:
+									logger.error("Error: {e}")
+									self.page.update()
+								finally:
+									return
 
 						else:
 							logger.warning("User's location is outside CDMX coordinates. ")
@@ -463,8 +543,13 @@ class ChatbotView(ft.View):
 									"por lo que no se puede realizar la búsqueda de información de lugares cercanos a tu ubicación actual."
 								)
 							)
-							self.page.update()
-							return
+							try:
+								self.page.update()
+							except Exception as e:
+								logger.error("Error: {e}")
+								self.page.update()
+							finally:
+								return
 
 					else:
 						logger.warning("Location permissions are not granted. Opening location permissions dialog...")
@@ -476,8 +561,13 @@ class ChatbotView(ft.View):
 								"necesitamos que permitas el acceso a tu ubicación."
 							)
 						)
-						self.page.open(self.dlg_request_location_permission)
-						return
+						try:
+							self.page.open(self.dlg_request_location_permission)
+						except Exception as e:
+							logger.error("Error: {e}")
+							self.page.open(self.dlg_request_location_permission)
+						finally:
+							return
 
 			self.add_message(
 				is_bot=True,
@@ -492,8 +582,13 @@ class ChatbotView(ft.View):
 			logger.info("Asking for audio permissions if not granted...")
 			if not self.audio_recorder.has_permission(wait_timeout=60.0):
 				logger.warning("Audio permissions are not granted. Opening audio permissions dialog...")
-				self.page.open(self.dlg_request_audio_permission)
-				return
+				try:
+					self.page.open(self.dlg_request_audio_permission)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_request_audio_permission)
+				finally:
+					return
 
 			logger.info("Changing UI components to recording state...")
 			self.txt_message.value = "Grabando audio..."
@@ -503,7 +598,11 @@ class ChatbotView(ft.View):
 				color=ft.Colors.WHITE,
 				size=25
 			)
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Starting audio recording...")
 			self.record_flag = True
@@ -518,7 +617,11 @@ class ChatbotView(ft.View):
 				color=ft.Colors.WHITE,
 				size=25
 			)
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Stopping audio recording...")
 			self.record_flag = False
@@ -546,7 +649,11 @@ class ChatbotView(ft.View):
 				logger.info(f"Speech captured: {user_message}")
 				self.add_message(is_bot=False, message=user_message.capitalize())
 				self.add_message(is_bot=True, message="Buscando información...")
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
 				logger.info("Checking if the agent needs user's location...")
 				user_message = self.lv_chat.controls[-2].controls[1].content.content.value
@@ -592,8 +699,13 @@ class ChatbotView(ft.View):
 										)
 									)
 
-									self.page.update()
-									return
+									try:
+										self.page.update()
+									except Exception as e:
+										logger.error("Error: {e}")
+										self.page.update()
+									finally:
+										return
 
 							else:
 								logger.warning("User's location is outside CDMX coordinates. ")
@@ -606,8 +718,13 @@ class ChatbotView(ft.View):
 										"por lo que no se puede realizar la búsqueda de información de lugares cercanos a tu ubicación actual."
 									)
 								)
-								self.page.update()
-								return
+								try:
+									self.page.update()
+								except Exception as e:
+									logger.error("Error: {e}")
+									self.page.update()
+								finally:
+									return
 
 						else:
 							logger.warning("Location permissions are not granted. Opening location permissions dialog...")
@@ -620,8 +737,13 @@ class ChatbotView(ft.View):
 								)
 							)
 
-							self.page.open(self.dlg_request_location_permission)
-							return
+							try:
+								self.page.open(self.dlg_request_location_permission)
+							except Exception as e:
+								logger.error("Error: {e}")
+								self.page.open(self.dlg_request_location_permission)
+							finally:
+								return
 
 				self.add_message(
 					is_bot=True,
@@ -633,7 +755,12 @@ class ChatbotView(ft.View):
 				self.add_message(is_bot=False, message="SPEECH_RECOGNITION_ERROR")
 
 	def request_audio_permission(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_request_audio_permission)
+		try:
+			self.page.close(self.dlg_request_audio_permission)
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.close(self.dlg_request_audio_permission)
+
 		logger.info("Requesting audio permissions...")
 
 		logger.info("Asking for audio permissions...")
@@ -646,7 +773,11 @@ class ChatbotView(ft.View):
 				color=ft.Colors.WHITE,
 				size=25
 			)
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Starting audio recording...")
 			self.audio_recorder.start_recording(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME))
@@ -663,7 +794,12 @@ class ChatbotView(ft.View):
 			)
 
 	def request_audio_permission_denied(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_request_audio_permission)
+		try:
+			self.page.close(self.dlg_request_audio_permission)
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.close(self.dlg_request_audio_permission)
+
 		logger.warning("Audio permissions denied. Replacing last agent message with error message...")
 		self.add_message(
 			is_bot=True,
@@ -680,7 +816,11 @@ class ChatbotView(ft.View):
 			logger.info("Switch audio for agent changed to Text")
 
 	def request_location_permission(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_request_location_permission)
+		try:
+			self.page.close(self.dlg_request_audio_permission)
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.close(self.dlg_request_audio_permission)
 
 		logger.info("Requesting location permissions...")
 		if request_location_permissions(self.gl, logger):
@@ -729,10 +869,19 @@ class ChatbotView(ft.View):
 				)
 			)
 
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def request_location_permission_denied(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_request_location_permission)
+		try:
+			self.page.close(self.dlg_request_location_permission)
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.close(self.dlg_request_location_permission)
+
 		logger.info("Location permissions denied")
 		logger.info("Replacing last agent message with error message...")
 		self.lv_chat.controls[-1].controls[0].content = Message(
@@ -744,4 +893,8 @@ class ChatbotView(ft.View):
 				"Por favor intenta de nuevo con una pregunta diferente."
 			)
 		)
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
