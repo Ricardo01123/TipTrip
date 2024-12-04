@@ -1,6 +1,8 @@
 import flet as ft
-from requests import get, Response
 from logging import Logger, getLogger
+
+from requests import get, Response
+from requests.exceptions import ConnectTimeout
 
 from components.bars import *
 from resources.config import *
@@ -205,18 +207,49 @@ class FavoritesView(ft.View):
 
 	def get_favorites(self) -> list | ft.Container:
 		logger.info("Calling Back-End API...")
+		try:
+			response: Response = get(
+				url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}/{self.page.session.get('id')}",
+				headers={
+					"Content-Type": "application/json",
+					"Authorization": f"Bearer {self.page.session.get('session_token')}"
+				},
+				json={
+					"current_latitude": self.page.session.get("current_latitude"),
+					"current_longitude": self.page.session.get("current_longitude")
+				}
+			)
 
-		response: Response = get(
-			url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}/{self.page.session.get('id')}",
-			headers={
-				"Content-Type": "application/json",
-				"Authorization": f"Bearer {self.page.session.get('session_token')}"
-			},
-			json={
-				"current_latitude": self.page.session.get("current_latitude"),
-				"current_longitude": self.page.session.get("current_longitude")
-			}
-		)
+		except ConnectTimeout:
+			logger.error("Connection timeout while getting favorite places")
+			self.dlg_error.title = ft.Text("Error de conexión a internet")
+			self.dlg_error.content = ft.Text(
+				"No se pudo obtener información sobre los sitios turísticos favoritos. "
+				"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+			)
+
+			try:
+				self.page.open(self.dlg_error)
+
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
+
+			finally:
+				return [
+					ft.Container(
+						alignment=ft.alignment.center,
+						content=ft.Text(
+							value=(
+								"Ocurrió un error al obtener la lista de sitios "
+								"turísticos favoritos.\nFavor de intentarlo de nuevo "
+								"más tarde."
+							),
+							color=ft.Colors.BLACK,
+							size=30
+						)
+					)
+				]
 
 		logger.info("Evaluating response...")
 		if response.status_code == 200:
@@ -270,7 +303,12 @@ class FavoritesView(ft.View):
 		self.total_items = len(items)
 		self.total_pages = (self.total_items + self.items_per_page - 1) // self.items_per_page
 		self.lbl_actual_page.value = f"Página {self.current_page + 1} de {self.total_pages}"
-		self.page.update()
+
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def search_favorite(self, _: ft.ControlEvent) -> None:
 		if self.txt_favorite_searcher.value == "":
@@ -297,7 +335,11 @@ class FavoritesView(ft.View):
 
 		self.lbl_actual_page.value = f"Página {self.current_page + 1} de {self.total_pages}"
 		self.set_page_indexes()
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def next_page(self, _: ft.ControlEvent) -> None:
 		logger.info(f"Going to next page...")
@@ -308,10 +350,18 @@ class FavoritesView(ft.View):
 
 		self.lbl_actual_page.value = f"Página {self.current_page + 1} de {self.total_pages}"
 		self.set_page_indexes()
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def request_location_permission(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_request_location_permission)
+		try:
+			self.page.close(self.dlg_request_location_permission)
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.close(self.dlg_request_location_permission)
 
 		logger.info("Requesting location permissions...")
 		if request_location_permissions(self.gl, logger):
@@ -332,9 +382,14 @@ class FavoritesView(ft.View):
 				self.dlg_location.title = ft.Text("Ubicación fuera de CDMX")
 				self.dlg_location.content = ft.Text(
 					"Tu ubicación actual no se encuentra dentro de los límites de la Ciudad de México, "
-					"por lo que no se puede aplicar el filtro de cercanía."
+					"por lo que no se puede acceder al mapa interactivo."
 				)
-				self.page.open(self.dlg_location)
+
+				try:
+					self.page.open(self.dlg_location)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_location)
 
 		else:
 			logger.warning("Location permissions denied. Opening location permissions failed dialog...")
@@ -343,20 +398,34 @@ class FavoritesView(ft.View):
 				"No se han otorgado los permisos de ubicación, "
 				"se ha deshabilitado la opción de filtrado de sitios turísticos por cercanía."
 			)
-			self.page.open(self.dlg_location)
+			try:
+				self.page.open(self.dlg_location)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_location)
 
 	def check_if_open_map(self, _: ft.ControlEvent) -> None:
 		logger.info("Checking location permissions...")
-		if self.gl.is_location_service_enabled():
+		if is_location_permission_enabled(gl=self.gl, logger=logger):
 			logger.info("Location permissions are granted...")
-			go_to_view(self.page, logger=logger, route="/map")
+
+			try:
+				go_to_view(self.page, logger=logger, route="/map")
+			except Exception as e:
+				logger.error("Error: {e}")
+				go_to_view(self.page, logger=logger, route="/map")
 
 		else:
-
 			logger.warning("Location permissions are not granted...")
 			logger.info("Requesting location permissions...")
+			self.dlg_request_location_permission.title = ft.Text("Permisos de ubicación")
 			self.dlg_request_location_permission.content = ft.Text(
 				"Para acceder al mapa interactivo, "
 				"necesitamos que permitas el acceso a tu ubicación."
 			)
-			self.page.open(self.dlg_request_location_permission)
+
+			try:
+				self.page.open(self.dlg_request_location_permission)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_request_location_permission)

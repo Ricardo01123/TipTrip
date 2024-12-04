@@ -1,7 +1,9 @@
 import flet as ft
 from re import match
-from requests import post, Response
 from logging import Logger, getLogger
+
+from requests import post, Response
+from requests.exceptions import ConnectTimeout
 
 from resources.config import *
 from resources.styles import *
@@ -268,27 +270,72 @@ class SignUpView(ft.View):
 		else:
 			self.lbl_pwd_match.visible = False
 
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def dlg_handle_ok_button(self, _: ft.ControlEvent) -> None:
-		self.page.update()
-		self.page.close(self.dlg_success)
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
+
+		try:
+			self.page.close(self.dlg_success)
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.close(self.dlg_success)
 
 		logger.info("Showing loading splash screen...")
 		self.cont_splash.visible = True
 		self.splash.visible = True
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 		logger.info("Authenticating user...")
 
-		response: Response = post(
-			url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
-			headers={"Content-Type": "application/json"},
-			json={
-				"mail": self.txt_email.value.strip(),
-				"password": self.txt_password.value.strip()
-			}
-		)
+		try:
+			response: Response = post(
+				url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"mail": self.txt_email.value.strip(),
+					"password": self.txt_password.value.strip()
+				}
+			)
+
+		except ConnectTimeout:
+			logger.error("Connection timeout while authenticating user")
+			self.dlg_error.title = ft.Text(value="Error de conexión a internet")
+			self.dlg_error.content = ft.Text(
+				value=(
+					"Ocurrió un error al intentar autenticar al usuario. "
+					"Favor de intentarlo de nuevo más tarde."
+				)
+			)
+
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
+
+			try:
+				self.page.open(self.dlg_error)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
+			finally:
+				return
 
 		if response.status_code == 201:
 			logger.info("User authenticated successfully")
@@ -319,14 +366,26 @@ class SignUpView(ft.View):
 			self.txt_confirm_password.value = ""
 			self.chk_tyc.value = False
 
-			self.page.update()
-
-			go_to_view(page=self.page, logger=logger, route="/permissions")
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Hidding loading splash screen...")
 			self.cont_splash.visible = False
 			self.splash.visible = False
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
+
+			try:
+				go_to_view(page=self.page, logger=logger, route="/permissions")
+			except Exception as e:
+				logger.error("Error: {e}")
+				go_to_view(page=self.page, logger=logger, route="/permissions")
 
 		else:
 			logger.error("An error occurred while trying to authenticate user")
@@ -341,14 +400,29 @@ class SignUpView(ft.View):
 			logger.info("Hidding loading splash screen...")
 			self.cont_splash.visible = False
 			self.splash.visible = False
-			self.page.update()
-			self.page.open(self.dlg_error)
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
+
+			try:
+				self.page.open(self.dlg_error)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
+			finally:
+				return
 
 	def handle_btn_back(self, _: ft.ControlEvent) -> None:
 		logger.info("Showing loading splash screen...")
 		self.cont_splash.visible = True
 		self.splash.visible = True
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 		logger.info("Cleaning text fields...")
 		self.txt_username.value = ""
@@ -364,12 +438,20 @@ class SignUpView(ft.View):
 		self.lbl_pwd_match.visible = False
 		self.lbl_tyc_required.visible = False
 
-		go_to_view(page=self.page, logger=logger, route="/sign_in")
-
 		logger.info("Hidding loading splash screen...")
 		self.cont_splash.visible = False
 		self.splash.visible = False
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
+
+		try:
+			go_to_view(page=self.page, logger=logger, route="/sign_in")
+		except Exception as e:
+			logger.error("Error: {e}")
+			go_to_view(page=self.page, logger=logger, route="/sign_in")
 
 	def btn_submit_clicked(self, _: ft.ControlEvent) -> None:
 		username_txt_filled: bool = False
@@ -411,7 +493,11 @@ class SignUpView(ft.View):
 		else:
 			self.lbl_tyc_required.visible = False
 
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 		if all([
 			username_txt_filled,
@@ -436,18 +522,50 @@ class SignUpView(ft.View):
 				logger.info("Showing loading splash screen...")
 				self.cont_splash.visible = True
 				self.splash.visible = True
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
 				logger.info("Creating new user...")
-				response: Response = post(
-					url=f"{BACK_END_URL}/{USERS_ENDPOINT}",
-					headers={"Content-Type": "application/json"},
-					json={
-						"username": self.txt_username.value.strip(),
-						"mail": self.txt_email.value.strip(),
-						"password": self.txt_password.value.strip(),
-					}
-				)
+				try:
+					response: Response = post(
+						url=f"{BACK_END_URL}/{USERS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"username": self.txt_username.value.strip(),
+							"mail": self.txt_email.value.strip(),
+							"password": self.txt_password.value.strip(),
+						}
+					)
+
+				except ConnectTimeout:
+					logger.error("Connection timeout while creating user")
+					self.dlg_error.title = ft.Text(value="Error de conexión a internet")
+					self.dlg_error.content = ft.Text(
+						value=(
+							"No se pudo crear el usuario. "
+							"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+						)
+					)
+
+					logger.info("Hidding loading splash screen...")
+					self.cont_splash.visible = False
+					self.splash.visible = False
+					try:
+						self.page.update()
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.update()
+
+					try:
+						self.page.open(self.dlg_error)
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.open(self.dlg_error)
+					finally:
+						return
 
 				if response.status_code == 201:
 					logger.info("New user created successfully")
@@ -455,9 +573,17 @@ class SignUpView(ft.View):
 					logger.info("Hidding loading splash screen...")
 					self.cont_splash.visible = False
 					self.splash.visible = False
-					self.page.update()
+					try:
+						self.page.update()
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.update()
 
-					self.page.open(self.dlg_success)
+					try:
+						self.page.open(self.dlg_success)
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.open(self.dlg_success)
 
 				elif response.status_code == 409:
 					logger.error("Email already exists")
@@ -474,7 +600,17 @@ class SignUpView(ft.View):
 					self.splash.visible = False
 					self.page.update()
 
-					self.page.open(self.dlg_error)
+					try:
+						self.page.update()
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.update()
+
+					try:
+						self.page.open(self.dlg_error)
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.open(self.dlg_error)
 
 				else:
 					logger.error("Error creating user")
@@ -489,6 +625,14 @@ class SignUpView(ft.View):
 					logger.info("Hidding loading splash screen...")
 					self.cont_splash.visible = False
 					self.splash.visible = False
-					self.page.update()
+					try:
+						self.page.update()
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.update()
 
-					self.page.open(self.dlg_error)
+					try:
+						self.page.open(self.dlg_error)
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.open(self.dlg_error)

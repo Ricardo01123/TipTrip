@@ -67,7 +67,11 @@ class Carousel(ft.Container):
 
 		self.current_container.content = self.items[self.current_item]
 		logger.info(f"Current item src: {self.current_container.content.src}")
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def next_item(self, _: ft.ControlEvent) -> None:
 		if self.current_item == self.total_items - 1:
@@ -79,4 +83,8 @@ class Carousel(ft.Container):
 
 		self.current_container.content = self.items[self.current_item]
 		logger.info(f"Current item src: {self.current_container.content.src}")
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()

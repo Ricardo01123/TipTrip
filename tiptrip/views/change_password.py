@@ -1,6 +1,8 @@
 import flet as ft
-from requests import put, Response
 from logging import Logger, getLogger
+
+from requests import put, Response
+from requests.exceptions import ConnectTimeout
 
 from resources.config import *
 from resources.styles import *
@@ -184,26 +186,28 @@ class ChangePasswordView(ft.View):
 		else:
 			self.lbl_pwd_match.visible = False
 
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def btn_back_clicked(self, _: ft.ControlEvent) -> None:
 		self.txt_password.value = ""
 		self.txt_confirm_password.value = ""
 		self.lbl_password_required.visible = False
 		self.lbl_confirm_password_required.visible = False
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
-		logger.info("Showing loading splash screen...")
-		self.cont_splash.visible = True
-		self.splash.visible = True
-		self.page.update()
-
-		go_to_view(page=self.page, logger=logger, route="/sign_in")
-
-		logger.info("Hidding loading splash screen...")
-		self.cont_splash.visible = False
-		self.splash.visible = False
-		self.page.update()
+		try:
+			go_to_view(page=self.page, logger=logger, route="/sign_in")
+		except Exception as e:
+			logger.error("Error: {e}")
+			go_to_view(page=self.page, logger=logger, route="/sign_in")
 
 	def btn_submit_clicked(self, _: ft.ControlEvent) -> None:
 		if (self.txt_password.value == "" or self.txt_password.value.isspace()) or \
@@ -212,29 +216,62 @@ class ChangePasswordView(ft.View):
 			if self.txt_password.value == "" or self.txt_password.value.isspace():
 				logger.warning("Empty password field. Updating view...")
 				self.lbl_password_required.visible = True
-				self.page.update()
+
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
 			if self.txt_confirm_password.value == "" or self.txt_confirm_password.value.isspace():
 				logger.warning("Empty confirm password field. Updating view...")
 				self.lbl_confirm_password_required.visible = True
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
 		else:
 			if not self.lbl_pwd_match.visible:
 				logger.info("Showing loading splash screen...")
 				self.cont_splash.visible = True
 				self.splash.visible = True
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
 				logger.info("Updating user password...")
-				response: Response = put(
-					url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
-					headers={
-						"Content-Type": "application/json",
-						"Authorization": f"Bearer {self.page.session.get('session_token')}"
-					},
-					json={"password": self.txt_password.value.strip()}
-				)
+				try:
+					response: Response = put(
+						url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
+						headers={
+							"Content-Type": "application/json",
+							"Authorization": f"Bearer {self.page.session.get('session_token')}"
+						},
+						json={"password": self.txt_password.value.strip()}
+					)
+
+				except ConnectTimeout:
+					logger.error("Connection timeout while deleting account")
+					self.dlg_error.title = ft.Text(value="Error de conexión a internet")
+					self.dlg_error.content = ft.Text(
+						value=(
+							"No se pudieron guardar los datos. "
+							"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+						)
+					)
+					try:
+						self.page.open(self.dlg_error)
+
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.open(self.dlg_error)
+
+					finally:
+						return
 
 				if response.status_code == 201:
 					logger.info("Password updated successfully. Updating view...")
@@ -244,9 +281,17 @@ class ChangePasswordView(ft.View):
 					self.txt_confirm_password.value = ""
 					self.lbl_password_required.visible = False
 					self.lbl_confirm_password_required.visible = False
-					self.page.update()
+					try:
+						self.page.update()
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.update()
 
-					self.page.open(self.dlg_updated_data)
+					try:
+						self.page.open(self.dlg_updated_data)
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.open(self.dlg_updated_data)
 
 				else:
 					logger.error("Error verifying user")
@@ -265,21 +310,34 @@ class ChangePasswordView(ft.View):
 					self.txt_confirm_password.value = ""
 					self.lbl_password_required.visible = False
 					self.lbl_confirm_password_required.visible = False
-					self.page.update()
 
-					self.page.open(self.dlg_error)
+					try:
+						self.page.update()
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.update()
+
+					try:
+						self.page.open(self.dlg_error)
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.open(self.dlg_error)
 
 	def handle_dlg_updated_data(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_updated_data)
+		try:
+			self.page.close(self.dlg_updated_data)
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.close(self.dlg_updated_data)
 
-		logger.info("Showing loading splash screen...")
-		self.cont_splash.visible = True
-		self.splash.visible = True
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
-		go_to_view(page=self.page, logger=logger, route="/sign_in")
-
-		logger.info("Hidding loading splash screen...")
-		self.cont_splash.visible = False
-		self.splash.visible = False
-		self.page.update()
+		try:
+			go_to_view(page=self.page, logger=logger, route="/sign_in")
+		except Exception as e:
+			logger.error("Error: {e}")
+			go_to_view(page=self.page, logger=logger, route="/sign_in")

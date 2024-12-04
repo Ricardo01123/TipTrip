@@ -1,9 +1,11 @@
 import flet as ft
 import flet.map as map
 from typing import Optional
-from requests import get, Response
 from geopy.distance import geodesic
 from logging import Logger, getLogger
+
+from requests import get, Response
+from requests.exceptions import ConnectTimeout
 
 from resources.config import *
 from resources.functions import *
@@ -298,20 +300,41 @@ class MapView(ft.View):
 
 	def get_places(self, distance: int, classification: str = None) -> Optional[list]:
 		logger.info("Getting places data...")
-		response: Response = get(
-			url=f"{BACK_END_URL}/{PLACES_ENDPOINT}",
-			headers={
-				"Content-Type": "application/json",
-				"Authorization": f"Bearer {self.page.session.get('session_token')}"
-			},
-			json={
-				"classification": classification,
-				"municipality": None,
-				"distance": distance,
-				"current_latitude": self.page.session.get("current_latitude"),
-				"current_longitude": self.page.session.get("current_longitude")
-			}
-		)
+		try:
+			response: Response = get(
+				url=f"{BACK_END_URL}/{PLACES_ENDPOINT}",
+				headers={
+					"Content-Type": "application/json",
+					"Authorization": f"Bearer {self.page.session.get('session_token')}"
+				},
+				json={
+					"classification": classification,
+					"municipality": None,
+					"distance": distance,
+					"current_latitude": self.page.session.get("current_latitude"),
+					"current_longitude": self.page.session.get("current_longitude")
+				}
+			)
+
+		except ConnectTimeout:
+			logger.error("Connection timeout while deleting account")
+			self.dlg_error.title = ft.Text(value="Error de conexión a internet")
+			self.dlg_error.content = ft.Text(
+				value=(
+					"No se pudo obtener información sobre los sitios turísticos. "
+					"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+				)
+			)
+
+			try:
+				self.page.open(self.dlg_error)
+
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
+
+			finally:
+				return None
 
 		logger.info("Evaluating response...")
 		if response.status_code == 200:
@@ -419,7 +442,11 @@ class MapView(ft.View):
 			logger.info("Showing loading splash screen...")
 			self.cont_splash.visible = True
 			self.splash.visible = True
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Checking location permissions...")
 			if self.gl.is_location_service_enabled():
@@ -453,22 +480,39 @@ class MapView(ft.View):
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
 			else:
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
 				logger.warning("Location permissions are not granted. Asking for permissions...")
-				self.page.open(self.dlg_request_location_permission)
+				try:
+					self.page.open(self.dlg_request_location_permission)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_request_location_permission)
 
 		except Exception as e:
 			logger.info("Hidding loading splash screen...")
 			self.cont_splash.visible = False
 			self.splash.visible = False
-			self.page.update()
+
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.error(f"Error centering user on map: {e}")
 			self.dlg_error.title.value = "Error al centrar usuario"
@@ -476,14 +520,24 @@ class MapView(ft.View):
 				"Ocurrió un error al centrar el mapa en tu ubicación. "
 				"Favor de intentarlo de nuevo más tarde."
 			)
-			self.page.open(self.dlg_error)
+
+			try:
+				self.page.open(self.dlg_error)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
 
 	def apply_filters(self, _: ft.ControlEvent) -> None:
 		try:
 			logger.info("Showing loading splash screen...")
 			self.cont_splash.visible = True
 			self.splash.visible = True
-			self.page.update()
+
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Checking location permissions...")
 			if self.gl.is_location_service_enabled():
@@ -514,10 +568,20 @@ class MapView(ft.View):
 						logger.info("Hidding loading splash screen...")
 						self.cont_splash.visible = False
 						self.splash.visible = False
-						self.page.update()
 
-						self.page.open(self.dlg_error)
-						return
+						try:
+							self.page.update()
+						except Exception as e:
+							logger.error("Error: {e}")
+							self.page.update()
+
+						try:
+							self.page.open(self.dlg_error)
+						except Exception as e:
+							logger.error("Error: {e}")
+							self.page.open(self.dlg_error)
+						finally:
+							return
 
 					else:
 						logger.info("Cleaning previous markers...")
@@ -538,10 +602,19 @@ class MapView(ft.View):
 					logger.info("Hidding loading splash screen...")
 					self.cont_splash.visible = False
 					self.splash.visible = False
-					self.page.update()
+					try:
+						self.page.update()
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.update()
 
-					self.page.open(self.dlg_error)
-					return
+					try:
+						self.page.open(self.dlg_error)
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.open(self.dlg_error)
+					finally:
+						return
 
 				logger.info("Getting current coordinates...")
 				current_position: ft.GeolocatorPosition = self.gl.get_current_position()
@@ -573,16 +646,28 @@ class MapView(ft.View):
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
 			else:
 				logger.warning("Location permissions are not granted. Asking for permissions...")
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
-				self.page.open(self.dlg_request_location_permission)
+				try:
+					self.page.open(self.dlg_request_location_permission)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_request_location_permission)
 
 		except Exception as e:
 			logger.error(f"Error applying filters: {e}")
@@ -595,15 +680,28 @@ class MapView(ft.View):
 			logger.info("Hidding loading splash screen...")
 			self.cont_splash.visible = False
 			self.splash.visible = False
-			self.page.update()
-			self.page.open(self.dlg_error)
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
+
+			try:
+				self.page.open(self.dlg_error)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
 
 	def clean_filters(self, _: ft.ControlEvent) -> None:
 		try:
 			logger.info("Showing loading splash screen...")
 			self.cont_splash.visible = True
 			self.splash.visible = True
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Cleaning filters process started...")
 			logger.info("Checking location permissions...")
@@ -637,10 +735,19 @@ class MapView(ft.View):
 						logger.info("Hidding loading splash screen...")
 						self.cont_splash.visible = False
 						self.splash.visible = False
-						self.page.update()
+						try:
+							self.page.update()
+						except Exception as e:
+							logger.error("Error: {e}")
+							self.page.update()
 
-						self.page.open(self.dlg_error)
-						return
+						try:
+							self.page.open(self.dlg_error)
+						except Exception as e:
+							logger.error("Error: {e}")
+							self.page.open(self.dlg_error)
+						finally:
+							return
 
 					else:
 						logger.info("Cleaning previous markers...")
@@ -661,9 +768,19 @@ class MapView(ft.View):
 					logger.info("Hidding loading splash screen...")
 					self.cont_splash.visible = False
 					self.splash.visible = False
-					self.page.update()
-					self.page.open(self.dlg_error)
-					return
+					try:
+						self.page.update()
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.update()
+
+					try:
+						self.page.open(self.dlg_error)
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.open(self.dlg_error)
+					finally:
+						return
 
 				logger.info("Getting current coordinates...")
 				current_position: ft.GeolocatorPosition = self.gl.get_current_position()
@@ -688,7 +805,11 @@ class MapView(ft.View):
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
 			else:
 				logger.warning("Location permissions are not granted. Asking for permissions...")
@@ -696,8 +817,17 @@ class MapView(ft.View):
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
-				self.page.open(self.dlg_request_location_permission)
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
+
+				try:
+					self.page.open(self.dlg_request_location_permission)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_request_location_permission)
 
 		except Exception as e:
 			logger.error(f"Error applying filters: {e}")
@@ -710,8 +840,17 @@ class MapView(ft.View):
 			logger.info("Hidding loading splash screen...")
 			self.cont_splash.visible = False
 			self.splash.visible = False
-			self.page.update()
-			self.page.open(self.dlg_error)
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
+
+			try:
+				self.page.open(self.dlg_error)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
 
 	def handle_map_click(self, event: map.MapTapEvent) -> None:
 		clicked_lat: float = event.coordinates.latitude
@@ -735,7 +874,11 @@ class MapView(ft.View):
 					f"Dirección: {place_data['address']}\n\n"
 					f"Distancia: {place_data['distancia']:.2f} km"
 				)
-				self.page.open(self.dlg_place_info)
+				try:
+					self.page.open(self.dlg_place_info)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_place_info)
 
 	def handle_map_event(self, event: map.MapEvent) -> None:
 		if str(event.source) == "MapEventSource.SCROLL_WHEEL":
@@ -751,13 +894,25 @@ class MapView(ft.View):
 					marker.content.controls[-1].visible = False
 				self.markers_names_are_hidden = True
 
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 	def handle_accept_location_permission(self, _: ft.ControlEvent) -> None:
 		if request_location_permissions(self.gl, logger):
 			logger.info("Location permissions granted. Getting current coordinates. Opening location permissions failed dialog...")
-			self.page.open(self.dlg_location_permissions_succeded)
+			try:
+				self.page.open(self.dlg_location_permissions_succeded)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_location_permissions_succeded)
 
 		else:
 			logger.warning("Location permissions denied. Opening location permissions failed dialog...")
-			self.page.open(self.dlg_location_permissions_failed)
+			try:
+				self.page.open(self.dlg_location_permissions_failed)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_location_permissions_failed)

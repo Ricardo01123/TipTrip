@@ -109,11 +109,6 @@ class PermissionsView(ft.View):
 		)
 
 	def btn_yes_clicked(self, _: ft.ControlEvent) -> None:
-		logger.info("Showing loading splash screen...")
-		self.cont_splash.visible = True
-		self.splash.visible = True
-		self.page.update()
-
 		logger.info("Checking location permissions...")
 		if request_location_permissions(self.gl, logger):
 			logger.info("Location permissions granted. Getting current coordinates...")
@@ -142,19 +137,13 @@ class PermissionsView(ft.View):
 				)
 			)
 
-			go_to_view(page=self.page, logger=logger, route='/')
-
-			logger.info("Hidding loading splash screen...")
-			self.cont_splash.visible = False
-			self.splash.visible = False
-			self.page.update()
+			try:
+				go_to_view(page=self.page, logger=logger, route='/')
+			except Exception as e:
+				logger.error("Error: {e}")
+				go_to_view(page=self.page, logger=logger, route='/')
 
 	def btn_no_clicked(self, _: ft.ControlEvent) -> None:
-		logger.info("Showing loading splash screen...")
-		self.cont_splash.visible = True
-		self.splash.visible = True
-		self.page.update()
-
 		logger.warning("Location permissions are not granted. Continuing without coordinates...")
 		self.page.session.set(key="current_latitude", value=None)
 		self.page.session.set(key="current_longitude", value=None)
@@ -162,9 +151,8 @@ class PermissionsView(ft.View):
 		self.page.session.set(key="is_inside_cdmx", value=False)
 		self.page.session.set(key="chk_distance_value", value=False)
 
-		go_to_view(page=self.page, logger=logger, route='/')
-
-		logger.info("Hidding loading splash screen...")
-		self.cont_splash.visible = False
-		self.splash.visible = False
-		self.page.update()
+		try:
+			go_to_view(page=self.page, logger=logger, route='/')
+		except Exception as e:
+			logger.error("Error: {e}")
+			go_to_view(page=self.page, logger=logger, route='/')

@@ -145,7 +145,11 @@ class AudioPlayer(ft.Container):
 			value=self.format_duration(self.duration),
 			color=ft.Colors.BLACK
 		)
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def on_duration_changed(self, event: ft.AudioDurationChangeEvent) -> None:
 		self.set_duration(int(event.data))
@@ -182,7 +186,11 @@ class AudioPlayer(ft.Container):
 			self.cont_icon.content = self.cca_pause
 			self.cont_icon.on_click = self.pause_audio
 
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def on_position_changed(self, event: ft.AudioPositionChangeEvent) -> None:
 		logger.info(f"Position changed: {event.data} milliseconds")
@@ -206,10 +214,18 @@ class AudioPlayer(ft.Container):
 		else:
 			self.audio.resume()
 
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def pause_audio(self, _: ft.ControlEvent) -> None:
 		self.cont_icon.content = self.cca_play
 		self.cont_icon.on_click = self.play_audio
 		self.audio.pause()
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()

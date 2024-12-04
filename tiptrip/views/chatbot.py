@@ -107,7 +107,8 @@ class ChatbotView(ft.View):
 
 		# ListView (Chat) components
 		self.txt_message: ft.TextField = ft.TextField(
-			label="Escribe un mensaje",
+			hint_text="Escribe un mensaje",
+			hint_style=ft.TextStyle(color=ft.Colors.BLACK),
 			on_change=self.validate,
 			multiline=True,
 			shift_enter=True,

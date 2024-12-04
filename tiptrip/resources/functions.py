@@ -9,7 +9,11 @@ from resources.config import *
 # Navigation functions
 def go_to_view(page: ft.Page, logger: Logger, route: str) -> None:
 	logger.info(f"Redirecting to view \'{route}\'...")
-	page.go(route)
+	try:
+		page.go(route)
+	except Exception as e:
+		logger.error(f"Error: {e}")
+		page.go(route)
 
 
 # Places functions

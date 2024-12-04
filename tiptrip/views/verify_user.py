@@ -1,7 +1,9 @@
 import flet as ft
 from re import match
-from requests import get, Response
 from logging import Logger, getLogger
+
+from requests import post, Response
+from requests.exceptions import ConnectTimeout
 
 from resources.config import *
 from resources.styles import *
@@ -136,64 +138,113 @@ class VerifyUserView(ft.View):
 
 	def btn_back_clicked(self, _: ft.ControlEvent) -> None:
 		self.txt_email.value = ""
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
-		logger.info("Showing loading splash screen...")
-		self.cont_splash.visible = True
-		self.splash.visible = True
-		self.page.update()
-
-		go_to_view(page=self.page, logger=logger, route="/sign_in")
-
-		logger.info("Hidding loading splash screen...")
-		self.cont_splash.visible = False
-		self.splash.visible = False
-		self.page.update()
+		try:
+			go_to_view(page=self.page, logger=logger, route="/sign_in")
+		except Exception as e:
+			logger.error("Error: {e}")
+			go_to_view(page=self.page, logger=logger, route="/sign_in")
 
 	def btn_submit_clicked(self, _: ft.ControlEvent) -> None:
 		if self.txt_email.value == "" or self.txt_email.value.isspace():
 			logger.warning("Empty mail field. Updating view...")
 			self.lbl_email_required.visible = True
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 		elif not match(pattern=RGX_EMAIL, string=self.txt_email.value):
 			logger.warning("Invalid email format")
 			self.dlg_error.title = ft.Text(value="Formato de correo inválido")
 			self.dlg_error.content = ft.Text(value="El correo electrónico ingresado no es válido. Favor de verificarlo.")
-			self.page.open(self.dlg_error)
+			try:
+				self.page.open(self.dlg_error)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
 
 		else:
 			logger.info("Showing loading splash screen...")
 			self.cont_splash.visible = True
 			self.splash.visible = True
 			self.lbl_email_required.visible = False
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Verifying user...")
-			response: Response = get(
-				url=f"{BACK_END_URL}/{USERS_ENDPOINT}/verify",
-				headers={"Content-Type": "application/json"},
-				json={"mail": self.txt_email.value.strip()}
-			)
+			try:
+				response: Response = post(
+					url=f"{BACK_END_URL}/{USERS_ENDPOINT}/verify",
+					headers={"Content-Type": "application/json"},
+					json={"mail": self.txt_email.value.strip()}
+				)
+
+			except ConnectTimeout:
+				logger.error("Connection timeout while verifying user")
+				self.dlg_error.title = ft.Text(value="Error de conexión a internet")
+				self.dlg_error.content = ft.Text(
+					value=(
+						"No se pudo verificar el usuario. "
+						"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+					)
+				)
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
+
+				try:
+					self.page.open(self.dlg_error)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_error)
+				finally:
+					return
 
 			if response.status_code == 201:
 				logger.info("User verified successfully")
 				data: dict = response.json()
 
 				self.txt_email.value = ""
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
 				logger.info("Setting session data...")
 				self.page.session.set(key="aux", value=None) # This is a workaround to avoid a bug in the framework
 				self.page.session.set(key="id", value=data["id"])
 				self.page.session.set(key="session_token", value=data["token"])
 
-				go_to_view(page=self.page, logger=logger, route="/change_password")
-
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
+
+				try:
+					go_to_view(page=self.page, logger=logger, route="/change_password")
+				except Exception as e:
+					logger.error("Error: {e}")
+					go_to_view(page=self.page, logger=logger, route="/change_password")
 
 			elif response.status_code == 404:
 				logger.warning("User not found")
@@ -207,9 +258,17 @@ class VerifyUserView(ft.View):
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
-				self.page.open(self.dlg_error)
+				try:
+					self.page.open(self.dlg_error)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_error)
 
 			else:
 				logger.error("Error verifying user")
@@ -223,6 +282,14 @@ class VerifyUserView(ft.View):
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
-				self.page.open(self.dlg_error)
+				try:
+					self.page.open(self.dlg_error)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_error)

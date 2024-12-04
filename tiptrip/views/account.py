@@ -1,9 +1,8 @@
 import flet as ft
-from os import listdir
-from os.path import join
-from requests import delete, Response
 from logging import Logger, getLogger
 
+from requests import delete, Response
+from requests.exceptions import ConnectTimeout
 
 from components.bars import *
 from resources.config import *
@@ -53,13 +52,8 @@ class AccountView(ft.View):
 		)
 		self.dlg_error: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=ft.Text("Error al eliminar cuenta"),
-			content=ft.Text(
-				value=(
-					"Ocurrió un error al eliminar la cuenta. "
-					"Favor de intentarlo de nuevo más tarde."
-				)
-			),
+			title=ft.Text(""),
+			content=ft.Text(""),
 			actions=[
 				ft.TextButton(
 					text="Aceptar",
@@ -219,7 +213,7 @@ class AccountView(ft.View):
 									width=self.page.width,
 									icon=ft.Icons.EDIT,
 									text="Editar perfil",
-									on_click=self.go_to_update_user,
+									on_click=lambda _: go_to_view(page=self.page, logger=logger, route="/update_user"),
 									**btn_secondary_style
 								)
 							),
@@ -235,29 +229,71 @@ class AccountView(ft.View):
 			bottom_appbar=BottomBar(page=self.page, logger=logger, current_route="/account")
 		)
 
-	def go_to_update_user(self, _: ft.ControlEvent) -> None:
-		go_to_view(page=self.page, logger=logger, route="/update_user")
-
 	def handle_ok_account_deleted(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_account_deleted)
-		go_to_view(page=self.page, logger=logger, route="/sign_in")
+		try:
+			self.page.close(self.dlg_account_deleted)
+			go_to_view(page=self.page, logger=logger, route="/sign_in")
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.close(self.dlg_account_deleted)
+			go_to_view(page=self.page, logger=logger, route="/sign_in")
 
 	def delete_account(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_confirm_delete_account)
+		try:
+			self.page.close(self.dlg_confirm_delete_account)
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.close(self.dlg_confirm_delete_account)
 
 		logger.info("Making request to delete account...")
-		response: Response = delete(
-			url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
-			headers={
-				"Content-Type": "application/json",
-				"Authorization": f"Bearer {self.page.session.get('session_token')}"
-			}
-		)
+		try:
+			response: Response = delete(
+				url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
+				headers={
+					"Content-Type": "application/json",
+					"Authorization": f"Bearer {self.page.session.get('session_token')}"
+				}
+			)
+
+		except ConnectTimeout:
+			logger.error("Connection timeout while deleting account")
+			self.dlg_error.title = ft.Text(value="Error de conexión a internet")
+			self.dlg_error.content = ft.Text(
+				value=(
+					"No se pudo eliminar el usuario. "
+					"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+				)
+			)
+
+			try:
+				self.page.open(self.dlg_error)
+
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
+
+			finally:
+				return
 
 		if response.status_code == 200:
 			logger.info("Account deleted successfully")
-			self.page.open(self.dlg_account_deleted)
+			try:
+				self.page.open(self.dlg_account_deleted)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_account_deleted)
 
 		else:
 			logger.error("Error deleting account")
-			self.page.open(self.dlg_error)
+			self.dlg_error.title = ft.Text(value="Error al eliminar cuenta")
+			self.dlg_error.content = ft.Text(
+				value=(
+					"Ocurrió un error al eliminar la cuenta. "
+					"Favor de intentarlo de nuevo más tarde."
+				)
+			)
+			try:
+				self.page.open(self.dlg_error)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)

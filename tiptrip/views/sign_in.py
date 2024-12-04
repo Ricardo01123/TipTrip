@@ -1,6 +1,8 @@
 import flet as ft
-from requests import post, Response
 from logging import Logger, getLogger
+
+from requests import post, Response
+from requests.exceptions import ConnectTimeout
 
 from resources.config import *
 from resources.styles import *
@@ -200,23 +202,58 @@ class SignInView(ft.View):
 			self.lbl_password_required.visible = False
 			password_txt_filled = True
 
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 		if email_txt_filled and password_txt_filled:
 			logger.info("Showing loading splash screen...")
 			self.cont_splash.visible = True
 			self.splash.visible = True
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Authenticating user...")
-			response: Response = post(
-				url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
-				headers={"Content-Type": "application/json"},
-				json={
-					"mail": self.txt_email.value.strip(),
-					"password": self.txt_password.value.strip()
-				}
-			)
+			try:
+				response: Response = post(
+					url=f"{BACK_END_URL}/{AUTH_USER_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"mail": self.txt_email.value.strip(),
+						"password": self.txt_password.value.strip()
+					}
+				)
+
+			except ConnectTimeout:
+				logger.error("Connection timeout while authenticating user")
+				self.dlg_error.title = ft.Text(value="Error de conexión a internet")
+				self.dlg_error.content = ft.Text(
+					value=(
+						"Ocurrió un error de conexión a internet al intentar iniciar sesión. "
+						"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+					)
+				)
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
+
+				try:
+					self.page.open(self.dlg_error)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_error)
+				finally:
+					return
 
 			if response.status_code == 201:
 				logger.info("User authenticated successfully")
@@ -272,21 +309,37 @@ class SignInView(ft.View):
 						)
 					)
 
-					go_to_view(page=self.page, logger=logger, route='/')
-
 					logger.info("Hidding loading splash screen...")
 					self.cont_splash.visible = False
 					self.splash.visible = False
-					self.page.update()
+					try:
+						self.page.update()
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.update()
+
+					try:
+						go_to_view(page=self.page, logger=logger, route='/')
+					except Exception as e:
+						logger.error("Error: {e}")
+						go_to_view(page=self.page, logger=logger, route='/')
 
 				else:
 					logger.warning("Location permissions are not granted")
-					go_to_view(page=self.page, logger=logger, route="/permissions")
-
 					logger.info("Hidding loading splash screen...")
 					self.cont_splash.visible = False
 					self.splash.visible = False
-					self.page.update()
+					try:
+						self.page.update()
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.update()
+
+					try:
+						go_to_view(page=self.page, logger=logger, route="/permissions")
+					except Exception as e:
+						logger.error("Error: {e}")
+						go_to_view(page=self.page, logger=logger, route="/permissions")
 
 			elif response.status_code == 401 or response.status_code == 404:
 				logger.warning("User and/or password are incorrect")
@@ -294,9 +347,17 @@ class SignInView(ft.View):
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
-				self.page.open(self.dlg_not_found)
+				try:
+					self.page.open(self.dlg_not_found)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_not_found)
 
 			else:
 				logger.error("An error occurred while authenticating the user")
@@ -304,6 +365,14 @@ class SignInView(ft.View):
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
-				self.page.open(self.dlg_error)
+				try:
+					self.page.open(self.dlg_error)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_error)

@@ -1,9 +1,10 @@
 import flet as ft
 from os import listdir
 from os.path import join
-from requests import get, Response
 from logging import Logger, getLogger
-from requests import post, delete, Response
+
+from requests.exceptions import ConnectTimeout
+from requests import get, post, delete, Response
 
 from components.bars import *
 from resources.config import *
@@ -39,6 +40,19 @@ class PlaceDetailsView(ft.View):
 			label_color=MAIN_COLOR,
 			unselected_label_color=ft.Colors.BLACK,
 			tabs=self.fill_data_tabs()
+		)
+		self.dlg_error: ft.AlertDialog = ft.AlertDialog(
+			modal=True,
+			title=ft.Text(""),
+			content=ft.Text(""),
+			actions=[
+				ft.TextButton(
+					text="Aceptar",
+					on_click=lambda _: self.page.close(self.dlg_error)
+				),
+			],
+			actions_alignment=ft.MainAxisAlignment.END,
+			on_dismiss=lambda _: self.page.close(self.dlg_error)
 		)
 
 		# View native attributes
@@ -215,17 +229,48 @@ class PlaceDetailsView(ft.View):
 		)
 
 	def get_place_data(self, id: str) -> dict | ft.Container:
-		response: Response = get(
-			url=f"{BACK_END_URL}/{PLACES_ENDPOINT}/{id}",
-			headers={
-				"Content-Type": "application/json",
-				"Authorization": f"Bearer {self.page.session.get('session_token')}"
-			},
-			json={
-				"current_latitude": self.page.session.get("current_latitude"),
-				"current_longitude": self.page.session.get("current_longitude")
-			}
-		)
+		try:
+			response: Response = get(
+				url=f"{BACK_END_URL}/{PLACES_ENDPOINT}/{id}",
+				headers={
+					"Content-Type": "application/json",
+					"Authorization": f"Bearer {self.page.session.get('session_token')}"
+				},
+				json={
+					"current_latitude": self.page.session.get("current_latitude"),
+					"current_longitude": self.page.session.get("current_longitude")
+				}
+			)
+		except ConnectTimeout:
+			logger.error("Connection timeout while deleting account")
+			self.dlg_error.title = ft.Text(value="Error de conexión a internet")
+			self.dlg_error.content = ft.Text(
+				value=(
+					"No se pudo obtener información del sitio turístico seleccionado. "
+					"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+				)
+			)
+
+			try:
+				self.page.open(self.dlg_error)
+
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
+
+			finally:
+				ft.Container(
+					alignment=ft.alignment.center,
+					content=ft.Text(
+						value=(
+							"Ocurrió un error al obtener información del sitio "
+							"turístico seleccionado.\n"
+							"Favor de intentarlo de nuevo más tarde."
+						),
+						color=ft.Colors.BLACK,
+						size=35
+					)
+				)
 
 		if response.status_code == 200:
 			logger.debug(f"Response 200 OK: {response.json()}")
@@ -639,7 +684,7 @@ class PlaceDetailsView(ft.View):
 		try:
 			images: list = listdir(path)
 			if images:
-				return [join("places", dir, image) for image in images]
+				return [join("places", image_dir, image) for image in images]
 			else:
 				return ["default.png"]
 
@@ -649,18 +694,42 @@ class PlaceDetailsView(ft.View):
 	def handle_saved_iconbutton(self, _) -> None:
 		if self.saved_iconbutton.icon == ft.Icons.BOOKMARKS:
 			logger.info("Removing place from favorites...")
-			response: Response = delete(
-				url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}/{self.page.session.get('id')}/{self.place_data['id']}",
-				headers={
-					"Content-Type": "application/json",
-					"Authorization": f"Bearer {self.page.session.get('session_token')}"
-				}
-			)
+			try:
+				response: Response = delete(
+					url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}/{self.page.session.get('id')}/{self.place_data['id']}",
+					headers={
+						"Content-Type": "application/json",
+						"Authorization": f"Bearer {self.page.session.get('session_token')}"
+					}
+				)
+
+			except ConnectTimeout:
+				logger.error("Connection timeout while deleting favorite place")
+				self.dlg_error.title = ft.Text("Error de conexión a internet")
+				self.dlg_error.content = ft.Text(
+					"No se pudo eliminar el sitio turístico de la lista de favoritos. "
+					"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+				)
+
+				try:
+					self.page.open(self.dlg_error)
+
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_error)
+
+				finally:
+					return
 
 			if response.status_code == 200:
 				logger.info("Place removed from favorites successfully")
 				self.saved_iconbutton.icon = ft.Icons.BOOKMARKS_OUTLINED
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
+
 			else:
 				print("Error removing place from favorites")
 				self.dlg_error.title = ft.Text("Error al eliminar")
@@ -668,31 +737,60 @@ class PlaceDetailsView(ft.View):
 					"Ocurrió un error eliminando el sitio turístico de la lista de favoritos. "
 					"Favor de intentarlo de nuevo más tarde."
 				)
-				self.page.open(self.dlg_error)
+				try:
+					self.page.open(self.dlg_error)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_error)
 
 		else:
 			logger.info("Adding place to favorites...")
-			response: Response = post(
-				url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}",
-				headers={
-					"Content-Type": "application/json",
-					"Authorization": f"Bearer {self.page.session.get('session_token')}"
-				},
-				json={
-					"user_id": self.page.session.get("id"),
-					"place_id": self.place_data["id"]
-				}
-			)
+			try:
+				response: Response = post(
+					url=f"{BACK_END_URL}/{FAVORITES_ENDPOINT}",
+					headers={
+						"Content-Type": "application/json",
+						"Authorization": f"Bearer {self.page.session.get('session_token')}"
+					},
+					json={
+						"user_id": self.page.session.get("id"),
+						"place_id": self.place_data["id"]
+					}
+				)
+			except ConnectTimeout:
+				logger.error("Connection timeout while adding favorite place")
+				self.dlg_error.title = ft.Text("Error de conexión a internet")
+				self.dlg_error.content = ft.Text(
+					"No se pudo agregar el sitio turístico a la lista de favoritos. "
+					"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+				)
+
+				try:
+					self.page.open(self.dlg_error)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_error)
+
+				finally:
+					return
 
 			if response.status_code == 201:
 				logger.info("Place added to favorites successfully")
 				self.saved_iconbutton.icon = ft.Icons.BOOKMARKS
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 			else:
-				print("Error adding place to favorites")
+				logger.error("Error adding place to favorites")
 				self.dlg_error.title = ft.Text("Error al agregar")
 				self.dlg_error.content = ft.Text(
 					"Ocurrió un error agregando el sitio turístico a la lista de favoritos. "
 					"Favor de intentarlo de nuevo más tarde."
 				)
-				self.page.open(self.dlg_error)
+				try:
+					self.page.open(self.dlg_error)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_error)

@@ -3,8 +3,10 @@ from re import match
 from typing import Any
 from os.path import join
 from shutil import copyfile
-from requests import put, Response
 from logging import Logger, getLogger
+
+from requests import put, Response
+from requests.exceptions import ConnectTimeout
 
 from components.bars import *
 from resources.config import *
@@ -132,6 +134,7 @@ class UpdateUserView(ft.View):
 						controls=[
 							ft.Container(
 								width=self.page.width,
+								height=(PROFILE_IMAGE_DIMENSIONS * 2) + SPACING,
 								alignment=ft.alignment.center,
 								padding=ft.padding.only(bottom=SPACING),
 								content=(
@@ -152,8 +155,8 @@ class UpdateUserView(ft.View):
 							),
 							ft.Container(
 								expand=True,
-								right=(SPACING * 3),
-								bottom=SPACING,
+								right=(SPACING * 4),
+								bottom=(SPACING * 2),
 								content=ft.CircleAvatar(
 									bgcolor=SECONDARY_COLOR,
 									radius=(SPACING * 2),
@@ -255,20 +258,33 @@ class UpdateUserView(ft.View):
 		else:
 			self.lbl_pwd_match.visible = False
 
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def btn_submit_clicked(self, _: ft.ControlEvent) -> None:
 		if self.lbl_pwd_match.visible:
 			logger.info("Passwords do not match. Aborting process...")
 			self.dlg_error.title = ft.Text(value="Las contraseñas no coinciden")
 			self.dlg_error.content = ft.Text(value="Las contraseñas no coinciden. Favor de verificarlas.")
-			self.page.open(self.dlg_error)
+
+			try:
+				self.page.open(self.dlg_error)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
 
 		elif not match(pattern=RGX_EMAIL, string=self.txt_email.value):
 			logger.info("Invalid email format. Aborting process...")
 			self.dlg_error.title = ft.Text(value="Formato de correo inválido")
 			self.dlg_error.content = ft.Text(value="El correo electrónico ingresado no es válido. Favor de verificarlo.")
-			self.page.open(self.dlg_error)
+			try:
+				self.page.open(self.dlg_error)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
 
 		else:
 			logger.info("Submit button clicked, initiating process to update user data...")
@@ -290,18 +306,43 @@ class UpdateUserView(ft.View):
 				logger.info("No changes detected, aborting process...")
 				self.dlg_error.title = ft.Text(value="Sin cambios detectados")
 				self.dlg_error.content = ft.Text(value="No se detectaron cambios en tus datos. Abortando...")
-				self.page.open(self.dlg_error)
+				try:
+					self.page.open(self.dlg_error)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_error)
 
 			else:
 				logger.info("Making request to update user...")
-				response: Response = put(
-					url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
-					headers={
-						"Content-Type": "application/json",
-						"Authorization": f"Bearer {self.page.session.get('session_token')}"
-					},
-					json=payload
-				)
+				try:
+					response: Response = put(
+						url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
+						headers={
+							"Content-Type": "application/json",
+							"Authorization": f"Bearer {self.page.session.get('session_token')}"
+						},
+						json=payload
+					)
+
+				except ConnectTimeout:
+					logger.error("Connection timeout while updating user")
+					self.dlg_error.title = ft.Text(value="Error de conexión a internet")
+					self.dlg_error.content = ft.Text(
+						value=(
+							"No se pudieron actualizar los datos. "
+							"Favor de revisar tu conexión a internet e intentarlo de nuevo más tarde."
+						)
+					)
+
+					try:
+						self.page.open(self.dlg_error)
+
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.open(self.dlg_error)
+
+					finally:
+						return
 
 				if response.status_code == 201:
 					logger.info("User updated successfully")
@@ -312,7 +353,11 @@ class UpdateUserView(ft.View):
 					self.txt_password.value = ""
 					self.txt_confirm_password.value = ""
 
-					self.page.open(self.dlg_updated_data)
+					try:
+						self.page.open(self.dlg_updated_data)
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.open(self.dlg_updated_data)
 
 				else:
 					logger.error("Error updating user")
@@ -324,7 +369,11 @@ class UpdateUserView(ft.View):
 						)
 					)
 
-					self.page.open(self.dlg_error)
+					try:
+						self.page.open(self.dlg_error)
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.open(self.dlg_error)
 
 	def btn_back_clicked(self, _: ft.ControlEvent) -> None:
 		logger.info("Back button clicked, discarding changes...")
@@ -333,7 +382,11 @@ class UpdateUserView(ft.View):
 		self.txt_password.value = ""
 		self.txt_confirm_password.value = ""
 
-		go_to_view(page=self.page, logger=logger, route="/account")
+		try:
+			go_to_view(page=self.page, logger=logger, route="/account")
+		except Exception as e:
+			logger.error("Error: {e}")
+			go_to_view(page=self.page, logger=logger, route="/account")
 
 	def save_new_user_image(self, event: ft.FilePickerResultEvent) -> None:
 		logger.info("Processing new image selected...")
@@ -345,7 +398,11 @@ class UpdateUserView(ft.View):
 				copyfile(event.files[0].path, join(ASSETS_ABSPATH, f"user.{extension}"))
 				logger.info("New image saved successfully.")
 
-				self.page.open(self.dlg_updated_image)
+				try:
+					self.page.open(self.dlg_updated_image)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_updated_image)
 
 			else:
 				logger.error("Error saving new image.")
@@ -356,15 +413,37 @@ class UpdateUserView(ft.View):
 						"Favor de intentarlo de nuevo más tarde."
 					)
 				)
-				self.page.open(self.dlg_error)
+				try:
+					self.page.open(self.dlg_error)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_error)
 
 		else:
 			logger.info("No image selected. Aborting...")
 
 	def handle_dlg_updated_data(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_updated_data)
-		go_to_view(page=self.page, logger=logger, route="/account")
+		try:
+			self.page.close(self.dlg_updated_data)
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.close(self.dlg_updated_data)
+
+		try:
+			go_to_view(page=self.page, logger=logger, route="/account")
+		except Exception as e:
+			logger.error("Error: {e}")
+			go_to_view(page=self.page, logger=logger, route="/account")
 
 	def handle_dlg_updated_image(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_updated_image)
-		go_to_view(page=self.page, logger=logger, route="/account")
+		try:
+			self.page.close(self.dlg_updated_image)
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.close(self.dlg_updated_image)
+
+		try:
+			go_to_view(page=self.page, logger=logger, route="/account")
+		except Exception as e:
+			logger.error("Error: {e}")
+			go_to_view(page=self.page, logger=logger, route="/account")

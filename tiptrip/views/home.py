@@ -1,6 +1,8 @@
 import flet as ft
-from requests import get, Response
 from logging import Logger, getLogger
+
+from requests import get, Response
+from requests.exceptions import ConnectTimeout
 
 from components.bars import *
 from resources.config import *
@@ -344,20 +346,51 @@ class HomeView(ft.View):
 			distance = None
 
 		logger.info("Getting places data...")
-		response: Response = get(
-			url=f"{BACK_END_URL}/{PLACES_ENDPOINT}",
-			headers={
-				"Content-Type": "application/json",
-				"Authorization": f"Bearer {self.page.session.get('session_token')}"
-			},
-			json={
-				"classification": classification,
-				"municipality": municipality,
-				"distance": distance,
-				"current_latitude": self.page.session.get("current_latitude"),
-				"current_longitude": self.page.session.get("current_longitude")
-			}
-		)
+		try:
+			response: Response = get(
+				url=f"{BACK_END_URL}/{PLACES_ENDPOINT}",
+				headers={
+					"Content-Type": "application/json",
+					"Authorization": f"Bearer {self.page.session.get('session_token')}"
+				},
+				json={
+					"classification": classification,
+					"municipality": municipality,
+					"distance": distance,
+					"current_latitude": self.page.session.get("current_latitude"),
+					"current_longitude": self.page.session.get("current_longitude")
+				}
+			)
+
+		except ConnectTimeout:
+			logger.error("Connection timeout while getting favorite places")
+			self.dlg_error.title = ft.Text("Error de conexión a internet")
+			self.dlg_error.content = ft.Text(
+				"No se pudo obtener información sobre los sitios turísticos. "
+				"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+			)
+
+			try:
+				self.page.open(self.dlg_error)
+
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
+
+			finally:
+				return [
+					ft.Container(
+						alignment=ft.alignment.center,
+						content=ft.Text(
+							value=(
+								"Ocurrió un error al obtener la información de "
+								"los sitios turísticos."
+							),
+							color=ft.Colors.BLACK,
+							size=30
+						)
+					)
+				]
 
 		logger.info(f"Evaluating response with status {response.status_code}...")
 		if response.status_code == 200:
@@ -422,7 +455,12 @@ class HomeView(ft.View):
 		self.total_items = len(items)
 		self.total_pages = (self.total_items + self.items_per_page - 1) // self.items_per_page
 		self.lbl_actual_page.value = f"Página {self.current_page + 1} de {self.total_pages}"
-		self.page.update()
+
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def set_page_indexes(self) -> None:
 		logger.info("Setting page indexes...")
@@ -434,7 +472,11 @@ class HomeView(ft.View):
 			else self.page.session.get("places_data")[self.page_start_index:self.page_end_index]
 		)
 
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def previous_page(self, _: ft.ControlEvent) -> None:
 		logger.info(f"Going to previous page...")
@@ -444,9 +486,13 @@ class HomeView(ft.View):
 			self.current_page = self.total_pages - 1
 
 		self.lbl_actual_page.value = f"Página {self.current_page + 1} de {self.total_pages}"
-
 		self.set_page_indexes()
-		self.page.update()
+
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def next_page(self, _: ft.ControlEvent) -> None:
 		logger.info(f"Going to next page...")
@@ -456,9 +502,13 @@ class HomeView(ft.View):
 			self.current_page = 0
 
 		self.lbl_actual_page.value = f"Página {self.current_page + 1} de {self.total_pages}"
-
 		self.set_page_indexes()
-		self.page.update()
+
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def search_place(self, _: ft.ControlEvent) -> None:
 		if self.txt_place_searcher.value == "":
@@ -481,7 +531,12 @@ class HomeView(ft.View):
 		logger.info("Showing loading splash screen...")
 		self.cont_splash.visible = True
 		self.splash.visible = True
-		self.page.update()
+
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 		if not self.chk_distance.value:
 			logger.info("Deactivating distance filter...")
@@ -490,7 +545,12 @@ class HomeView(ft.View):
 			logger.info("Hidding loading splash screen...")
 			self.cont_splash.visible = False
 			self.splash.visible = False
-			self.page.update()
+
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Storing new distance filter value and coordinates in session...")
 			self.page.session.set(key="chk_distance_value", value=False)
@@ -515,7 +575,12 @@ class HomeView(ft.View):
 					logger.info("Hidding loading splash screen...")
 					self.cont_splash.visible = False
 					self.splash.visible = False
-					self.page.update()
+
+					try:
+						self.page.update()
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.update()
 
 					logger.info("Storing new distance filter values in session...")
 					self.page.session.set(key="is_inside_cdmx", value=True)
@@ -537,9 +602,18 @@ class HomeView(ft.View):
 					logger.info("Hidding loading splash screen...")
 					self.cont_splash.visible = False
 					self.splash.visible = False
-					self.page.update()
 
-					self.page.open(self.dlg_location)
+					try:
+						self.page.update()
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.update()
+
+					try:
+						self.page.open(self.dlg_location)
+					except Exception as e:
+						logger.error("Error: {e}")
+						self.page.open(self.dlg_location)
 
 			else:
 				logger.warning("Location permissions are not granted. Opening location permissions dialog...")
@@ -553,17 +627,34 @@ class HomeView(ft.View):
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
-				self.page.open(self.dlg_request_location_permission)
+				try:
+					self.page.open(self.dlg_request_location_permission)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_request_location_permission)
 
 	def request_location_permission(self, _: ft.ControlEvent) -> None:
-		self.page.close(self.dlg_request_location_permission)
+		try:
+			self.page.close(self.dlg_request_location_permission)
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.close(self.dlg_request_location_permission)
 
 		logger.info("Showing loading splash screen...")
 		self.cont_splash.visible = True
 		self.splash.visible = True
-		self.page.update()
+
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 		logger.info("Requesting location permissions...")
 		if request_location_permissions(self.gl, logger):
@@ -587,9 +678,18 @@ class HomeView(ft.View):
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
 
-				self.page.open(self.dlg_sites_filter)
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
+
+				try:
+					self.page.open(self.dlg_sites_filter)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_sites_filter)
 
 			else:
 				logger.warning("User's location is not inside CDMX coordinates. Disabling distance filter...")
@@ -603,14 +703,24 @@ class HomeView(ft.View):
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
-				self.page.update()
+
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.update()
 
 				self.dlg_location.title = ft.Text("Ubicación fuera de CDMX")
 				self.dlg_location.content = ft.Text(
 					"Tu ubicación actual no se encuentra dentro de los límites de la Ciudad de México, "
-					"por lo que no se puede aplicar el filtro de cercanía."
+					"por lo que no se puede aplicar el filtro de cercanía ni acceder al mapa interactivo."
 				)
-				self.page.open(self.dlg_location)
+
+				try:
+					self.page.open(self.dlg_location)
+				except Exception as e:
+					logger.error("Error: {e}")
+					self.page.open(self.dlg_location)
 
 		else:
 			logger.warning("Location permissions denied. Denying distance filter...")
@@ -622,7 +732,12 @@ class HomeView(ft.View):
 			logger.info("Hidding loading splash screen...")
 			self.cont_splash.visible = False
 			self.splash.visible = False
-			self.page.update()
+
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Opening location permissions failed dialog...")
 			self.dlg_location.title = ft.Text("Permisos de ubicación")
@@ -630,28 +745,51 @@ class HomeView(ft.View):
 				"No se han otorgado los permisos de ubicación, "
 				"se ha deshabilitado la opción de filtrado de sitios turísticos por cercanía."
 			)
-			self.page.open(self.dlg_location)
+
+			try:
+				self.page.open(self.dlg_location)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_location)
 
 	def request_location_permission_denied(self, _: ft.ControlEvent) -> None:
 		logger.info("Location permissions denied. Denying distance filter...")
-		self.page.close(self.dlg_request_location_permission)
+		try:
+			self.page.close(self.dlg_request_location_permission)
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.close(self.dlg_request_location_permission)
 
 		self.page.session.set(key="chk_distance_value", value=False)
 		self.page.session.set(key="sld_value", value=7)
 		self.chk_distance.value = False
 		self.sld_distance.disabled = True
 		self.sld_distance.value = 7
-		self.page.update()
+
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 	def apply_filters(self, _: ft.ControlEvent) -> None:
 		try:
 			logger.info("Showing loading splash screen...")
 			self.cont_splash.visible = True
 			self.splash.visible = True
-			self.page.update()
+
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Applying filters...")
-			self.page.close(self.dlg_sites_filter)
+			try:
+				self.page.close(self.dlg_sites_filter)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.close(self.dlg_sites_filter)
 
 			logger.info("Storing new filters values in session...")
 			self.page.session.set(key="drd_classification_value", value=self.drd_classification.value)
@@ -696,13 +834,23 @@ class HomeView(ft.View):
 			logger.info("Hidding loading splash screen...")
 			self.cont_splash.visible = False
 			self.splash.visible = False
-			self.page.update()
+
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 		except Exception as e:
 			logger.info("Hidding loading splash screen...")
 			self.cont_splash.visible = False
 			self.splash.visible = False
-			self.page.update()
+
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.error(f"Error applying filters: {e}")
 			self.dlg_error.title.value = "Error al aplicar filtros"
@@ -710,17 +858,31 @@ class HomeView(ft.View):
 				"Ocurrió un error al aplicar los filtros. "
 				"Favor de intentarlo de nuevo más tarde."
 			)
-			self.page.open(self.dlg_error)
+
+			try:
+				self.page.open(self.dlg_error)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
 
 	def clean_filters(self, _: ft.ControlEvent) -> None:
 		try:
 			logger.info("Showing loading splash screen...")
 			self.cont_splash.visible = True
 			self.splash.visible = True
-			self.page.update()
+
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Cleaning filters process started...")
-			self.page.close(self.dlg_sites_filter)
+			try:
+				self.page.close(self.dlg_sites_filter)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.close(self.dlg_sites_filter)
 
 			logger.info("Storing new clean filters values in session...")
 			self.page.session.set(key="drd_classification_value", value="Seleccionar todas")
@@ -731,7 +893,11 @@ class HomeView(ft.View):
 			self.drd_classification.value = "Seleccionar todas"
 			self.drd_municipality.value = "Seleccionar todas"
 			self.sld_distance.value = 7
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.info("Checking location permissions...")
 			if is_location_permission_enabled(gl=self.gl, logger=logger):
@@ -771,13 +937,23 @@ class HomeView(ft.View):
 			logger.info("Hidding loading splash screen...")
 			self.cont_splash.visible = False
 			self.splash.visible = False
-			self.page.update()
+
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 		except Exception as e:
 			logger.info("Hidding loading splash screen...")
 			self.cont_splash.visible = False
 			self.splash.visible = False
-			self.page.update()
+
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.error(f"Error cleaning filters: {e}")
 			self.dlg_error.title.value = "Error al limpiar filtros"
@@ -785,34 +961,60 @@ class HomeView(ft.View):
 				"Ocurrió un error al limpiar los filtros. "
 				"Favor de intentarlo de nuevo más tarde."
 			)
-			self.page.open(self.dlg_error)
+
+			try:
+				self.page.open(self.dlg_error)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_error)
 
 	def check_if_open_map(self, _: ft.ControlEvent) -> None:
 		logger.info("Showing loading splash screen...")
 		self.cont_splash.visible = True
 		self.splash.visible = True
-		self.page.update()
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error("Error: {e}")
+			self.page.update()
 
 		logger.info("Checking location permissions...")
-		if self.gl.is_location_service_enabled():
+		if is_location_permission_enabled(gl=self.gl, logger=logger):
 			logger.info("Location permissions are granted...")
-			go_to_view(self.page, logger=logger, route="/map")
+			try:
+				go_to_view(self.page, logger=logger, route="/map")
+			except Exception as e:
+				logger.error("Error: {e}")
+				go_to_view(self.page, logger=logger, route="/map")
 
 			logger.info("Hidding loading splash screen...")
 			self.cont_splash.visible = False
 			self.splash.visible = False
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 		else:
 			logger.info("Hidding loading splash screen...")
 			self.cont_splash.visible = False
 			self.splash.visible = False
-			self.page.update()
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.update()
 
 			logger.warning("Location permissions are not granted...")
 			logger.info("Requesting location permissions...")
+			self.dlg_request_location_permission.title = ft.Text("Permisos de ubicación")
 			self.dlg_request_location_permission.content = ft.Text(
 				"Para acceder al mapa interactivo, "
 				"necesitamos que permitas el acceso a tu ubicación."
 			)
-			self.page.open(self.dlg_request_location_permission)
+			try:
+				self.page.open(self.dlg_request_location_permission)
+			except Exception as e:
+				logger.error("Error: {e}")
+				self.page.open(self.dlg_request_location_permission)

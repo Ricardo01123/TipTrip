@@ -40,11 +40,18 @@ class TopBar(ft.AppBar):
 		self.logger.info("Cleaning session...")
 		self.page.session.clear()
 
-		go_to_view(page=self.page, logger=self.logger, route="/sign_in")
+		try:
+			go_to_view(page=self.page, logger=self.logger, route="/sign_in")
+		except Exception as e:
+			self.logger.error(f"Error: {e}")
+			go_to_view(page=self.page, logger=self.logger, route="/sign_in")
 
 
 class BottomBar(ft.BottomAppBar):
 	def __init__(self, page: ft.Page, logger: Logger, current_route: str) -> None:
+		self.page = page
+		self.logger = logger
+
 		super().__init__(
 			bgcolor=MAIN_COLOR,
 			shape=ft.NotchShape.CIRCULAR,
@@ -60,13 +67,13 @@ class BottomBar(ft.BottomAppBar):
 							else ft.Colors.BLACK
 						),
 						icon_size=30,
-						on_click=lambda _: go_to_view(page=page, logger=logger, route='/')
+						on_click=self.go_to_home
 					),
 					ft.IconButton(
 						icon=ft.Icons.SUPPORT_AGENT,
 						icon_color=ft.Colors.BLACK,
 						icon_size=30,
-						on_click=lambda _: go_to_view(page=page, logger=logger, route="/chatbot")
+						on_click=self.go_to_chatbot
 					),
 					ft.IconButton(
 						icon=ft.Icons.BOOKMARKS,
@@ -76,7 +83,7 @@ class BottomBar(ft.BottomAppBar):
 							else ft.Colors.BLACK
 						),
 						icon_size=30,
-						on_click=lambda _: go_to_view(page=page, logger=logger, route="/favorites")
+						on_click=self.go_to_favorites
 					),
 					ft.IconButton(
 						icon=ft.Icons.ACCOUNT_CIRCLE,
@@ -86,8 +93,36 @@ class BottomBar(ft.BottomAppBar):
 							else ft.Colors.BLACK
 						),
 						icon_size=30,
-						on_click=lambda _: go_to_view(page=page, logger=logger, route="/account")
+						on_click=self.go_to_account
 					)
 				]
 			)
 		)
+
+	def go_to_home(self, _: ft.ControlEvent) -> None:
+		try:
+			go_to_view(page=self.page, logger=self.logger, route='/')
+		except Exception as e:
+			self.logger.error(f"Error: {e}")
+			go_to_view(page=self.page, logger=self.logger, route='/')
+
+	def go_to_chatbot(self, _: ft.ControlEvent) -> None:
+		try:
+			go_to_view(page=self.page, logger=self.logger, route="/chatbot")
+		except Exception as e:
+			self.logger.error(f"Error: {e}")
+			go_to_view(page=self.page, logger=self.logger, route="/chatbot")
+
+	def go_to_favorites(self, _: ft.ControlEvent) -> None:
+		try:
+			go_to_view(page=self.page, logger=self.logger, route="/favorites")
+		except Exception as e:
+			self.logger.error(f"Error: {e}")
+			go_to_view(page=self.page, logger=self.logger, route="/favorites")
+
+	def go_to_account(self, _: ft.ControlEvent) -> None:
+		try:
+			go_to_view(page=self.page, logger=self.logger, route="/account")
+		except Exception as e:
+			self.logger.error(f"Error: {e}")
+			go_to_view(page=self.page, logger=self.logger, route="/account")
