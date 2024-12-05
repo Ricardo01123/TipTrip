@@ -244,7 +244,7 @@ class PlaceCard(ft.Container):
 					self.page.open(self.dlg_error)
 
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
 
 				finally:
@@ -256,7 +256,7 @@ class PlaceCard(ft.Container):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 			else:
 				print("Error removing place from favorites")
@@ -268,7 +268,7 @@ class PlaceCard(ft.Container):
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
 
 		else:
@@ -296,7 +296,7 @@ class PlaceCard(ft.Container):
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
 
 				finally:
@@ -308,7 +308,7 @@ class PlaceCard(ft.Container):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 			else:
 				logger.error("Error adding place to favorites")
@@ -320,5 +320,5 @@ class PlaceCard(ft.Container):
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)

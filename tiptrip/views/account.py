@@ -234,7 +234,7 @@ class AccountView(ft.View):
 			self.page.close(self.dlg_account_deleted)
 			go_to_view(page=self.page, logger=logger, route="/sign_in")
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_account_deleted)
 			go_to_view(page=self.page, logger=logger, route="/sign_in")
 
@@ -242,7 +242,7 @@ class AccountView(ft.View):
 		try:
 			self.page.close(self.dlg_confirm_delete_account)
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_confirm_delete_account)
 
 		logger.info("Making request to delete account...")
@@ -269,7 +269,7 @@ class AccountView(ft.View):
 				self.page.open(self.dlg_error)
 
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
 
 			finally:
@@ -280,7 +280,7 @@ class AccountView(ft.View):
 			try:
 				self.page.open(self.dlg_account_deleted)
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_account_deleted)
 
 		else:
@@ -295,5 +295,5 @@ class AccountView(ft.View):
 			try:
 				self.page.open(self.dlg_error)
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)

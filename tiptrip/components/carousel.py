@@ -70,7 +70,7 @@ class Carousel(ft.Container):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 	def next_item(self, _: ft.ControlEvent) -> None:
@@ -86,5 +86,5 @@ class Carousel(ft.Container):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()

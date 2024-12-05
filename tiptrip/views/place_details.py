@@ -255,7 +255,7 @@ class PlaceDetailsView(ft.View):
 				self.page.open(self.dlg_error)
 
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
 
 			finally:
@@ -356,7 +356,6 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=self.place_data["info"]["schedules"],
 										color=ft.Colors.BLACK,
-										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -380,7 +379,6 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=self.place_data["info"]["prices"],
 										color=ft.Colors.BLACK,
-										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -416,7 +414,6 @@ class PlaceDetailsView(ft.View):
 											f"{self.place_data['address']['state']}."
 										),
 										color=ft.Colors.BLACK,
-										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -440,7 +437,6 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=self.place_data["address"]["how_to_arrive"],
 										color=ft.Colors.BLACK,
-										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -463,7 +459,6 @@ class PlaceDetailsView(ft.View):
 						content=ft.Text(
 							value=self.place_data["info"]["description"],
 							color=ft.Colors.BLACK,
-							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -477,7 +472,6 @@ class PlaceDetailsView(ft.View):
 						content=ft.Text(
 							value=self.place_data["reviews"]["historic"],
 							color=ft.Colors.BLACK,
-							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -491,7 +485,6 @@ class PlaceDetailsView(ft.View):
 						content=ft.Text(
 							value=self.place_data["reviews"]["general"],
 							color=ft.Colors.BLACK,
-							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -505,7 +498,6 @@ class PlaceDetailsView(ft.View):
 						content=ft.Text(
 							value=self.place_data["info"]["services"],
 							color=ft.Colors.BLACK,
-							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -519,7 +511,6 @@ class PlaceDetailsView(ft.View):
 						content=ft.Text(
 							value=self.place_data["info"]["activities"],
 							color=ft.Colors.BLACK,
-							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -533,7 +524,6 @@ class PlaceDetailsView(ft.View):
 						content=ft.Text(
 							value=self.place_data["info"]["permanent_exhibitions"],
 							color=ft.Colors.BLACK,
-							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -547,7 +537,6 @@ class PlaceDetailsView(ft.View):
 						content=ft.Text(
 							value=self.place_data["info"]["temporal_exhibitions"],
 							color=ft.Colors.BLACK,
-							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -577,7 +566,6 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=self.place_data["info"]["mail"],
 										color=ft.Colors.BLACK,
-										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -624,7 +612,6 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=self.place_data["info"]["website"],
 										color=ft.Colors.BLACK,
-										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -648,7 +635,6 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=self.place_data["info"]["sic_website"],
 										color=ft.Colors.BLACK,
-										text_align=ft.TextAlign.JUSTIFY
 									)
 								)
 							]
@@ -715,7 +701,7 @@ class PlaceDetailsView(ft.View):
 					self.page.open(self.dlg_error)
 
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
 
 				finally:
@@ -727,7 +713,7 @@ class PlaceDetailsView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 			else:
@@ -740,7 +726,7 @@ class PlaceDetailsView(ft.View):
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
 
 		else:
@@ -768,7 +754,7 @@ class PlaceDetailsView(ft.View):
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
 
 				finally:
@@ -780,7 +766,7 @@ class PlaceDetailsView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 			else:
 				logger.error("Error adding place to favorites")
@@ -792,5 +778,5 @@ class PlaceDetailsView(ft.View):
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)

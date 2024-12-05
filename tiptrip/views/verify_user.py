@@ -141,13 +141,13 @@ class VerifyUserView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 		try:
 			go_to_view(page=self.page, logger=logger, route="/sign_in")
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			go_to_view(page=self.page, logger=logger, route="/sign_in")
 
 	def btn_submit_clicked(self, _: ft.ControlEvent) -> None:
@@ -157,7 +157,7 @@ class VerifyUserView(ft.View):
 			try:
 				self.page.update()
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.update()
 
 		elif not match(pattern=RGX_EMAIL, string=self.txt_email.value):
@@ -167,7 +167,7 @@ class VerifyUserView(ft.View):
 			try:
 				self.page.open(self.dlg_error)
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
 
 		else:
@@ -178,7 +178,7 @@ class VerifyUserView(ft.View):
 			try:
 				self.page.update()
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.update()
 
 			logger.info("Verifying user...")
@@ -204,13 +204,13 @@ class VerifyUserView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
 				finally:
 					return
@@ -223,7 +223,7 @@ class VerifyUserView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 				logger.info("Setting session data...")
@@ -237,13 +237,13 @@ class VerifyUserView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 				try:
 					go_to_view(page=self.page, logger=logger, route="/change_password")
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					go_to_view(page=self.page, logger=logger, route="/change_password")
 
 			elif response.status_code == 404:
@@ -261,13 +261,13 @@ class VerifyUserView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
 
 			else:
@@ -285,11 +285,11 @@ class VerifyUserView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)

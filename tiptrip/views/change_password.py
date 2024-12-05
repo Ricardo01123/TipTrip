@@ -189,7 +189,7 @@ class ChangePasswordView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 	def btn_back_clicked(self, _: ft.ControlEvent) -> None:
@@ -200,13 +200,13 @@ class ChangePasswordView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 		try:
 			go_to_view(page=self.page, logger=logger, route="/sign_in")
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			go_to_view(page=self.page, logger=logger, route="/sign_in")
 
 	def btn_submit_clicked(self, _: ft.ControlEvent) -> None:
@@ -220,7 +220,7 @@ class ChangePasswordView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 			if self.txt_confirm_password.value == "" or self.txt_confirm_password.value.isspace():
@@ -229,7 +229,7 @@ class ChangePasswordView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 		else:
@@ -240,7 +240,7 @@ class ChangePasswordView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 				logger.info("Updating user password...")
@@ -267,7 +267,7 @@ class ChangePasswordView(ft.View):
 						self.page.open(self.dlg_error)
 
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_error)
 
 					finally:
@@ -284,13 +284,13 @@ class ChangePasswordView(ft.View):
 					try:
 						self.page.update()
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.update()
 
 					try:
 						self.page.open(self.dlg_updated_data)
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_updated_data)
 
 				else:
@@ -314,30 +314,30 @@ class ChangePasswordView(ft.View):
 					try:
 						self.page.update()
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.update()
 
 					try:
 						self.page.open(self.dlg_error)
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_error)
 
 	def handle_dlg_updated_data(self, _: ft.ControlEvent) -> None:
 		try:
 			self.page.close(self.dlg_updated_data)
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_updated_data)
 
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 		try:
 			go_to_view(page=self.page, logger=logger, route="/sign_in")
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			go_to_view(page=self.page, logger=logger, route="/sign_in")

@@ -273,20 +273,20 @@ class SignUpView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 	def dlg_handle_ok_button(self, _: ft.ControlEvent) -> None:
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 		try:
 			self.page.close(self.dlg_success)
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_success)
 
 		logger.info("Showing loading splash screen...")
@@ -295,7 +295,7 @@ class SignUpView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 		logger.info("Authenticating user...")
@@ -326,13 +326,13 @@ class SignUpView(ft.View):
 			try:
 				self.page.update()
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.update()
 
 			try:
 				self.page.open(self.dlg_error)
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
 			finally:
 				return
@@ -369,7 +369,7 @@ class SignUpView(ft.View):
 			try:
 				self.page.update()
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.update()
 
 			logger.info("Hidding loading splash screen...")
@@ -378,13 +378,13 @@ class SignUpView(ft.View):
 			try:
 				self.page.update()
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.update()
 
 			try:
 				go_to_view(page=self.page, logger=logger, route="/permissions")
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				go_to_view(page=self.page, logger=logger, route="/permissions")
 
 		else:
@@ -403,13 +403,13 @@ class SignUpView(ft.View):
 			try:
 				self.page.update()
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.update()
 
 			try:
 				self.page.open(self.dlg_error)
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
 			finally:
 				return
@@ -421,7 +421,7 @@ class SignUpView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 		logger.info("Cleaning text fields...")
@@ -444,13 +444,13 @@ class SignUpView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 		try:
 			go_to_view(page=self.page, logger=logger, route="/sign_in")
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			go_to_view(page=self.page, logger=logger, route="/sign_in")
 
 	def btn_submit_clicked(self, _: ft.ControlEvent) -> None:
@@ -496,7 +496,7 @@ class SignUpView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 		if all([
@@ -525,7 +525,7 @@ class SignUpView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 				logger.info("Creating new user...")
@@ -556,13 +556,13 @@ class SignUpView(ft.View):
 					try:
 						self.page.update()
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.update()
 
 					try:
 						self.page.open(self.dlg_error)
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_error)
 					finally:
 						return
@@ -576,13 +576,13 @@ class SignUpView(ft.View):
 					try:
 						self.page.update()
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.update()
 
 					try:
 						self.page.open(self.dlg_success)
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_success)
 
 				elif response.status_code == 409:
@@ -603,13 +603,13 @@ class SignUpView(ft.View):
 					try:
 						self.page.update()
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.update()
 
 					try:
 						self.page.open(self.dlg_error)
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_error)
 
 				else:
@@ -628,11 +628,11 @@ class SignUpView(ft.View):
 					try:
 						self.page.update()
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.update()
 
 					try:
 						self.page.open(self.dlg_error)
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_error)

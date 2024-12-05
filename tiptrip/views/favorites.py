@@ -20,10 +20,12 @@ class FavoritesView(ft.View):
 		self.page = page
 
 		# Custom components
-		# Geolocation components
+		self.ph: ft.PermissionHandler = ft.PermissionHandler()
+		page.overlay.append(self.ph)
+
 		self.gl: ft.Geolocator = ft.Geolocator(
 			location_settings=ft.GeolocatorSettings(
-				accuracy=ft.GeolocatorPositionAccuracy.LOW
+				accuracy=ft.GeolocatorPositionAccuracy.BEST
 			),
 			on_error=lambda error: logger.error(f"Geolocator error: {error}"),
 		)
@@ -96,37 +98,7 @@ class FavoritesView(ft.View):
 			)
 		)
 
-		# Modals and bottom sheet components
-		self.dlg_request_location_permission: ft.AlertDialog = ft.AlertDialog(
-			modal=True,
-			title=ft.Text(""),
-			content=ft.Text(""),
-			actions=[
-				ft.TextButton(
-					text="Cancelar",
-					on_click=lambda _: self.page.close(self.dlg_request_location_permission)
-				),
-				ft.TextButton(
-					text="Aceptar",
-					on_click=self.request_location_permission
-				)
-			],
-			actions_alignment=ft.MainAxisAlignment.END,
-			on_dismiss=lambda _: self.page.close(self.dlg_request_location_permission)
-		)
-		self.dlg_location: ft.AlertDialog = ft.AlertDialog(
-			modal=True,
-			title=ft.Text(""),
-			content=ft.Text(""),
-			actions_alignment=ft.MainAxisAlignment.END,
-			actions=[
-				ft.TextButton(
-					text="Aceptar",
-					on_click=lambda _: self.page.close(self.dlg_location)
-				)
-			],
-			on_dismiss=lambda _: self.page.close(self.dlg_location)
-		)
+		# Dialogs components
 		self.dlg_error: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
 			title=ft.Text(""),
@@ -149,6 +121,7 @@ class FavoritesView(ft.View):
 				bgcolor=SECONDARY_COLOR,
 				foreground_color=ft.Colors.WHITE,
 				shape=ft.CircleBorder(),
+				data=ft.PermissionType.LOCATION,
 				on_click=self.check_if_open_map
 			),
 			floating_action_button_location=ft.FloatingActionButtonLocation.MINI_CENTER_DOCKED,
@@ -232,7 +205,7 @@ class FavoritesView(ft.View):
 				self.page.open(self.dlg_error)
 
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
 
 			finally:
@@ -307,7 +280,7 @@ class FavoritesView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 	def search_favorite(self, _: ft.ControlEvent) -> None:
@@ -317,7 +290,7 @@ class FavoritesView(ft.View):
 			self.update_pagination_data(self.items)
 		else:
 			value: str = self.txt_favorite_searcher.value.lower()
-			logger.info(f"Searching favorite... Searching for value {value}")
+			logger.info(f"Searching place by: {value}")
 			items: list = [
 				favorite for favorite in self.items if value in
 				# Searching in the structure of the PlaceCard component in place_card.py
@@ -338,7 +311,7 @@ class FavoritesView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 	def next_page(self, _: ft.ControlEvent) -> None:
@@ -353,14 +326,14 @@ class FavoritesView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 	def request_location_permission(self, _: ft.ControlEvent) -> None:
 		try:
 			self.page.close(self.dlg_request_location_permission)
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_request_location_permission)
 
 		logger.info("Requesting location permissions...")
@@ -388,7 +361,7 @@ class FavoritesView(ft.View):
 				try:
 					self.page.open(self.dlg_location)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_location)
 
 		else:
@@ -401,31 +374,31 @@ class FavoritesView(ft.View):
 			try:
 				self.page.open(self.dlg_location)
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_location)
 
-	def check_if_open_map(self, _: ft.ControlEvent) -> None:
+	def check_if_open_map(self, event: ft.ControlEvent) -> None:
 		logger.info("Checking location permissions...")
-		if is_location_permission_enabled(gl=self.gl, logger=logger):
+		permission: ft.PermissionStatus = self.ph.request_permission(event.control.data, wait_timeout=60)
+		logger.info(f"Location permissions status: {permission}")
+		if permission == ft.PermissionStatus.GRANTED:
 			logger.info("Location permissions are granted...")
 
 			try:
 				go_to_view(self.page, logger=logger, route="/map")
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				go_to_view(self.page, logger=logger, route="/map")
 
 		else:
 			logger.warning("Location permissions are not granted...")
-			logger.info("Requesting location permissions...")
-			self.dlg_request_location_permission.title = ft.Text("Permisos de ubicación")
-			self.dlg_request_location_permission.content = ft.Text(
+			self.dlg_error.title = ft.Text("Permisos de ubicación")
+			self.dlg_error.content = ft.Text(
 				"Para acceder al mapa interactivo, "
 				"necesitamos que permitas el acceso a tu ubicación."
 			)
-
 			try:
-				self.page.open(self.dlg_request_location_permission)
+				self.page.open(self.dlg_error)
 			except Exception as e:
-				logger.error("Error: {e}")
-				self.page.open(self.dlg_request_location_permission)
+				logger.error(f"Error: {e}")
+				self.page.open(self.dlg_error)

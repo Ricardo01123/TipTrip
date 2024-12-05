@@ -261,7 +261,7 @@ class UpdateUserView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 	def btn_submit_clicked(self, _: ft.ControlEvent) -> None:
@@ -273,7 +273,7 @@ class UpdateUserView(ft.View):
 			try:
 				self.page.open(self.dlg_error)
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
 
 		elif not match(pattern=RGX_EMAIL, string=self.txt_email.value):
@@ -283,7 +283,7 @@ class UpdateUserView(ft.View):
 			try:
 				self.page.open(self.dlg_error)
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
 
 		else:
@@ -309,7 +309,7 @@ class UpdateUserView(ft.View):
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
 
 			else:
@@ -338,7 +338,7 @@ class UpdateUserView(ft.View):
 						self.page.open(self.dlg_error)
 
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_error)
 
 					finally:
@@ -356,7 +356,7 @@ class UpdateUserView(ft.View):
 					try:
 						self.page.open(self.dlg_updated_data)
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_updated_data)
 
 				else:
@@ -372,7 +372,7 @@ class UpdateUserView(ft.View):
 					try:
 						self.page.open(self.dlg_error)
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_error)
 
 	def btn_back_clicked(self, _: ft.ControlEvent) -> None:
@@ -385,7 +385,7 @@ class UpdateUserView(ft.View):
 		try:
 			go_to_view(page=self.page, logger=logger, route="/account")
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			go_to_view(page=self.page, logger=logger, route="/account")
 
 	def save_new_user_image(self, event: ft.FilePickerResultEvent) -> None:
@@ -401,7 +401,7 @@ class UpdateUserView(ft.View):
 				try:
 					self.page.open(self.dlg_updated_image)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_updated_image)
 
 			else:
@@ -416,7 +416,7 @@ class UpdateUserView(ft.View):
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
 
 		else:
@@ -426,24 +426,24 @@ class UpdateUserView(ft.View):
 		try:
 			self.page.close(self.dlg_updated_data)
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_updated_data)
 
 		try:
 			go_to_view(page=self.page, logger=logger, route="/account")
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			go_to_view(page=self.page, logger=logger, route="/account")
 
 	def handle_dlg_updated_image(self, _: ft.ControlEvent) -> None:
 		try:
 			self.page.close(self.dlg_updated_image)
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_updated_image)
 
 		try:
 			go_to_view(page=self.page, logger=logger, route="/account")
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			go_to_view(page=self.page, logger=logger, route="/account")

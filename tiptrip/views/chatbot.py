@@ -27,7 +27,9 @@ class ChatbotView(ft.View):
 		self.record_flag: bool = False
 
 		# Custom components
-		# Geolocation components
+		self.ph: ft.PermissionHandler = ft.PermissionHandler()
+		page.overlay.append(self.ph)
+
 		self.gl: ft.Geolocator = ft.Geolocator(
 			location_settings=ft.GeolocatorSettings(
 				accuracy=ft.GeolocatorPositionAccuracy.LOW
@@ -44,7 +46,6 @@ class ChatbotView(ft.View):
 			auto_gain=True,
 			cancel_echo=True,
 			suppress_noise=True
-			# on_state_changed=handle_state_change,
 		)
 		self.page.overlay.append(self.audio_recorder)
 
@@ -110,6 +111,9 @@ class ChatbotView(ft.View):
 		self.txt_message: ft.TextField = ft.TextField(
 			label="Escribe un mensaje",
 			on_change=self.validate,
+			autofocus=True,
+			capitalization=ft.TextCapitalization.SENTENCES,
+			autocorrect=True,
 			multiline=True,
 			shift_enter=True,
 			max_length=250,
@@ -156,49 +160,11 @@ class ChatbotView(ft.View):
 			expand=1,
 			alignment=ft.alignment.center_right,
 			content=self.cca_mic,
+			data=ft.PermissionType.LOCATION,
 			on_click=self.cca_mic_clicked
 		)
 
 		# Modals components
-		self.dlg_request_location_permission: ft.AlertDialog = ft.AlertDialog(
-			modal=True,
-			title=ft.Text(""),
-			content=ft.Text(""),
-			actions=[
-				ft.TextButton(
-					text="Cancelar",
-					on_click=self.request_location_permission_denied
-				),
-				ft.TextButton(
-					text="Aceptar",
-					on_click=self.request_location_permission
-				)
-			],
-			actions_alignment=ft.MainAxisAlignment.END,
-			on_dismiss=lambda _: self.page.close(self.dlg_request_location_permission)
-		)
-		self.dlg_request_audio_permission: ft.AlertDialog = ft.AlertDialog(
-			modal=True,
-			title=ft.Text(value="Permisos de micrófono"),
-			content=ft.Text(
-				value=(
-					"Para poder enviar mensajes de voz al agente conversacional, "
-					"necesitamos que permitas el acceso a tu micrófono."
-				)
-			),
-			actions=[
-				ft.TextButton(
-					text="Cancelar",
-					on_click=self.request_audio_permission_denied
-				),
-				ft.TextButton(
-					text="Aceptar",
-					on_click=self.request_audio_permission
-				)
-			],
-			actions_alignment=ft.MainAxisAlignment.END,
-			on_dismiss=lambda _: self.page.close(self.dlg_request_audio_permission)
-		)
 		self.dlg_error: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
 			title=ft.Text(""),
@@ -284,7 +250,7 @@ class ChatbotView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 	def add_message(self, is_bot: bool, message: str, must_anwser: bool = False) -> None:
@@ -322,7 +288,7 @@ class ChatbotView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 			else:
@@ -349,7 +315,7 @@ class ChatbotView(ft.View):
 						try:
 							self.page.update()
 						except Exception as e:
-							logger.error("Error: {e}")
+							logger.error(f"Error: {e}")
 							self.page.update()
 
 							return
@@ -396,7 +362,7 @@ class ChatbotView(ft.View):
 									try:
 										self.page.update()
 									except Exception as e:
-										logger.error("Error: {e}")
+										logger.error(f"Error: {e}")
 										self.page.update()
 
 										return
@@ -458,10 +424,10 @@ class ChatbotView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
-	def cca_send_clicked(self, _: ft.ControlEvent) -> None:
+	def cca_send_clicked(self, event: ft.ControlEvent) -> None:
 		if self.txt_message.value == "" or self.txt_message.value.isspace():
 			logger.info("Empty message, not sending...")
 
@@ -476,7 +442,7 @@ class ChatbotView(ft.View):
 			try:
 				self.page.update()
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.update()
 
 			self.add_message(is_bot=False, message=aux_message)
@@ -486,182 +452,11 @@ class ChatbotView(ft.View):
 			for phrase in LOCATION_PHRASES:
 				if phrase in aux_message.lower():
 					logger.info("Agent is asking for user location. Checking location permissions...")
-					if is_location_permission_enabled(gl=self.gl, logger=logger):
+					permission: ft.PermissionStatus = self.ph.request_permission(event.control.data, wait_timeout=60)
+					logger.info(f"Location permissions status: {permission}")
+					if permission == ft.PermissionStatus.GRANTED:
 						logger.info("Location permissions granted. Getting current coordinates...")
-						current_position: ft.GeolocatorPosition = self.gl.get_current_position()
-						self.page.session.set(key="current_latitude", value=current_position.latitude)
-						self.page.session.set(key="current_longitude", value=current_position.longitude)
-						logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
-
-						logger.info("Verifying if user's location is inside CDMX coordinates...")
-						if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
-							logger.info("User's location is inside CDMX coordinates. Saving user's location inside DB...")
-
-							response: Response = post(
-								url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
-								headers={
-									"Content-Type": "application/json",
-									"Authorization": f"Bearer {self.page.session.get('session_token')}"
-								},
-								json={
-									"latitude": self.page.session.get("current_latitude"),
-									"longitude": self.page.session.get("current_longitude")
-								}
-							)
-
-							if response.status_code == 201:
-								logger.info("User's coordinates saved successfully")
-								sleep(2)
-								break
-
-							else:
-								logger.warning(f"Error saving user's coordinates: {response.json()}")
-								logger.info("Replacing last agent message with error message...")
-								self.lv_chat.controls[-1].controls[0].content = Message(
-									is_bot=True,
-									message=(
-										"Ocurrió un error al solicitar información de lugares cercanos a tu ubicación actual. "
-										"Favor de intentarlo de nuevo más tarde."
-									)
-								)
-
-								try:
-									self.page.update()
-								except Exception as e:
-									logger.error("Error: {e}")
-									self.page.update()
-								finally:
-									return
-
-						else:
-							logger.warning("User's location is outside CDMX coordinates. ")
-							logger.info("Replacing last agent message with error message...")
-							self.lv_chat.controls[-1].controls[0].content = Message(
-								is_bot=True,
-								message=(
-									"Tu ubicación actual se encuentra fuera de los límites de la Ciudad de México, "
-									"por lo que no se puede realizar la búsqueda de información de lugares cercanos a tu ubicación actual."
-								)
-							)
-							try:
-								self.page.update()
-							except Exception as e:
-								logger.error("Error: {e}")
-								self.page.update()
-							finally:
-								return
-
-					else:
-						logger.warning("Location permissions are not granted. Opening location permissions dialog...")
-						logger.info("Opening request location permissions dialog...")
-						self.dlg_request_location_permission.title = ft.Text("Permisos de ubicación")
-						self.dlg_request_location_permission.content = ft.Text(
-							value=(
-								"Para obtener información sobre lugares cercanos a tu ubicación actual, "
-								"necesitamos que permitas el acceso a tu ubicación."
-							)
-						)
 						try:
-							self.page.open(self.dlg_request_location_permission)
-						except Exception as e:
-							logger.error("Error: {e}")
-							self.page.open(self.dlg_request_location_permission)
-						finally:
-							return
-
-			self.add_message(
-				is_bot=True,
-				message=self.lv_chat.controls[-2].controls[1].content.content.value,
-				must_anwser=True
-			)
-
-	def cca_mic_clicked(self, _: ft.ControlEvent) -> None:
-		if not self.record_flag:
-			logger.info("Recording audio process started...")
-
-			logger.info("Asking for audio permissions if not granted...")
-			if not self.audio_recorder.has_permission(wait_timeout=60.0):
-				logger.warning("Audio permissions are not granted. Opening audio permissions dialog...")
-				try:
-					self.page.open(self.dlg_request_audio_permission)
-				except Exception as e:
-					logger.error("Error: {e}")
-					self.page.open(self.dlg_request_audio_permission)
-				finally:
-					return
-
-			logger.info("Changing UI components to recording state...")
-			self.txt_message.value = "Grabando audio..."
-			self.cca_mic.bgcolor = ft.Colors.RED
-			self.cca_mic.content = ft.Icon(
-				name=ft.Icons.SEND,
-				color=ft.Colors.WHITE,
-				size=25
-			)
-			try:
-				self.page.update()
-			except Exception as e:
-				logger.error("Error: {e}")
-				self.page.update()
-
-			logger.info("Starting audio recording...")
-			self.record_flag = True
-			self.audio_recorder.start_recording(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME))
-
-		else:
-			logger.info("Changing UI components to initial state...")
-			self.txt_message.value = ""
-			self.cca_mic.bgcolor = MAIN_COLOR
-			self.cca_mic.content = ft.Icon(
-				name=ft.Icons.MIC,
-				color=ft.Colors.WHITE,
-				size=25
-			)
-			try:
-				self.page.update()
-			except Exception as e:
-				logger.error("Error: {e}")
-				self.page.update()
-
-			logger.info("Stopping audio recording...")
-			self.record_flag = False
-			self.audio_recorder.stop_recording()
-
-			logger.info("Encoding audio file...")
-			with open(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME), "rb") as audio_file:
-				encoded_audio_data: str = b64encode(audio_file.read()).decode("utf-8")
-
-			logger.info("Speech recognition process started...")
-			response: Response = post(
-				url=f"{BACK_END_URL}/{ASR_ENDPOINT}",
-				headers={
-					"Content-Type": "application/json",
-					"Authorization": f"Bearer {self.page.session.get('session_token')}"
-				},
-				json={
-					"audio": encoded_audio_data
-				}
-			)
-
-			logger.info(f"Speech recognition (ASR) endpoint response received {response.status_code}: {response.json()}")
-			if response.status_code == 201:
-				user_message: str = response.json()["text"]
-				logger.info(f"Speech captured: {user_message}")
-				self.add_message(is_bot=False, message=user_message.capitalize())
-				self.add_message(is_bot=True, message="Buscando información...")
-				try:
-					self.page.update()
-				except Exception as e:
-					logger.error("Error: {e}")
-					self.page.update()
-
-				logger.info("Checking if the agent needs user's location...")
-				user_message = self.lv_chat.controls[-2].controls[1].content.content.value
-				for phrase in LOCATION_PHRASES:
-					if phrase in user_message.lower():
-						logger.info("Agent is asking for user location. Checking location permissions...")
-						if is_location_permission_enabled(gl=self.gl, logger=logger):
-							logger.info("Location permissions granted. Getting current coordinates...")
 							current_position: ft.GeolocatorPosition = self.gl.get_current_position()
 							self.page.session.set(key="current_latitude", value=current_position.latitude)
 							self.page.session.set(key="current_longitude", value=current_position.longitude)
@@ -702,15 +497,13 @@ class ChatbotView(ft.View):
 									try:
 										self.page.update()
 									except Exception as e:
-										logger.error("Error: {e}")
+										logger.error(f"Error: {e}")
 										self.page.update()
 									finally:
 										return
 
 							else:
-								logger.warning("User's location is outside CDMX coordinates. ")
-								logger.info("Replacing last agent message with error message...")
-
+								logger.warning("User's location is outside CDMX coordinates. Replacing last agent message with error message...")
 								self.lv_chat.controls[-1].controls[0].content = Message(
 									is_bot=True,
 									message=(
@@ -721,27 +514,262 @@ class ChatbotView(ft.View):
 								try:
 									self.page.update()
 								except Exception as e:
-									logger.error("Error: {e}")
+									logger.error(f"Error: {e}")
+									self.page.update()
+								finally:
+									return
+
+						except Exception as e:
+							logger.warning(f"Error getting current coordinates: {e}")
+							logger.info("Replacing last agent message with error message...")
+							self.lv_chat.controls[-1].controls[0].content = Message(
+								is_bot=True,
+								message=(
+									"No se han otorgado los permisos de ubicación, "
+									"por lo que no se puede realizar la búsqueda de información "
+									"de lugares cercanos a tu ubicación actual.\n"
+									"Por favor intenta de nuevo con una pregunta diferente."
+								)
+							)
+							try:
+								self.page.update()
+							except Exception as e:
+								logger.error(f"Error: {e}")
+								self.page.update()
+							finally:
+								return
+
+					else:
+						logger.warning("Location permissions are not granted. Replacing last agent message with error message...")
+						self.lv_chat.controls[-1].controls[0].content = Message(
+							is_bot=True,
+							message=(
+								"No se han otorgado los permisos de ubicación, "
+								"por lo que no se puede realizar la búsqueda de información "
+								"de lugares cercanos a tu ubicación actual.\n"
+								"Por favor intenta de nuevo con una pregunta diferente."
+							)
+						)
+						try:
+							self.page.update()
+						except Exception as e:
+							logger.error(f"Error: {e}")
+							self.page.update()
+						finally:
+							return
+
+			self.add_message(
+				is_bot=True,
+				message=self.lv_chat.controls[-2].controls[1].content.content.value,
+				must_anwser=True
+			)
+
+	def cca_mic_clicked(self, event: ft.ControlEvent) -> None:
+		if not self.record_flag:
+			logger.info("Recording audio process started...")
+
+			logger.info("Asking for audio permissions if not granted...")
+			if not self.audio_recorder.has_permission(wait_timeout=60.0):
+				logger.warning("Audio permissions are not granted. Opening audio permissions dialog...")
+				try:
+					self.page.open(self.dlg_request_audio_permission)
+				except Exception as e:
+					logger.error(f"Error: {e}")
+					self.page.open(self.dlg_request_audio_permission)
+				finally:
+					return
+
+			logger.info("Changing UI components to recording state...")
+			self.txt_message.value = "Grabando audio..."
+			self.cca_mic.bgcolor = ft.Colors.RED
+			self.cca_mic.content = ft.Icon(
+				name=ft.Icons.SEND,
+				color=ft.Colors.WHITE,
+				size=25
+			)
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error(f"Error: {e}")
+				self.page.update()
+
+			logger.info("Starting audio recording...")
+			self.record_flag = True
+			self.audio_recorder.start_recording(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME))
+
+		else:
+			logger.info("Changing UI components to initial state...")
+			self.txt_message.value = ""
+			self.cca_mic.bgcolor = MAIN_COLOR
+			self.cca_mic.content = ft.Icon(
+				name=ft.Icons.MIC,
+				color=ft.Colors.WHITE,
+				size=25
+			)
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error(f"Error: {e}")
+				self.page.update()
+
+			logger.info("Stopping audio recording...")
+			self.record_flag = False
+			self.audio_recorder.stop_recording()
+
+			logger.info("Encoding audio file...")
+			with open(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME), "rb") as audio_file:
+				encoded_audio_data: str = b64encode(audio_file.read()).decode("utf-8")
+
+			logger.info("Speech recognition process started...")
+			try:
+				response: Response = post(
+					url=f"{BACK_END_URL}/{ASR_ENDPOINT}",
+					headers={
+						"Content-Type": "application/json",
+						"Authorization": f"Bearer {self.page.session.get('session_token')}"
+					},
+					json={
+						"audio": encoded_audio_data
+					}
+				)
+
+			except ConnectTimeout:
+				logger.error("Connection timeout while authenticating user")
+				self.dlg_error.title = ft.Text(value="Error de conexión a internet")
+				self.dlg_error.content = ft.Text(
+					value=(
+						"Ocurrió un error de conexión a internet al intentar convertir el mensaje de voz en texto. "
+						"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
+					)
+				)
+				try:
+					self.page.open(self.dlg_error)
+				except Exception as e:
+					logger.error(f"Error: {e}")
+					self.page.open(self.dlg_error)
+				finally:
+					return
+
+			logger.info(f"Speech recognition (ASR) endpoint response received {response.status_code}: {response.json()}")
+			if response.status_code == 201:
+				user_message: str = response.json()["text"]
+				logger.info(f"Speech captured: {user_message}")
+				self.add_message(is_bot=False, message=user_message.capitalize())
+				self.add_message(is_bot=True, message="Buscando información...")
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error(f"Error: {e}")
+					self.page.update()
+
+				logger.info("Checking if the agent needs user's location...")
+				user_message = self.lv_chat.controls[-2].controls[1].content.content.value
+				for phrase in LOCATION_PHRASES:
+					if phrase in user_message.lower():
+						logger.info("Agent is asking for user location. Checking location permissions...")
+						permission: ft.PermissionStatus = self.ph.request_permission(event.control.data, wait_timeout=60)
+						logger.info(f"Location permissions status: {permission}")
+						if permission == ft.PermissionStatus.GRANTED:
+							logger.info("Location permissions granted. Getting current coordinates...")
+							try:
+								current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+								self.page.session.set(key="current_latitude", value=current_position.latitude)
+								self.page.session.set(key="current_longitude", value=current_position.longitude)
+								logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+
+								logger.info("Verifying if user's location is inside CDMX coordinates...")
+								if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
+									logger.info("User's location is inside CDMX coordinates. Saving user's location inside DB...")
+
+									response: Response = post(
+										url=f"{BACK_END_URL}/{USERS_ENDPOINT}/{self.page.session.get('id')}",
+										headers={
+											"Content-Type": "application/json",
+											"Authorization": f"Bearer {self.page.session.get('session_token')}"
+										},
+										json={
+											"latitude": self.page.session.get("current_latitude"),
+											"longitude": self.page.session.get("current_longitude")
+										}
+									)
+
+									if response.status_code == 201:
+										logger.info("User's coordinates saved successfully")
+										sleep(2)
+										break
+
+									else:
+										logger.warning(f"Error saving user's coordinates: {response.json()}")
+										logger.info("Replacing last agent message with error message...")
+										self.lv_chat.controls[-1].controls[0].content = Message(
+											is_bot=True,
+											message=(
+												"Ocurrió un error al solicitar información de lugares cercanos a tu ubicación actual. "
+												"Favor de intentarlo de nuevo más tarde."
+											)
+										)
+
+										try:
+											self.page.update()
+										except Exception as e:
+											logger.error(f"Error: {e}")
+											self.page.update()
+										finally:
+											return
+
+								else:
+									logger.warning("User's location is outside CDMX coordinates. Replacing last agent message with error message...")
+									self.lv_chat.controls[-1].controls[0].content = Message(
+										is_bot=True,
+										message=(
+											"Tu ubicación actual se encuentra fuera de los límites de la Ciudad de México, "
+											"por lo que no se puede realizar la búsqueda de información de lugares cercanos a tu ubicación actual."
+										)
+									)
+									try:
+										self.page.update()
+									except Exception as e:
+										logger.error(f"Error: {e}")
+										self.page.update()
+									finally:
+										return
+
+							except Exception as e:
+								logger.warning(f"Error getting current coordinates: {e}")
+								logger.info("Replacing last agent message with error message...")
+								self.lv_chat.controls[-1].controls[0].content = Message(
+									is_bot=True,
+									message=(
+										"No se han otorgado los permisos de ubicación, "
+										"por lo que no se puede realizar la búsqueda de información "
+										"de lugares cercanos a tu ubicación actual.\n"
+										"Por favor intenta de nuevo con una pregunta diferente."
+									)
+								)
+								try:
+									self.page.update()
+								except Exception as e:
+									logger.error(f"Error: {e}")
 									self.page.update()
 								finally:
 									return
 
 						else:
-							logger.warning("Location permissions are not granted. Opening location permissions dialog...")
-							logger.info("Opening request location permissions dialog...")
-							self.dlg_request_location_permission.title = ft.Text("Permisos de ubicación")
-							self.dlg_request_location_permission.content = ft.Text(
-								value=(
-									"Para obtener información sobre lugares cercanos a tu ubicación actual, "
-									"necesitamos que permitas el acceso a tu ubicación."
+							logger.warning("Location permissions are not granted. Replacing last agent message with error message...")
+							self.lv_chat.controls[-1].controls[0].content = Message(
+								is_bot=True,
+								message=(
+									"No se han otorgado los permisos de ubicación, "
+									"por lo que no se puede realizar la búsqueda de información "
+									"de lugares cercanos a tu ubicación actual.\n"
+									"Por favor intenta de nuevo con una pregunta diferente."
 								)
 							)
-
 							try:
-								self.page.open(self.dlg_request_location_permission)
+								self.page.update()
 							except Exception as e:
-								logger.error("Error: {e}")
-								self.page.open(self.dlg_request_location_permission)
+								logger.error(f"Error: {e}")
+								self.page.update()
 							finally:
 								return
 
@@ -758,7 +786,7 @@ class ChatbotView(ft.View):
 		try:
 			self.page.close(self.dlg_request_audio_permission)
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_request_audio_permission)
 
 		logger.info("Requesting audio permissions...")
@@ -776,7 +804,7 @@ class ChatbotView(ft.View):
 			try:
 				self.page.update()
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.update()
 
 			logger.info("Starting audio recording...")
@@ -797,7 +825,7 @@ class ChatbotView(ft.View):
 		try:
 			self.page.close(self.dlg_request_audio_permission)
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_request_audio_permission)
 
 		logger.warning("Audio permissions denied. Replacing last agent message with error message...")
@@ -814,87 +842,3 @@ class ChatbotView(ft.View):
 			logger.info("Switch audio for agent changed to Audio")
 		else:
 			logger.info("Switch audio for agent changed to Text")
-
-	def request_location_permission(self, _: ft.ControlEvent) -> None:
-		try:
-			self.page.close(self.dlg_request_audio_permission)
-		except Exception as e:
-			logger.error("Error: {e}")
-			self.page.close(self.dlg_request_audio_permission)
-
-		logger.info("Requesting location permissions...")
-		if request_location_permissions(self.gl, logger):
-			logger.info("Location permissions granted. Getting current coordinates...")
-			current_position: ft.GeolocatorPosition = self.gl.get_current_position()
-			self.page.session.set(key="current_latitude", value=current_position.latitude)
-			self.page.session.set(key="current_longitude", value=current_position.longitude)
-			logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
-
-			logger.info("Verifying if user's location is inside CDMX coordinates...")
-			if is_inside_cdmx((self.page.session.get("current_latitude"), self.page.session.get("current_longitude"))):
-				logger.warning("User's location is inside CDMX coordinates. ")
-				logger.info("Replacing last agent message with success message...")
-				self.lv_chat.controls[-1].controls[0].content = Message(
-					is_bot=True,
-					message=(
-						"Perfecto, ahora puedes realizar cualquier pregunta sobre "
-						"lugares turísticos cercanos a tu ubicación actual.\n"
-						"¡Intentalo!"
-					)
-				)
-
-			else:
-				logger.warning("User's location is outside CDMX coordinates")
-				logger.info("Replacing last agent message with error message...")
-				self.lv_chat.controls[-1].controls[0].content = Message(
-					is_bot=True,
-					message=(
-						"Tu ubicación actual se encuentra fuera de los límites "
-						"de la Ciudad de México, por lo que no se puede realizar "
-						"la búsqueda de información de lugares cercanos a tu ubicación actual.\n"
-						"Por favor intenta de nuevo con una pregunta diferente."
-					)
-				)
-
-		else:
-			logger.warning("Location permissions denied")
-			logger.info("Replacing last agent message with error message...")
-			self.lv_chat.controls[-1].controls[0].content = Message(
-				is_bot=True,
-				message=(
-					"No se han otorgado los permisos de ubicación, "
-					"por lo que no se puede realizar la búsqueda de información "
-					"de lugares cercanos a tu ubicación actual.\n"
-					"Por favor intenta de nuevo con una pregunta diferente."
-				)
-			)
-
-		try:
-			self.page.update()
-		except Exception as e:
-			logger.error("Error: {e}")
-			self.page.update()
-
-	def request_location_permission_denied(self, _: ft.ControlEvent) -> None:
-		try:
-			self.page.close(self.dlg_request_location_permission)
-		except Exception as e:
-			logger.error("Error: {e}")
-			self.page.close(self.dlg_request_location_permission)
-
-		logger.info("Location permissions denied")
-		logger.info("Replacing last agent message with error message...")
-		self.lv_chat.controls[-1].controls[0].content = Message(
-			is_bot=True,
-			message=(
-				"No se han otorgado los permisos de ubicación, "
-				"por lo que no se puede realizar la búsqueda de información de "
-				"lugares cercanos a tu ubicación actual.\n"
-				"Por favor intenta de nuevo con una pregunta diferente."
-			)
-		)
-		try:
-			self.page.update()
-		except Exception as e:
-			logger.error("Error: {e}")
-			self.page.update()

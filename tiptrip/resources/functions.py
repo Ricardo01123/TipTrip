@@ -72,7 +72,7 @@ def format_place_name(place_name: str) -> str:
 
 
 # Geolocation functions
-def is_location_permission_enabled(gl: ft.Geolocator, logger: Logger) -> bool:
+def is_location_permission_enabled(gl: ft.Geolocator, logger: Logger, data = None) -> bool:
 	try:
 		status: ft.GeolocatorPermissionStatus = gl.get_permission_status()
 		logger.info(f"Location permission status: {status}")

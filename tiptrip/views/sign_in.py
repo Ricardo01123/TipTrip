@@ -19,16 +19,18 @@ class SignInView(ft.View):
 		# Custom attributes
 		self.page = page
 
-		# Geolocator component
+		# Custom components
+		self.ph: ft.PermissionHandler = ft.PermissionHandler()
+		page.overlay.append(self.ph)
+
 		self.gl: ft.Geolocator = ft.Geolocator(
 			location_settings=ft.GeolocatorSettings(
-				accuracy=ft.GeolocatorPositionAccuracy.LOW
+				accuracy=ft.GeolocatorPositionAccuracy.BEST
 			),
 			on_error=lambda error: logger.error(f"Geolocator error: {error}"),
 		)
 		self.page.overlay.append(self.gl)
 
-		# Custom components
 		self.txt_email: ft.TextField = ft.TextField(
 			prefix_icon=ft.Icons.EMAIL,
 			label="Correo electrónico",
@@ -79,6 +81,7 @@ class SignInView(ft.View):
 		self.btn_submit: ft.ElevatedButton = ft.ElevatedButton(
 			width=self.page.width,
 			content=ft.Text(value="Iniciar sesión", size=BTN_TEXT_SIZE),
+			data=ft.PermissionType.LOCATION,
 			on_click=self.btn_submit_clicked,
 			**btn_primary_style
 		)
@@ -183,7 +186,7 @@ class SignInView(ft.View):
 			]
 		)
 
-	def btn_submit_clicked(self, _: ft.ControlEvent) -> None:
+	def btn_submit_clicked(self, event: ft.ControlEvent) -> None:
 		email_txt_filled: bool = False
 		password_txt_filled: bool = False
 
@@ -205,7 +208,7 @@ class SignInView(ft.View):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 		if email_txt_filled and password_txt_filled:
@@ -215,7 +218,7 @@ class SignInView(ft.View):
 			try:
 				self.page.update()
 			except Exception as e:
-				logger.error("Error: {e}")
+				logger.error(f"Error: {e}")
 				self.page.update()
 
 			logger.info("Authenticating user...")
@@ -244,13 +247,13 @@ class SignInView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
 				finally:
 					return
@@ -284,47 +287,67 @@ class SignInView(ft.View):
 				self.txt_password.value = ""
 
 				logger.info("Checking location permissions...")
-				if request_location_permissions(self.gl, logger):
+				permission: ft.PermissionStatus = self.ph.request_permission(event.control.data, wait_timeout=60)
+				logger.info(f"Location permissions status: {permission}")
+				if permission == ft.PermissionStatus.GRANTED:
 					logger.info("Location permissions granted. Getting current coordinates...")
-					current_position: ft.GeolocatorPosition = self.gl.get_current_position()
-					self.page.session.set(key="current_latitude", value=current_position.latitude)
-					self.page.session.set(key="current_longitude", value=current_position.longitude)
-					logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
-
-					self.page.session.set(
-						key="is_inside_cdmx",
-						value=(
-							True
-							if is_inside_cdmx((
-								self.page.session.get("current_latitude"),
-								self.page.session.get("current_longitude")
-							))
-							else False
-						)
-					)
-					self.page.session.set(
-						key="chk_distance_value",
-						value=(
-							True
-							if self.page.session.get("is_inside_cdmx")
-							else False
-						)
-					)
-
-					logger.info("Hidding loading splash screen...")
-					self.cont_splash.visible = False
-					self.splash.visible = False
 					try:
-						self.page.update()
-					except Exception as e:
-						logger.error("Error: {e}")
-						self.page.update()
+						current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+						self.page.session.set(key="current_latitude", value=current_position.latitude)
+						self.page.session.set(key="current_longitude", value=current_position.longitude)
+						logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
 
-					try:
-						go_to_view(page=self.page, logger=logger, route='/')
+						self.page.session.set(
+							key="is_inside_cdmx",
+							value=(
+								True
+								if is_inside_cdmx((
+									self.page.session.get("current_latitude"),
+									self.page.session.get("current_longitude")
+								))
+								else False
+							)
+						)
+						self.page.session.set(
+							key="chk_distance_value",
+							value=(
+								True
+								if self.page.session.get("is_inside_cdmx")
+								else False
+							)
+						)
+
+						logger.info("Hidding loading splash screen...")
+						self.cont_splash.visible = False
+						self.splash.visible = False
+						try:
+							self.page.update()
+						except Exception as e:
+							logger.error(f"Error: {e}")
+							self.page.update()
+
+						try:
+							go_to_view(page=self.page, logger=logger, route='/')
+						except Exception as e:
+							logger.error(f"Error: {e}")
+							go_to_view(page=self.page, logger=logger, route='/')
+
 					except Exception as e:
-						logger.error("Error: {e}")
-						go_to_view(page=self.page, logger=logger, route='/')
+						logger.warning(f"Error getting current coordinates: {e}")
+						logger.info("Hidding loading splash screen...")
+						self.cont_splash.visible = False
+						self.splash.visible = False
+						try:
+							self.page.update()
+						except Exception as e:
+							logger.error(f"Error: {e}")
+							self.page.update()
+
+						try:
+							go_to_view(page=self.page, logger=logger, route="/permissions")
+						except Exception as e:
+							logger.error(f"Error: {e}")
+							go_to_view(page=self.page, logger=logger, route="/permissions")
 
 				else:
 					logger.warning("Location permissions are not granted")
@@ -334,31 +357,30 @@ class SignInView(ft.View):
 					try:
 						self.page.update()
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						self.page.update()
 
 					try:
 						go_to_view(page=self.page, logger=logger, route="/permissions")
 					except Exception as e:
-						logger.error("Error: {e}")
+						logger.error(f"Error: {e}")
 						go_to_view(page=self.page, logger=logger, route="/permissions")
 
 			elif response.status_code == 401 or response.status_code == 404:
 				logger.warning("User and/or password are incorrect")
-
 				logger.info("Hidding loading splash screen...")
 				self.cont_splash.visible = False
 				self.splash.visible = False
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 				try:
 					self.page.open(self.dlg_not_found)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_not_found)
 
 			else:
@@ -370,11 +392,11 @@ class SignInView(ft.View):
 				try:
 					self.page.update()
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.update()
 
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
-					logger.error("Error: {e}")
+					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)

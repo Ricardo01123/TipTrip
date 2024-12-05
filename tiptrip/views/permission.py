@@ -15,18 +15,23 @@ class PermissionsView(ft.View):
 	def __init__(self, page: ft.Page) -> None:
 		# Custom attributes
 		self.page = page
+
+		# Custom components
+		self.ph: ft.PermissionHandler = ft.PermissionHandler()
+		page.overlay.append(self.ph)
+
 		self.gl: ft.Geolocator = ft.Geolocator(
 			location_settings=ft.GeolocatorSettings(
-				accuracy=ft.GeolocatorPositionAccuracy.LOW
+				accuracy=ft.GeolocatorPositionAccuracy.BEST
 			),
 			on_error=lambda error: logger.error(f"Geolocator error: {error}"),
 		)
 		self.page.overlay.append(self.gl)
 
-		# Custom components
 		self.btn_yes: ft.ElevatedButton = ft.ElevatedButton(
 			width=self.page.width,
 			content=ft.Text(value="Otorgar permisos", size=BTN_TEXT_SIZE),
+			data=ft.PermissionType.LOCATION,
 			on_click=self.btn_yes_clicked,
 			**btn_primary_style
 		)
@@ -108,45 +113,7 @@ class PermissionsView(ft.View):
 			]
 		)
 
-	def btn_yes_clicked(self, _: ft.ControlEvent) -> None:
-		logger.info("Checking location permissions...")
-		if request_location_permissions(self.gl, logger):
-			logger.info("Location permissions granted. Getting current coordinates...")
-			current_position: ft.GeolocatorPosition = self.gl.get_current_position()
-			self.page.session.set(key="current_latitude", value=current_position.latitude)
-			self.page.session.set(key="current_longitude", value=current_position.longitude)
-			logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
-
-			self.page.session.set(
-				key="is_inside_cdmx",
-				value=(
-					True
-					if is_inside_cdmx((
-						self.page.session.get("current_latitude"),
-						self.page.session.get("current_longitude")
-					))
-					else False
-				)
-			)
-			self.page.session.set(
-				key="chk_distance_value",
-				value=(
-					True
-					if self.page.session.get("is_inside_cdmx")
-					else False
-				)
-			)
-
-			# Chatbot variables
-			self.page.session.set(key="audio_players", value=[])
-
-			try:
-				go_to_view(page=self.page, logger=logger, route='/')
-			except Exception as e:
-				logger.error("Error: {e}")
-				go_to_view(page=self.page, logger=logger, route='/')
-
-	def btn_no_clicked(self, _: ft.ControlEvent) -> None:
+	def continue_without_coordinates(self) -> None:
 		logger.warning("Location permissions are not granted. Continuing without coordinates...")
 		self.page.session.set(key="current_latitude", value=None)
 		self.page.session.set(key="current_longitude", value=None)
@@ -159,5 +126,91 @@ class PermissionsView(ft.View):
 		try:
 			go_to_view(page=self.page, logger=logger, route='/')
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			go_to_view(page=self.page, logger=logger, route='/')
+
+	def btn_yes_clicked(self, event: ft.ControlEvent) -> None:
+		logger.info("Showing loading splash screen...")
+		self.cont_splash.visible = True
+		self.splash.visible = True
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error(f"Error: {e}")
+			self.page.update()
+
+		logger.info("Checking location permissions...")
+		permission: ft.PermissionStatus = self.ph.request_permission(event.control.data, wait_timeout=60)
+		logger.info(f"Location permissions status: {permission}")
+		if permission == ft.PermissionStatus.GRANTED:
+			logger.info("Location permissions granted. Getting current coordinates...")
+			try:
+				current_position: ft.GeolocatorPosition = self.gl.get_current_position()
+				self.page.session.set(key="current_latitude", value=current_position.latitude)
+				self.page.session.set(key="current_longitude", value=current_position.longitude)
+				logger.info(f"Got current coordinates: ({current_position.latitude}, {current_position.longitude})")
+
+				self.page.session.set(
+					key="is_inside_cdmx",
+					value=(
+						True
+						if is_inside_cdmx((
+							self.page.session.get("current_latitude"),
+							self.page.session.get("current_longitude")
+						))
+						else False
+					)
+				)
+				self.page.session.set(
+					key="chk_distance_value",
+					value=(
+						True
+						if self.page.session.get("is_inside_cdmx")
+						else False
+					)
+				)
+
+				# Chatbot variables
+				self.page.session.set(key="audio_players", value=[])
+
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error(f"Error: {e}")
+					self.page.update()
+
+				try:
+					go_to_view(page=self.page, logger=logger, route='/')
+				except Exception as e:
+					logger.error(f"Error: {e}")
+					go_to_view(page=self.page, logger=logger, route='/')
+
+			except Exception as e:
+				logger.warning(f"Error getting current coordinates: {e}")
+				logger.info("Hidding loading splash screen...")
+				self.cont_splash.visible = False
+				self.splash.visible = False
+				try:
+					self.page.update()
+				except Exception as e:
+					logger.error(f"Error: {e}")
+					self.page.update()
+
+				self.continue_without_coordinates()
+		else:
+			logger.info("Hidding loading splash screen...")
+			self.cont_splash.visible = False
+			self.splash.visible = False
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error(f"Error: {e}")
+				self.page.update()
+
+			self.continue_without_coordinates()
+
+	def btn_no_clicked(self, _: ft.ControlEvent) -> None:
+		self.continue_without_coordinates()

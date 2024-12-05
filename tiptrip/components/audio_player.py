@@ -148,7 +148,7 @@ class AudioPlayer(ft.Container):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 	def on_duration_changed(self, event: ft.AudioDurationChangeEvent) -> None:
@@ -189,7 +189,7 @@ class AudioPlayer(ft.Container):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 	def on_position_changed(self, event: ft.AudioPositionChangeEvent) -> None:
@@ -217,7 +217,7 @@ class AudioPlayer(ft.Container):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
 
 	def pause_audio(self, _: ft.ControlEvent) -> None:
@@ -227,5 +227,5 @@ class AudioPlayer(ft.Container):
 		try:
 			self.page.update()
 		except Exception as e:
-			logger.error("Error: {e}")
+			logger.error(f"Error: {e}")
 			self.page.update()
