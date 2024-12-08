@@ -680,10 +680,10 @@ class HomeView(ft.View):
 								}
 							)
 						try:
-							self.page.open(self.dlg_location)
+							self.page.open(self.dlg_error)
 						except Exception as e:
 							logger.error(f"Error: {e}")
-							self.page.open(self.dlg_location)
+							self.page.open(self.dlg_error)
 							#! COMMENT
 							post(
 								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",

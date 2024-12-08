@@ -277,7 +277,9 @@ class SignInView(ft.View):
 				self.page.session.set(key="map_sld_value", value=7)
 				self.page.session.set(key="map_drd_value", value="Seleccionar todas")
 				# Chatbot variables
+				self.page.session.set(key="swt_audio_value", value=True)
 				self.page.session.set(key="audio_players", value=[])
+				self.page.session.set(key="lv_chat_controls", value=[])
 
 				logger.info("Cleaning text fields...")
 				self.txt_email.value = ""

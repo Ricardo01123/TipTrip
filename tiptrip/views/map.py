@@ -468,6 +468,9 @@ class MapView(ft.View):
 						zoom=13
 					)
 
+					logger.info("Reseting map rotation...")
+					self.map.reset_rotation()
+
 					logger.info("Hidding loading splash screen...")
 					self.cont_splash.visible = False
 					self.splash.visible = False

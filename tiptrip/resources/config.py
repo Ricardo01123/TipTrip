@@ -46,8 +46,7 @@ LOGGING_FORMAT: str = "[%(asctime)s] %(levelname)s in %(name)s: %(message)s"
 RGX_EMAIL: str = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
 # Back-End API
-# BACK_END_URL: str = "http://145.223.74.225:5000"
-BACK_END_URL: str = "http://127.0.0.1:5000"
+BACK_END_URL: str = "http://145.223.74.225:5000"
 PLACES_ENDPOINT: str = "places"
 USERS_ENDPOINT: str = "users"
 AUTH_USER_ENDPOINT: str = "users/auth"
@@ -73,7 +72,7 @@ CDXM_MAX_LONGITUDE: float = -98 - 57 / 60
 # Project paths
 PROJECT_DIR_ABSPATH: str = getcwd()
 ASSETS_ABSPATH: str = join(PROJECT_DIR_ABSPATH, "assets")
-TEMP_ABSPATH: str = join(PROJECT_DIR_ABSPATH, "storage", "temp")
+TEMP_ABSPATH: str = join(PROJECT_DIR_ABSPATH, "temp")
 
 # Places filters variables
 MUNICIPALITIES: list[str] = [

@@ -124,7 +124,9 @@ class PermissionsView(ft.View):
 		self.page.session.set(key="is_inside_cdmx", value=False)
 		self.page.session.set(key="chk_distance_value", value=False)
 
+		self.page.session.set(key="swt_audio_value", value=True)
 		self.page.session.set(key="audio_players", value=[])
+		self.page.session.set(key="lv_chat_controls", value=[])
 
 		try:
 			go_to_view(page=self.page, logger=logger, route='/')

@@ -388,17 +388,17 @@ class FavoritesView(ft.View):
 
 			else:
 				logger.warning("User's location is not inside CDMX coordinates")
-				self.dlg_location.title = ft.Text("Ubicación fuera de CDMX")
-				self.dlg_location.content = ft.Text(
+				self.dlg_error.title = ft.Text("Ubicación fuera de CDMX")
+				self.dlg_error.content = ft.Text(
 					"Tu ubicación actual no se encuentra dentro de los límites de la Ciudad de México, "
 					"por lo que no se puede acceder al mapa interactivo."
 				)
 
 				try:
-					self.page.open(self.dlg_location)
+					self.page.open(self.dlg_error)
 				except Exception as e:
 					logger.error(f"Error: {e}")
-					self.page.open(self.dlg_location)
+					self.page.open(self.dlg_error)
 					#! COMMENT
 					post(
 						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
@@ -411,16 +411,16 @@ class FavoritesView(ft.View):
 
 		else:
 			logger.warning("Location permissions denied. Opening location permissions failed dialog...")
-			self.dlg_location.title = ft.Text("Permisos de ubicación")
-			self.dlg_location.content = ft.Text(
+			self.dlg_error.title = ft.Text("Permisos de ubicación")
+			self.dlg_error.content = ft.Text(
 				"No se han otorgado los permisos de ubicación, "
 				"se ha deshabilitado la opción de filtrado de sitios turísticos por cercanía."
 			)
 			try:
-				self.page.open(self.dlg_location)
+				self.page.open(self.dlg_error)
 			except Exception as e:
 				logger.error(f"Error: {e}")
-				self.page.open(self.dlg_location)
+				self.page.open(self.dlg_error)
 				#! COMMENT
 				post(
 					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",

@@ -11,6 +11,7 @@ class TopBar(ft.AppBar):
 		self.logger = logger
 
 		super().__init__(
+			adaptive=True,
 			bgcolor=MAIN_COLOR,
 			leading=(
 				ft.IconButton(

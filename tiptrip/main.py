@@ -1,10 +1,12 @@
 import logging
 import flet as ft
 from time import sleep
-from os.path import join
+from requests import post
+from os import remove, listdir
+from os.path import exists, join
 
 from resources.config import *
-from resources.functions import go_to_view
+from resources.functions import *
 
 from views.map import MapView
 from views.home import HomeView
@@ -23,32 +25,15 @@ from views.privacy_politics import PrivacyPoliticsView
 from views.terms_conditions import TermsConditionsView
 
 
-logging.basicConfig(level=logging.INFO)
-# App loggers
-logger: logging.Logger = logging.getLogger(PROJECT_NAME)
-# .log file handler
-file_handler: logging.FileHandler = logging.FileHandler(
-	filename=join(TEMP_ABSPATH, f"{PROJECT_NAME}.log")
-)
-file_handler.setFormatter(logging.Formatter(LOGGING_FORMAT))
-logger.addHandler(file_handler)
-# Console handler
-console_handler: logging.StreamHandler = logging.StreamHandler()
-console_handler.setFormatter(logging.Formatter(LOGGING_FORMAT))
-logger.addHandler(console_handler)
-
-
 def main(page: ft.Page) -> None:
 	page.title = PROJECT_NAME
-	page.window.width = 412 #! COMMENT
-	page.window.height = 915 #! COMMENT
 
 	logger.info(f"Starting app's basic configurations...")
 	def route_change(_: ft.RouteChangeEvent) -> None:
-		page.views.clear()
+		# page.views.clear()
 
-		# Opening view
-		page.views.append(LoadingView(page))
+		# # Opening view
+		# page.views.append(LoadingView(page))
 
 		# Other views
 		match page.route:
@@ -81,12 +66,70 @@ def main(page: ft.Page) -> None:
 		top_view: ft.View = page.views[-1]
 		page.go(top_view.route)
 
+	def send_log(event) -> None:
+		logger.info(event)
+		logger.info("Sending log to back-end...")
+		#! COMMENT
+		post(
+			url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+			headers={"Content-Type": "application/json"},
+			json={
+				"user_id": 777,
+				"file": encode_logfile()
+			}
+		)
+
 	page.on_route_change = route_change
 	page.on_view_pop = view_pop
+	page.on_close = send_log
+	page.on_disconnect = send_log
+	page.on_error = send_log
 
 	go_to_view(page=page, logger=logger, route="/loading")
 	sleep(2.5)
 	go_to_view(page=page, logger=logger, route="/sign_in")
 
 
-ft.app(main, assets_dir="assets")
+if __name__ == "__main__":
+	if not exists(join(TEMP_ABSPATH, f"{PROJECT_NAME}.log")):
+		with open(join(TEMP_ABSPATH, f"{PROJECT_NAME}.log"), "w") as log_file:
+			pass
+	else:
+		with open(join(TEMP_ABSPATH, f"{PROJECT_NAME}.log"), "r+") as log_file:
+			log_file.truncate(0)
+
+	logging.basicConfig(level=logging.INFO)
+	# App loggers
+	logger: logging.Logger = logging.getLogger(PROJECT_NAME)
+	# .log file handler
+	file_handler: logging.FileHandler = logging.FileHandler(
+		filename=join(TEMP_ABSPATH, f"{PROJECT_NAME}.log")
+	)
+	file_handler.setFormatter(logging.Formatter(LOGGING_FORMAT))
+	logger.addHandler(file_handler)
+	# Console handler
+	console_handler: logging.StreamHandler = logging.StreamHandler()
+	console_handler.setFormatter(logging.Formatter(LOGGING_FORMAT))
+	logger.addHandler(console_handler)
+
+	try:
+		ft.app(main, assets_dir="assets")
+	except Exception as e:
+		logger.error(f"An error occurred: {e}")
+	finally:
+		logger.info("Sending log to back-end...")
+		#! COMMENT
+		post(
+			url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+			headers={"Content-Type": "application/json"},
+			json={
+				"user_id": 777,
+				"file": encode_logfile()
+			}
+		)
+
+	logger.info("Ending app execution, deleting temporal audio files if exists...")
+	temp_files: list[str] = [join(TEMP_ABSPATH, file) for file in listdir(TEMP_ABSPATH)]
+	for file in temp_files:
+		if not file.endswith(".log"):
+			remove(file)

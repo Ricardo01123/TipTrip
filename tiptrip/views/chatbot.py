@@ -51,7 +51,7 @@ class ChatbotView(ft.View):
 
 		# Settings components
 		self.swt_audio: ft.Switch = ft.Switch(
-			value=True,
+			value=self.page.session.get("swt_audio_value"),
 			adaptive=True,
 			active_color=ft.Colors.WHITE,
 			active_track_color=SECONDARY_COLOR,
@@ -120,23 +120,31 @@ class ChatbotView(ft.View):
 			max_lines=10,
 			**txt_messages_style
 		)
+		self.page.session.set(
+			key="lv_chat_controls",
+			value=(
+				[
+					ft.Row(
+						alignment=ft.MainAxisAlignment.START,
+						controls=[
+							ft.Container(
+								expand=9,
+								expand_loose=True,
+								content=Message(is_bot=True, message=AGENT_WELCOME_MESSAGE)
+							),
+							ft.Container(expand=1)
+						]
+					)
+				]
+				if self.page.session.get("lv_chat_controls") == []
+				else self.page.session.get("lv_chat_controls")
+			)
+		)
 		self.lv_chat: ft.ListView = ft.ListView(
 			padding=ft.padding.all(value=SPACING),
 			spacing=(SPACING / 2),
 			auto_scroll=True,
-			controls=[
-				ft.Row(
-					alignment=ft.MainAxisAlignment.START,
-					controls=[
-						ft.Container(
-							expand=9,
-							expand_loose=True,
-							content=Message(is_bot=True, message=AGENT_WELCOME_MESSAGE)
-						),
-						ft.Container(expand=1)
-					]
-				)
-			]
+			controls=self.page.session.get("lv_chat_controls")
 		)
 		self.cca_mic: ft.CircleAvatar = ft.CircleAvatar(
 			bgcolor=MAIN_COLOR,
@@ -263,9 +271,10 @@ class ChatbotView(ft.View):
 			)
 
 	def add_message(self, is_bot: bool, message: str, must_anwser: bool = False) -> None:
+		lv_chat_controls: list = self.page.session.get("lv_chat_controls")
 		if not is_bot:
 			logger.info("Adding user message...")
-			self.lv_chat.controls.append(
+			lv_chat_controls.append(
 				ft.Row(
 					alignment=ft.MainAxisAlignment.END,
 					controls=[
@@ -278,10 +287,26 @@ class ChatbotView(ft.View):
 					]
 				)
 			)
+			self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+			self.lv_chat.controls = self.page.session.get("lv_chat_controls")
+			try:
+				self.page.update()
+			except Exception as e:
+				logger.error(f"Error: {e}")
+				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 		else:
 			if not must_anwser:
 				logger.info("Adding agent message while process the user message...")
-				self.lv_chat.controls.append(
+				lv_chat_controls.append(
 					ft.Row(
 						alignment=ft.MainAxisAlignment.START,
 						controls=[
@@ -294,6 +319,8 @@ class ChatbotView(ft.View):
 						]
 					)
 				)
+				self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+				self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 				try:
 					self.page.update()
 				except Exception as e:
@@ -319,11 +346,11 @@ class ChatbotView(ft.View):
 								"Content-Type": "application/json",
 								"Authorization": f"Bearer {self.page.session.get('session_token')}"
 							},
-							json={"prompt": self.lv_chat.controls[-2].controls[1].content.content.value}
+							json={"prompt": lv_chat_controls[-2].controls[1].content.content.value}
 						)
 					except ConnectTimeout:
 						logger.error("Connection timeout while getting favorite places. Replacing last agent message with error message...")
-						self.lv_chat.controls[-1].controls[0].content = Message(
+						lv_chat_controls[-1].controls[0].content = Message(
 							is_bot=True,
 							message=(
 								"No se pudo obtener información sobre los sitios turísticos. "
@@ -356,7 +383,7 @@ class ChatbotView(ft.View):
 							logger.info("Agent response is only text")
 
 							logger.info("Replacing last agent message with agent response message...")
-							self.lv_chat.controls[-1].controls[0].content = Message(
+							lv_chat_controls[-1].controls[0].content = Message(
 								is_bot=True,
 								message=response.json()["text"],
 							)
@@ -384,13 +411,15 @@ class ChatbotView(ft.View):
 
 								except ConnectTimeout:
 									logger.error("Connection timeout while getting favorite places. Replacing last agent message with error message...")
-									self.lv_chat.controls[-1].controls[0].content = Message(
+									lv_chat_controls[-1].controls[0].content = Message(
 										is_bot=True,
 										message=(
 											"No se pudo obtener información sobre los sitios turísticos. "
 											"Favor de revisar su conexión a internet e intentarlo de nuevo más tarde."
 										)
 									)
+									self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+									self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 									try:
 										self.page.update()
 									except Exception as e:
@@ -441,30 +470,36 @@ class ChatbotView(ft.View):
 									)
 
 									logger.info("Replacing last agent message...")
-									if isinstance(self.lv_chat.controls[-1].controls[0].content.content, ft.Markdown):
-										self.lv_chat.controls[-1].controls[0].content = audio_players[-1]
+									if isinstance(lv_chat_controls[-1].controls[0].content.content, ft.Markdown):
+										lv_chat_controls[-1].controls[0].content = audio_players[-1]
 									else:
-										self.lv_chat.controls.append(audio_players[-1])
+										lv_chat_controls.append(audio_players[-1])
 
 									self.page.session.set(key="audio_players", value=audio_players)
+									self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+									self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 
 								else:
 									logger.info(f"TTS endpoint response received {tts_response.status_code}: {tts_response.json()}")
 									logger.info("Replacing last agent message with error text...")
-									if self.lv_chat.controls[-1].controls[0].bgcolor == ft.colors.WHITE:
-										self.lv_chat.controls[-1].controls[0].content = Message(
+									if lv_chat_controls[-1].controls[0].bgcolor == ft.colors.WHITE:
+										lv_chat_controls[-1].controls[0].content = Message(
 											is_bot=True,
 											message="AGENT_ERROR",
 										)
+									self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+									self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 								sleep(2)
 
 					else:
 						logger.info(f"Agent endpoint response received {response.status_code}: {response.json()}")
 						logger.info("Agent response is NOT ok. Replacing last agent message with error message...")
-						self.lv_chat.controls[-1].controls[0].content = Message(
+						lv_chat_controls[-1].controls[0].content = Message(
 							is_bot=True,
 							message="AGENT_ERROR",
 						)
+						self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+						self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 
 		logger.info("Updating live view components...")
 		try:
@@ -487,6 +522,7 @@ class ChatbotView(ft.View):
 			logger.info("Empty message, not sending...")
 
 		else:
+			lv_chat_controls: list = self.page.session.get("lv_chat_controls")
 			logger.info("Send button clicked")
 
 			logger.info("Changing components to initial state...")
@@ -550,14 +586,15 @@ class ChatbotView(ft.View):
 								else:
 									logger.warning(f"Error saving user's coordinates: {response.json()}")
 									logger.info("Replacing last agent message with error message...")
-									self.lv_chat.controls[-1].controls[0].content = Message(
+									lv_chat_controls[-1].controls[0].content = Message(
 										is_bot=True,
 										message=(
 											"Ocurrió un error al solicitar información de lugares cercanos a tu ubicación actual. "
 											"Favor de intentarlo de nuevo más tarde."
 										)
 									)
-
+									self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+									self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 									try:
 										self.page.update()
 									except Exception as e:
@@ -577,13 +614,15 @@ class ChatbotView(ft.View):
 
 							else:
 								logger.warning("User's location is outside CDMX coordinates. Replacing last agent message with error message...")
-								self.lv_chat.controls[-1].controls[0].content = Message(
+								lv_chat_controls[-1].controls[0].content = Message(
 									is_bot=True,
 									message=(
 										"Tu ubicación actual se encuentra fuera de los límites de la Ciudad de México, "
 										"por lo que no se puede realizar la búsqueda de información de lugares cercanos a tu ubicación actual."
 									)
 								)
+								self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+								self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 								try:
 									self.page.update()
 								except Exception as e:
@@ -604,7 +643,7 @@ class ChatbotView(ft.View):
 						except Exception as e:
 							logger.warning(f"Error getting current coordinates: {e}")
 							logger.info("Replacing last agent message with error message...")
-							self.lv_chat.controls[-1].controls[0].content = Message(
+							lv_chat_controls[-1].controls[0].content = Message(
 								is_bot=True,
 								message=(
 									"No se han otorgado los permisos de ubicación, "
@@ -613,6 +652,8 @@ class ChatbotView(ft.View):
 									"Por favor intenta de nuevo con una pregunta diferente."
 								)
 							)
+							self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+							self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 							try:
 								self.page.update()
 							except Exception as e:
@@ -632,7 +673,7 @@ class ChatbotView(ft.View):
 
 					else:
 						logger.warning("Location permissions are not granted. Replacing last agent message with error message...")
-						self.lv_chat.controls[-1].controls[0].content = Message(
+						lv_chat_controls[-1].controls[0].content = Message(
 							is_bot=True,
 							message=(
 								"No se han otorgado los permisos de ubicación, "
@@ -641,6 +682,8 @@ class ChatbotView(ft.View):
 								"Por favor intenta de nuevo con una pregunta diferente."
 							)
 						)
+						self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+						self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 						try:
 							self.page.update()
 						except Exception as e:
@@ -660,7 +703,7 @@ class ChatbotView(ft.View):
 
 			self.add_message(
 				is_bot=True,
-				message=self.lv_chat.controls[-2].controls[1].content.content.value,
+				message=lv_chat_controls[-2].controls[1].content.content.value,
 				must_anwser=True
 			)
 
@@ -714,6 +757,7 @@ class ChatbotView(ft.View):
 			)
 
 		else:
+			lv_chat_controls: list = self.page.session.get("lv_chat_controls")
 			logger.info("Changing UI components to initial state...")
 			self.txt_message.value = ""
 			self.cca_mic.bgcolor = MAIN_COLOR
@@ -790,10 +834,12 @@ class ChatbotView(ft.View):
 			if response.status_code == 201:
 				user_message: str = response.json()["text"]
 				logger.info(f"Speech captured: {user_message}. Replacing last user temp message with audio message...")
-				self.lv_chat.controls[-1].controls[1].content = Message(
+				lv_chat_controls[-1].controls[1].content = Message(
 					is_bot=False,
 					message=user_message.capitalize(),
 				)
+				self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+				self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 				self.add_message(is_bot=True, message="Buscando información...")
 				try:
 					self.page.update()
@@ -811,7 +857,7 @@ class ChatbotView(ft.View):
 					)
 
 				logger.info("Checking if the agent needs user's location...")
-				user_message = self.lv_chat.controls[-2].controls[1].content.content.value
+				user_message = lv_chat_controls[-2].controls[1].content.content.value
 				for phrase in LOCATION_PHRASES:
 					if phrase in user_message.lower():
 						logger.info("Agent is asking for user location. Checking location permissions...")
@@ -849,13 +895,15 @@ class ChatbotView(ft.View):
 									else:
 										logger.warning(f"Error saving user's coordinates: {response.json()}")
 										logger.info("Replacing last agent message with error message...")
-										self.lv_chat.controls[-1].controls[0].content = Message(
+										lv_chat_controls[-1].controls[0].content = Message(
 											is_bot=True,
 											message=(
 												"Ocurrió un error al solicitar información de lugares cercanos a tu ubicación actual. "
 												"Favor de intentarlo de nuevo más tarde."
 											)
 										)
+										self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+										self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 
 										try:
 											self.page.update()
@@ -876,13 +924,15 @@ class ChatbotView(ft.View):
 
 								else:
 									logger.warning("User's location is outside CDMX coordinates. Replacing last agent message with error message...")
-									self.lv_chat.controls[-1].controls[0].content = Message(
+									lv_chat_controls[-1].controls[0].content = Message(
 										is_bot=True,
 										message=(
 											"Tu ubicación actual se encuentra fuera de los límites de la Ciudad de México, "
 											"por lo que no se puede realizar la búsqueda de información de lugares cercanos a tu ubicación actual."
 										)
 									)
+									self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+									self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 									try:
 										self.page.update()
 									except Exception as e:
@@ -903,7 +953,7 @@ class ChatbotView(ft.View):
 							except Exception as e:
 								logger.warning(f"Error getting current coordinates: {e}")
 								logger.info("Replacing last agent message with error message...")
-								self.lv_chat.controls[-1].controls[0].content = Message(
+								lv_chat_controls[-1].controls[0].content = Message(
 									is_bot=True,
 									message=(
 										"No se han otorgado los permisos de ubicación, "
@@ -912,6 +962,8 @@ class ChatbotView(ft.View):
 										"Por favor intenta de nuevo con una pregunta diferente."
 									)
 								)
+								self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+								self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 								try:
 									self.page.update()
 								except Exception as e:
@@ -931,7 +983,7 @@ class ChatbotView(ft.View):
 
 						else:
 							logger.warning("Location permissions are not granted. Replacing last agent message with error message...")
-							self.lv_chat.controls[-1].controls[0].content = Message(
+							lv_chat_controls[-1].controls[0].content = Message(
 								is_bot=True,
 								message=(
 									"No se han otorgado los permisos de ubicación, "
@@ -940,6 +992,8 @@ class ChatbotView(ft.View):
 									"Por favor intenta de nuevo con una pregunta diferente."
 								)
 							)
+							self.page.session.set(key="lv_chat_controls", value=lv_chat_controls)
+							self.lv_chat.controls = self.page.session.get("lv_chat_controls")
 							try:
 								self.page.update()
 							except Exception as e:
@@ -959,7 +1013,7 @@ class ChatbotView(ft.View):
 
 				self.add_message(
 					is_bot=True,
-					message=self.lv_chat.controls[-2].controls[1].content.content.value,
+					message=lv_chat_controls[-2].controls[1].content.content.value,
 					must_anwser=True
 				)
 
@@ -1051,5 +1105,24 @@ class ChatbotView(ft.View):
 	def swt_audio_changed(self, _: ft.ControlEvent) -> None:
 		if self.swt_audio.value:
 			logger.info("Switch audio for agent changed to Audio")
+			self.swt_audio.value = True
+			self.page.session.set(key="swt_audio_value", value=True)
 		else:
 			logger.info("Switch audio for agent changed to Text")
+			self.swt_audio.value = False
+			self.page.session.set(key="swt_audio_value", value=False)
+
+		try:
+			self.page.update()
+		except Exception as e:
+			logger.error(f"Error: {e}")
+			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
