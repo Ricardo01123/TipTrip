@@ -5,12 +5,12 @@ from os.path import join
 from shutil import copyfile
 from logging import Logger, getLogger
 
-from requests import put, Response
+from requests import put, post, Response
 from requests.exceptions import ConnectTimeout
 
 from components.bars import *
 from resources.config import *
-from resources.functions import go_to_view, get_user_image
+from resources.functions import *
 from resources.styles import btn_primary_style, btn_secondary_style, txt_style
 
 
@@ -263,6 +263,15 @@ class UpdateUserView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 	def btn_submit_clicked(self, _: ft.ControlEvent) -> None:
 		if self.lbl_pwd_match.visible:
@@ -275,6 +284,15 @@ class UpdateUserView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 		elif not match(pattern=RGX_EMAIL, string=self.txt_email.value):
 			logger.info("Invalid email format. Aborting process...")
@@ -285,6 +303,15 @@ class UpdateUserView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 		else:
 			logger.info("Submit button clicked, initiating process to update user data...")
@@ -311,6 +338,15 @@ class UpdateUserView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 			else:
 				logger.info("Making request to update user...")
@@ -342,6 +378,15 @@ class UpdateUserView(ft.View):
 						self.page.open(self.dlg_error)
 
 					finally:
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
 						return
 
 				if response.status_code == 201:
@@ -358,6 +403,15 @@ class UpdateUserView(ft.View):
 					except Exception as e:
 						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_updated_data)
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
 
 				else:
 					logger.error("Error updating user")
@@ -374,6 +428,15 @@ class UpdateUserView(ft.View):
 					except Exception as e:
 						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_error)
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
 
 	def btn_back_clicked(self, _: ft.ControlEvent) -> None:
 		logger.info("Back button clicked, discarding changes...")
@@ -386,6 +449,15 @@ class UpdateUserView(ft.View):
 			go_to_view(page=self.page, logger=logger, route="/account")
 		except Exception as e:
 			logger.error(f"Error: {e}")
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 			go_to_view(page=self.page, logger=logger, route="/account")
 
 	def save_new_user_image(self, event: ft.FilePickerResultEvent) -> None:
@@ -403,6 +475,15 @@ class UpdateUserView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_updated_image)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 			else:
 				logger.error("Error saving new image.")
@@ -418,6 +499,15 @@ class UpdateUserView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 		else:
 			logger.info("No image selected. Aborting...")
@@ -428,11 +518,29 @@ class UpdateUserView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_updated_data)
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 		try:
 			go_to_view(page=self.page, logger=logger, route="/account")
 		except Exception as e:
 			logger.error(f"Error: {e}")
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 			go_to_view(page=self.page, logger=logger, route="/account")
 
 	def handle_dlg_updated_image(self, _: ft.ControlEvent) -> None:
@@ -441,9 +549,27 @@ class UpdateUserView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_updated_image)
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 		try:
 			go_to_view(page=self.page, logger=logger, route="/account")
 		except Exception as e:
 			logger.error(f"Error: {e}")
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 			go_to_view(page=self.page, logger=logger, route="/account")

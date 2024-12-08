@@ -4,7 +4,7 @@ from typing import Optional
 from geopy.distance import geodesic
 from logging import Logger, getLogger
 
-from requests import get, Response
+from requests import get, post, Response
 from requests.exceptions import ConnectTimeout
 
 from resources.config import *
@@ -32,7 +32,14 @@ class MapView(ft.View):
 			location_settings=ft.GeolocatorSettings(
 				accuracy=ft.GeolocatorPositionAccuracy.BEST
 			),
-			on_error=lambda error: logger.error(f"Geolocator error: {error}"),
+			on_error=lambda _: post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 		)
 		self.page.overlay.append(self.gl)
 
@@ -286,8 +293,26 @@ class MapView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			finally:
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 				return None
 
 		logger.info("Evaluating response...")
@@ -401,6 +426,15 @@ class MapView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.info("Checking location permissions...")
 			permission: ft.PermissionStatus = self.ph.request_permission(event.control.data, wait_timeout=60)
@@ -442,6 +476,15 @@ class MapView(ft.View):
 					except Exception as e:
 						logger.error(f"Error: {e}")
 						self.page.update()
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
 
 				except Exception as e:
 					logger.warning(f"Error getting current coordinates: {e}")
@@ -453,6 +496,15 @@ class MapView(ft.View):
 					except Exception as e:
 						logger.error(f"Error: {e}")
 						self.page.update()
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
 
 					self.dlg_error.title = ft.Text("Permisos de ubicación")
 					self.dlg_error.content = ft.Text(
@@ -464,6 +516,25 @@ class MapView(ft.View):
 					except Exception as e:
 						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_error)
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
+
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 			else:
 				logger.info("Hidding loading splash screen...")
@@ -474,6 +545,15 @@ class MapView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 				self.dlg_error.title = ft.Text("Permisos de ubicación")
 				self.dlg_error.content = ft.Text(
@@ -485,6 +565,15 @@ class MapView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 		except Exception as e:
 			logger.info("Hidding loading splash screen...")
@@ -496,6 +585,15 @@ class MapView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.error(f"Error centering user on map: {e}")
 			self.dlg_error.title.value = "Error al centrar usuario"
@@ -509,6 +607,15 @@ class MapView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 	def apply_filters(self, event: ft.ControlEvent) -> None:
 		try:
@@ -521,6 +628,15 @@ class MapView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.info("Checking location permissions...")
 			permission: ft.PermissionStatus = self.ph.request_permission(event.control.data, wait_timeout=60)
@@ -555,12 +671,30 @@ class MapView(ft.View):
 						except Exception as e:
 							logger.error(f"Error: {e}")
 							self.page.update()
+							#! COMMENT
+							post(
+								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+								headers={"Content-Type": "application/json"},
+								json={
+									"user_id": self.page.session.get("id"),
+									"file": encode_logfile()
+								}
+							)
 
 						try:
 							self.page.open(self.dlg_error)
 						except Exception as e:
 							logger.error(f"Error: {e}")
 							self.page.open(self.dlg_error)
+							#! COMMENT
+							post(
+								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+								headers={"Content-Type": "application/json"},
+								json={
+									"user_id": self.page.session.get("id"),
+									"file": encode_logfile()
+								}
+							)
 						finally:
 							return
 
@@ -588,12 +722,30 @@ class MapView(ft.View):
 					except Exception as e:
 						logger.error(f"Error: {e}")
 						self.page.update()
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
 
 					try:
 						self.page.open(self.dlg_error)
 					except Exception as e:
 						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_error)
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
 					finally:
 						return
 
@@ -632,6 +784,15 @@ class MapView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 			else:
 				logger.warning("Location permissions are not granted")
@@ -643,6 +804,15 @@ class MapView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 				self.dlg_error.title.value = "Permisos de ubicación"
 				self.dlg_error.content.value = (
@@ -655,6 +825,15 @@ class MapView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 		except Exception as e:
 			logger.error(f"Error applying filters: {e}")
@@ -679,6 +858,16 @@ class MapView(ft.View):
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
 
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
+
 	def clean_filters(self, event: ft.ControlEvent) -> None:
 		try:
 			logger.info("Showing loading splash screen...")
@@ -689,6 +878,15 @@ class MapView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.info("Checking location permissions...")
 			permission: ft.PermissionStatus = self.ph.request_permission(event.control.data, wait_timeout=60)
@@ -725,12 +923,30 @@ class MapView(ft.View):
 						except Exception as e:
 							logger.error(f"Error: {e}")
 							self.page.update()
+							#! COMMENT
+							post(
+								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+								headers={"Content-Type": "application/json"},
+								json={
+									"user_id": self.page.session.get("id"),
+									"file": encode_logfile()
+								}
+							)
 
 						try:
 							self.page.open(self.dlg_error)
 						except Exception as e:
 							logger.error(f"Error: {e}")
 							self.page.open(self.dlg_error)
+							#! COMMENT
+							post(
+								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+								headers={"Content-Type": "application/json"},
+								json={
+									"user_id": self.page.session.get("id"),
+									"file": encode_logfile()
+								}
+							)
 						finally:
 							return
 
@@ -758,12 +974,30 @@ class MapView(ft.View):
 					except Exception as e:
 						logger.error(f"Error: {e}")
 						self.page.update()
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
 
 					try:
 						self.page.open(self.dlg_error)
 					except Exception as e:
 						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_error)
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
 					finally:
 						return
 
@@ -795,6 +1029,15 @@ class MapView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 			else:
 				logger.warning("Location permissions are not granted. Asking for permissions...")
@@ -807,6 +1050,15 @@ class MapView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 				self.dlg_error.title.value = "Permisos de ubicación"
 				self.dlg_error.content.value = (
@@ -819,6 +1071,15 @@ class MapView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 		except Exception as e:
 			logger.error(f"Error applying filters: {e}")
@@ -830,6 +1091,15 @@ class MapView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			self.dlg_error.title.value = "Error al aplicar filtros"
 			self.dlg_error.content.value = (
@@ -842,6 +1112,15 @@ class MapView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 	def handle_map_click(self, event: map.MapTapEvent) -> None:
 		clicked_lat: float = event.coordinates.latitude
@@ -877,8 +1156,19 @@ class MapView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_place_info)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 	def handle_map_event(self, event: map.MapEvent) -> None:
+		logger.info(f"Map event: {event}")
+		logger.info(f"Map event source: {event.source}")
 		if str(event.source) == "MapEventSource.SCROLL_WHEEL":
 			if event.zoom >= self.markers_names_umbral and self.markers_names_are_hidden:
 				logger.info("Showing markers names...")
@@ -897,3 +1187,12 @@ class MapView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)

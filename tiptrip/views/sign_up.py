@@ -370,6 +370,15 @@ class SignUpView(ft.View):
 				self.page.update()
 			except Exception as e:
 				logger.error(f"Error: {e}")
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 				self.page.update()
 
 			logger.info("Hidding loading splash screen...")
@@ -379,12 +388,30 @@ class SignUpView(ft.View):
 				self.page.update()
 			except Exception as e:
 				logger.error(f"Error: {e}")
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 				self.page.update()
 
 			try:
 				go_to_view(page=self.page, logger=logger, route="/permissions")
 			except Exception as e:
 				logger.error(f"Error: {e}")
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 				go_to_view(page=self.page, logger=logger, route="/permissions")
 
 		else:
@@ -404,12 +431,30 @@ class SignUpView(ft.View):
 				self.page.update()
 			except Exception as e:
 				logger.error(f"Error: {e}")
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 				self.page.update()
 
 			try:
 				self.page.open(self.dlg_error)
 			except Exception as e:
 				logger.error(f"Error: {e}")
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 				self.page.open(self.dlg_error)
 			finally:
 				return
@@ -577,12 +622,30 @@ class SignUpView(ft.View):
 						self.page.update()
 					except Exception as e:
 						logger.error(f"Error: {e}")
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": response.json()["id"],
+								"file": encode_logfile()
+							}
+						)
 						self.page.update()
 
 					try:
 						self.page.open(self.dlg_success)
 					except Exception as e:
 						logger.error(f"Error: {e}")
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": response.json()["id"],
+								"file": encode_logfile()
+							}
+						)
 						self.page.open(self.dlg_success)
 
 				elif response.status_code == 409:

@@ -1,12 +1,12 @@
 import flet as ft
 from logging import Logger, getLogger
 
-from requests import delete, Response
+from requests import delete, post, Response
 from requests.exceptions import ConnectTimeout
 
 from components.bars import *
 from resources.config import *
-from resources.functions import go_to_view, get_user_image
+from resources.functions import *
 from resources.styles import btn_secondary_style, btn_danger_style
 
 
@@ -236,6 +236,15 @@ class AccountView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_account_deleted)
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 			go_to_view(page=self.page, logger=logger, route="/sign_in")
 
 	def delete_account(self, _: ft.ControlEvent) -> None:
@@ -244,6 +253,15 @@ class AccountView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_confirm_delete_account)
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 		logger.info("Making request to delete account...")
 		try:
@@ -271,6 +289,15 @@ class AccountView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			finally:
 				return
@@ -282,6 +309,15 @@ class AccountView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_account_deleted)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 		else:
 			logger.error("Error deleting account")
@@ -297,3 +333,12 @@ class AccountView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)

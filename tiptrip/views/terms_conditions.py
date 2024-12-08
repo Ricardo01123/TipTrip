@@ -56,7 +56,8 @@ class TermsConditionsView(ft.View):
 											content=ft.Text(
 												value=TERMS_CONDITIONS,
 												color=ft.Colors.BLACK,
-												text_align=ft.TextAlign.JUSTIFY
+												text_align=ft.TextAlign.JUSTIFY,
+												selectable=True
 											)
 										)
 									]

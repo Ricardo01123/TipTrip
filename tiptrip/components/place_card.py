@@ -78,6 +78,7 @@ class PlaceCard(ft.Container):
 								color=MAIN_COLOR,
 								size=PLC_TITLE_SIZE,
 								weight=ft.FontWeight.BOLD,
+								selectable=True
 							)
 						]
 					)
@@ -114,7 +115,8 @@ class PlaceCard(ft.Container):
 														content=ft.Text(
 															value=classification,
 															color=SECONDARY_COLOR,
-															size=PLC_CATEGORY_SIZE
+															size=PLC_CATEGORY_SIZE,
+															selectable=True
 														)
 													)
 												]
@@ -123,7 +125,8 @@ class PlaceCard(ft.Container):
 										ft.Container(
 											content=ft.Text(
 												value=address,
-												color=ft.Colors.BLACK
+												color=ft.Colors.BLACK,
+												selectable=True
 											)
 										)
 									]
@@ -149,6 +152,11 @@ class PlaceCard(ft.Container):
 										ft.Colors.BLACK
 										if distance is not None
 										else ft.Colors.WHITE
+									),
+									selectable=(
+										True
+										if distance is not None
+										else False
 									)
 								)
 							),

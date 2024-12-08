@@ -140,7 +140,7 @@ class ChatbotView(ft.View):
 		)
 		self.cca_mic: ft.CircleAvatar = ft.CircleAvatar(
 			bgcolor=MAIN_COLOR,
-			radius=(SPACING * 2),
+			radius=(SPACING * 1.5),
 			content=ft.Icon(
 				name=ft.Icons.MIC,
 				color=ft.Colors.WHITE,
@@ -149,7 +149,7 @@ class ChatbotView(ft.View):
 		)
 		self.cca_send: ft.CircleAvatar = ft.CircleAvatar(
 			bgcolor=MAIN_COLOR,
-			radius=(SPACING * 2),
+			radius=(SPACING * 1.5),
 			content=ft.Icon(
 				name=ft.Icons.SEND,
 				color=ft.Colors.WHITE,
@@ -252,6 +252,15 @@ class ChatbotView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 	def add_message(self, is_bot: bool, message: str, must_anwser: bool = False) -> None:
 		if not is_bot:
@@ -290,6 +299,15 @@ class ChatbotView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 			else:
 				if not "ERROR" in message:
@@ -317,7 +335,16 @@ class ChatbotView(ft.View):
 						except Exception as e:
 							logger.error(f"Error: {e}")
 							self.page.update()
-
+							#! COMMENT
+							post(
+								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+								headers={"Content-Type": "application/json"},
+								json={
+									"user_id": self.page.session.get("id"),
+									"file": encode_logfile()
+								}
+							)
+						finally:
 							return
 
 					logger.info("Evaluating the agent response...")
@@ -336,7 +363,12 @@ class ChatbotView(ft.View):
 
 						else:
 							logger.info("User is asking for audio messages. Splitting message...")
-							agent_responses: list[str] = split_agent_response(response.json()["text"])
+							agent_responses: list[str] = split_text(
+								response.json()["text"],
+								chunk_size=1000,
+								chunk_overlay=100,
+								separator="\n"
+							)
 							for index, agent_response in enumerate(agent_responses):
 								logger.info(f"Processing agent response {index + 1} of {len(agent_responses)}...")
 								logger.info("Calling the tts model to process the agent message...")
@@ -364,7 +396,16 @@ class ChatbotView(ft.View):
 									except Exception as e:
 										logger.error(f"Error: {e}")
 										self.page.update()
-
+										#! COMMENT
+										post(
+											url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+											headers={"Content-Type": "application/json"},
+											json={
+												"user_id": self.page.session.get("id"),
+												"file": encode_logfile()
+											}
+										)
+									finally:
 										return
 
 								if tts_response.status_code == 201:
@@ -375,7 +416,12 @@ class ChatbotView(ft.View):
 									audio_binary: bytes = b64decode(audio_data["audio"])
 
 									logger.info("Saving as temporary audio file...")
-									with wave.open(join(TEMP_ABSPATH, TEMP_AGENT_AUDIO_FILENAME), "wb") as file:
+									last_agent_audio_id: int = get_audio_id(type="agent")
+									self.page.session.set(
+										key="last_agent_audio_filename",
+										value=f"{join(TEMP_ABSPATH, TEMP_AGENT_AUDIO_FILENAME)}_{last_agent_audio_id}.wav"
+									)
+									with wave.open(self.page.session.get("last_agent_audio_filename"), "wb") as file:
 										file.setnchannels(audio_data["nchannels"])
 										file.setsampwidth(audio_data["sampwidth"])
 										file.setframerate(audio_data["framerate"])
@@ -389,13 +435,13 @@ class ChatbotView(ft.View):
 									audio_players.append(
 										AudioPlayer(
 											page=self.page,
-											src=join(TEMP_ABSPATH, TEMP_AGENT_AUDIO_FILENAME),
+											src=self.page.session.get("last_agent_audio_filename"),
 											components_width=self.page.width
 										)
 									)
 
 									logger.info("Replacing last agent message...")
-									if isinstance(self.lv_chat.controls[-1].controls[0].content, ft.Markdown):
+									if isinstance(self.lv_chat.controls[-1].controls[0].content.content, ft.Markdown):
 										self.lv_chat.controls[-1].controls[0].content = audio_players[-1]
 									else:
 										self.lv_chat.controls.append(audio_players[-1])
@@ -426,6 +472,15 @@ class ChatbotView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 	def cca_send_clicked(self, event: ft.ControlEvent) -> None:
 		if self.txt_message.value == "" or self.txt_message.value.isspace():
@@ -444,6 +499,15 @@ class ChatbotView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			self.add_message(is_bot=False, message=aux_message)
 			self.add_message(is_bot=True, message="Buscando información...")
@@ -499,6 +563,15 @@ class ChatbotView(ft.View):
 									except Exception as e:
 										logger.error(f"Error: {e}")
 										self.page.update()
+										#! COMMENT
+										post(
+											url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+											headers={"Content-Type": "application/json"},
+											json={
+												"user_id": self.page.session.get("id"),
+												"file": encode_logfile()
+											}
+										)
 									finally:
 										return
 
@@ -516,6 +589,15 @@ class ChatbotView(ft.View):
 								except Exception as e:
 									logger.error(f"Error: {e}")
 									self.page.update()
+									#! COMMENT
+									post(
+										url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+										headers={"Content-Type": "application/json"},
+										json={
+											"user_id": self.page.session.get("id"),
+											"file": encode_logfile()
+										}
+									)
 								finally:
 									return
 
@@ -536,6 +618,15 @@ class ChatbotView(ft.View):
 							except Exception as e:
 								logger.error(f"Error: {e}")
 								self.page.update()
+								#! COMMENT
+								post(
+									url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+									headers={"Content-Type": "application/json"},
+									json={
+										"user_id": self.page.session.get("id"),
+										"file": encode_logfile()
+									}
+								)
 							finally:
 								return
 
@@ -555,6 +646,15 @@ class ChatbotView(ft.View):
 						except Exception as e:
 							logger.error(f"Error: {e}")
 							self.page.update()
+							#! COMMENT
+							post(
+								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+								headers={"Content-Type": "application/json"},
+								json={
+									"user_id": self.page.session.get("id"),
+									"file": encode_logfile()
+								}
+							)
 						finally:
 							return
 
@@ -592,10 +692,26 @@ class ChatbotView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.info("Starting audio recording...")
 			self.record_flag = True
-			self.audio_recorder.start_recording(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME))
+			last_user_audio_id: int = get_audio_id(type="user")
+			self.page.session.set(
+				key="last_user_audio_filename",
+				value=f"{join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME)}_{last_user_audio_id}.wav"
+			)
+			self.audio_recorder.start_recording(
+				output_path=self.page.session.get("last_user_audio_filename")
+			)
 
 		else:
 			logger.info("Changing UI components to initial state...")
@@ -611,13 +727,24 @@ class ChatbotView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
+
+			self.add_message(is_bot=False, message="Convirtiendo audio en texto...")
 
 			logger.info("Stopping audio recording...")
 			self.record_flag = False
 			self.audio_recorder.stop_recording()
 
 			logger.info("Encoding audio file...")
-			with open(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME), "rb") as audio_file:
+			with open(self.page.session.get("last_user_audio_filename"), "rb") as audio_file:
 				encoded_audio_data: str = b64encode(audio_file.read()).decode("utf-8")
 
 			logger.info("Speech recognition process started...")
@@ -647,20 +774,41 @@ class ChatbotView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 				finally:
 					return
 
 			logger.info(f"Speech recognition (ASR) endpoint response received {response.status_code}: {response.json()}")
 			if response.status_code == 201:
 				user_message: str = response.json()["text"]
-				logger.info(f"Speech captured: {user_message}")
-				self.add_message(is_bot=False, message=user_message.capitalize())
+				logger.info(f"Speech captured: {user_message}. Replacing last user temp message with audio message...")
+				self.lv_chat.controls[-1].controls[1].content = Message(
+					is_bot=False,
+					message=user_message.capitalize(),
+				)
 				self.add_message(is_bot=True, message="Buscando información...")
 				try:
 					self.page.update()
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 				logger.info("Checking if the agent needs user's location...")
 				user_message = self.lv_chat.controls[-2].controls[1].content.content.value
@@ -714,6 +862,15 @@ class ChatbotView(ft.View):
 										except Exception as e:
 											logger.error(f"Error: {e}")
 											self.page.update()
+											#! COMMENT
+											post(
+												url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+												headers={"Content-Type": "application/json"},
+												json={
+													"user_id": self.page.session.get("id"),
+													"file": encode_logfile()
+												}
+											)
 										finally:
 											return
 
@@ -731,6 +888,15 @@ class ChatbotView(ft.View):
 									except Exception as e:
 										logger.error(f"Error: {e}")
 										self.page.update()
+										#! COMMENT
+										post(
+											url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+											headers={"Content-Type": "application/json"},
+											json={
+												"user_id": self.page.session.get("id"),
+												"file": encode_logfile()
+											}
+										)
 									finally:
 										return
 
@@ -751,6 +917,15 @@ class ChatbotView(ft.View):
 								except Exception as e:
 									logger.error(f"Error: {e}")
 									self.page.update()
+									#! COMMENT
+									post(
+										url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+										headers={"Content-Type": "application/json"},
+										json={
+											"user_id": self.page.session.get("id"),
+											"file": encode_logfile()
+										}
+									)
 								finally:
 									return
 
@@ -770,6 +945,15 @@ class ChatbotView(ft.View):
 							except Exception as e:
 								logger.error(f"Error: {e}")
 								self.page.update()
+								#! COMMENT
+								post(
+									url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+									headers={"Content-Type": "application/json"},
+									json={
+										"user_id": self.page.session.get("id"),
+										"file": encode_logfile()
+									}
+								)
 							finally:
 								return
 
@@ -788,6 +972,15 @@ class ChatbotView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_request_audio_permission)
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 		logger.info("Requesting audio permissions...")
 
@@ -806,6 +999,15 @@ class ChatbotView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.info("Starting audio recording...")
 			self.audio_recorder.start_recording(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME))
@@ -827,6 +1029,15 @@ class ChatbotView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.close(self.dlg_request_audio_permission)
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 		logger.warning("Audio permissions denied. Replacing last agent message with error message...")
 		self.add_message(

@@ -68,7 +68,8 @@ class LoadingView(ft.View):
 						value=f"Consejo: {choice(ADVICES)}",
 						size=20,
 						color=ft.Colors.BLACK,
-						text_align=ft.TextAlign.CENTER
+						text_align=ft.TextAlign.CENTER,
+						selectable=True
 					)
 				)
 			]

@@ -1,7 +1,7 @@
 import flet as ft
 from logging import Logger, getLogger
 
-from requests import get, Response
+from requests import get, post, Response
 from requests.exceptions import ConnectTimeout
 
 from components.bars import *
@@ -207,6 +207,15 @@ class FavoritesView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			finally:
 				return [
@@ -282,6 +291,15 @@ class FavoritesView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 	def search_favorite(self, _: ft.ControlEvent) -> None:
 		if self.txt_favorite_searcher.value == "":
@@ -313,6 +331,15 @@ class FavoritesView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 	def next_page(self, _: ft.ControlEvent) -> None:
 		logger.info(f"Going to next page...")
@@ -328,6 +355,15 @@ class FavoritesView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 	def request_location_permission(self, _: ft.ControlEvent) -> None:
 		try:
@@ -363,6 +399,15 @@ class FavoritesView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_location)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 		else:
 			logger.warning("Location permissions denied. Opening location permissions failed dialog...")
@@ -376,6 +421,15 @@ class FavoritesView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_location)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 	def check_if_open_map(self, event: ft.ControlEvent) -> None:
 		logger.info("Checking location permissions...")
@@ -388,6 +442,15 @@ class FavoritesView(ft.View):
 				go_to_view(self.page, logger=logger, route="/map")
 			except Exception as e:
 				logger.error(f"Error: {e}")
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 				go_to_view(self.page, logger=logger, route="/map")
 
 		else:
@@ -402,3 +465,12 @@ class FavoritesView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)

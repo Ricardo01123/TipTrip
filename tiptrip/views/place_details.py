@@ -8,8 +8,8 @@ from requests import get, post, delete, Response
 
 from components.bars import *
 from resources.config import *
+from resources.functions import *
 from components.carousel import Carousel
-from resources.functions import format_place_name, get_place_icon
 
 
 logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
@@ -25,21 +25,12 @@ class PlaceDetailsView(ft.View):
 		self.saved_iconbutton: ft.IconButton = ft.IconButton(
 			icon=(
 				ft.Icons.BOOKMARKS
-				if self.place_data["is_favorite"]
+				if not isinstance(self.place_data, ft.Container) and self.place_data["is_favorite"]
 				else ft.Icons.BOOKMARKS_OUTLINED
 			),
 			icon_color=SECONDARY_COLOR,
 			icon_size=25,
 			on_click=self.handle_saved_iconbutton
-		)
-		self.data_tabs: ft.Tabs = ft.Tabs(
-			selected_index=0,
-			animation_duration=300,
-			divider_color=ft.Colors.TRANSPARENT,
-			indicator_color=ft.Colors.TRANSPARENT,
-			label_color=MAIN_COLOR,
-			unselected_label_color=ft.Colors.BLACK,
-			tabs=self.fill_data_tabs()
 		)
 		self.dlg_error: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
@@ -97,95 +88,94 @@ class PlaceDetailsView(ft.View):
 							blur_radius=LOW_BLUR,
 							color=ft.Colors.GREY_500
 						),
-						content=(
-							self.place_data
-							if isinstance(self.place_data, ft.Container)
-							else ft.Column(
-								alignment=ft.MainAxisAlignment.CENTER,
-								spacing=0,
-								controls=[
-									ft.Container(
-										width=self.page.width,
-										alignment=ft.alignment.bottom_left,
-										content=ft.Row(
-											scroll=ft.ScrollMode.HIDDEN,
-											controls=[
-												ft.Text(
-													value=self.place_data["info"]["name"],
-													color=MAIN_COLOR,
-													weight=ft.FontWeight.BOLD,
-													size=25,
-												)
-											]
-										)
-									),
-									ft.Container(
-										width=self.page.width,
-										content=ft.Row(
-											spacing=0,
-											alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
-											controls=[
-												ft.Container(
-													content=ft.Row(
-														spacing=10,
-														controls=[
-															ft.Container(content=self.saved_iconbutton),
-															ft.Container(
-																content=ft.Icon(
-																	name=get_place_icon(self.place_data["info"]["classification"]),
-																	color=SECONDARY_COLOR,
-																	size=18
-																)
-															),
-															ft.Container(
-																content=ft.Text(
-																	value=self.place_data["info"]["classification"],
-																	color=SECONDARY_COLOR,
-																	size=18
-																)
-															)
-														]
-													)
-												),
-												ft.Container(
-													width=70,
-													bgcolor=SECONDARY_COLOR,
-													border_radius=ft.border_radius.all(
-														value=15
-													),
-													padding=ft.padding.only(
-														right=5
-													),
-													content=ft.Row(
-														spacing=5,
-														alignment=ft.MainAxisAlignment.CENTER,
-														controls=[
-															ft.Container(
-																expand=1,
-																alignment=ft.alignment.center_right,
-																content=ft.Icon(
-																	name=ft.Icons.STAR_BORDER,
-																	color=ft.Colors.WHITE,
-																	size=18
-																)
-															),
-															ft.Container(
-																expand=1,
-																alignment=ft.alignment.center_left,
-																content=ft.Text(
-																	value=self.place_data["info"]["punctuation"],
-																	color=ft.Colors.WHITE,
-																	size=18
-																)
-															)
-														]
-													)
-												)
-											]
-										)
+						content=ft.Column(
+							alignment=ft.MainAxisAlignment.CENTER,
+							spacing=0,
+							controls=[
+								ft.Container(
+									width=self.page.width,
+									alignment=ft.alignment.bottom_left,
+									content=ft.Row(
+										scroll=ft.ScrollMode.HIDDEN,
+										controls=[
+											ft.Text(
+												value=self.place_data["info"]["name"],
+												color=MAIN_COLOR,
+												weight=ft.FontWeight.BOLD,
+												size=25,
+												selectable=True
+											)
+										]
 									)
-								]
-							)
+								),
+								ft.Container(
+									width=self.page.width,
+									content=ft.Row(
+										spacing=0,
+										alignment=ft.MainAxisAlignment.SPACE_BETWEEN,
+										controls=[
+											ft.Container(
+												content=ft.Row(
+													spacing=10,
+													controls=[
+														ft.Container(content=self.saved_iconbutton),
+														ft.Container(
+															content=ft.Icon(
+																name=get_place_icon(self.place_data["info"]["classification"]),
+																color=SECONDARY_COLOR,
+																size=18
+															)
+														),
+														ft.Container(
+															content=ft.Text(
+																value=self.place_data["info"]["classification"],
+																color=SECONDARY_COLOR,
+																size=18,
+																selectable=True
+															)
+														)
+													]
+												)
+											),
+											ft.Container(
+												width=70,
+												bgcolor=SECONDARY_COLOR,
+												border_radius=ft.border_radius.all(
+													value=15
+												),
+												padding=ft.padding.only(
+													right=5
+												),
+												content=ft.Row(
+													spacing=5,
+													alignment=ft.MainAxisAlignment.CENTER,
+													controls=[
+														ft.Container(
+															expand=1,
+															alignment=ft.alignment.center_right,
+															content=ft.Icon(
+																name=ft.Icons.STAR_BORDER,
+																color=ft.Colors.WHITE,
+																size=18
+															)
+														),
+														ft.Container(
+															expand=1,
+															alignment=ft.alignment.center_left,
+															content=ft.Text(
+																value=self.place_data["info"]["punctuation"],
+																color=ft.Colors.WHITE,
+																size=18,
+																selectable=True
+															)
+														)
+													]
+												)
+											)
+										]
+									)
+								)
+							]
 						)
 					)
 				),
@@ -218,10 +208,14 @@ class PlaceDetailsView(ft.View):
 						offset=ft.Offset(0, -2),
 						color=ft.Colors.BLACK
 					),
-					content=ft.Column(
-						expand=True,
-						scroll=ft.ScrollMode.HIDDEN,
-						controls=[self.data_tabs]
+					content=ft.Tabs(
+						selected_index=0,
+						animation_duration=300,
+						divider_color=ft.Colors.TRANSPARENT,
+						indicator_color=ft.Colors.TRANSPARENT,
+						label_color=MAIN_COLOR,
+						unselected_label_color=ft.Colors.BLACK,
+						tabs=self.fill_data_tabs()
 					)
 				)
 			],
@@ -276,7 +270,7 @@ class PlaceDetailsView(ft.View):
 			logger.debug(f"Response 200 OK: {response.json()}")
 			return response.json()["place"]
 
-		elif response.status_code == 204:
+		elif response.status_code == 204 or response.status_code == 404:
 			logger.debug(f"Response 204 No Content: {response.json()}")
 			return ft.Container(
 				alignment=ft.alignment.center,
@@ -289,6 +283,15 @@ class PlaceDetailsView(ft.View):
 
 		else:
 			logger.error(f"Response {response.status_code}: {response.json()}")
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 			return ft.Container(
 				alignment=ft.alignment.center,
 				content=ft.Text(
@@ -316,7 +319,7 @@ class PlaceDetailsView(ft.View):
 			self.place_data["address"]["state"],
 			self.place_data["address"]["how_to_arrive"],
 		]):
-			info: ft.Column = ft.Column()
+			info: ft.Column = ft.Column(scroll=ft.ScrollMode.HIDDEN)
 
 			if self.place_data["distance"]:
 				info.controls.append(
@@ -327,13 +330,15 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"Distancia de mí:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.Colors.BLACK
+										color=ft.Colors.BLACK,
+										selectable=True
 									)
 								),
 								ft.Container(
 									content=ft.Text(
 										value=f"{self.place_data['distance']:.2f} km",
-										color=ft.Colors.BLACK
+										color=ft.Colors.BLACK,
+										selectable=True
 									)
 								)
 							]
@@ -349,20 +354,22 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nHorarios:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.Colors.BLACK
+										color=ft.Colors.BLACK,
+										selectable=True
 									)
 								),
 								ft.Container(
 									content=ft.Text(
 										value=self.place_data["info"]["schedules"],
 										color=ft.Colors.BLACK,
+										text_align=ft.TextAlign.JUSTIFY,
+										selectable=True
 									)
 								)
 							]
 						)
 					)
 				)
-
 			if self.place_data["info"]["prices"]:
 				info.controls.append(
 					ft.Container(
@@ -372,13 +379,16 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nCostos:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.Colors.BLACK
+										color=ft.Colors.BLACK,
+										selectable=True
 									)
 								),
 								ft.Container(
 									content=ft.Text(
 										value=self.place_data["info"]["prices"],
 										color=ft.Colors.BLACK,
+										text_align=ft.TextAlign.JUSTIFY,
+										selectable=True
 									)
 								)
 							]
@@ -401,7 +411,8 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nDirección:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.Colors.BLACK
+										color=ft.Colors.BLACK,
+										selectable=True
 									)
 								),
 								ft.Container(
@@ -414,6 +425,8 @@ class PlaceDetailsView(ft.View):
 											f"{self.place_data['address']['state']}."
 										),
 										color=ft.Colors.BLACK,
+										text_align=ft.TextAlign.JUSTIFY,
+										selectable=True
 									)
 								)
 							]
@@ -422,6 +435,7 @@ class PlaceDetailsView(ft.View):
 				)
 
 			if self.place_data["address"]["how_to_arrive"]:
+				splitted: list = split_text(self.place_data["address"]["how_to_arrive"])
 				info.controls.append(
 					ft.Container(
 						content=ft.Column(
@@ -430,13 +444,21 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nReferencias para llegar:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.Colors.BLACK
+										color=ft.Colors.BLACK,
+										selectable=True
 									)
 								),
 								ft.Container(
-									content=ft.Text(
-										value=self.place_data["address"]["how_to_arrive"],
-										color=ft.Colors.BLACK,
+									content=ft.Column(
+										scroll=ft.ScrollMode.HIDDEN,
+										controls=[
+											ft.Text(
+												value=split,
+												color=ft.Colors.BLACK,
+												text_align=ft.TextAlign.JUSTIFY,
+												selectable=True
+											) for split in splitted
+										]
 									)
 								)
 							]
@@ -447,96 +469,162 @@ class PlaceDetailsView(ft.View):
 			result.append(
 				ft.Tab(
 					text="Información",
-					content=info
+					content=ft.Container(
+						expand=True,
+						content=info
+					)
 				)
 			)
 
 		if self.place_data["info"]["description"]:
+			splitted: list = split_text(self.place_data["info"]["description"])
 			result.append(
 				ft.Tab(
 					text="Descripción",
 					content=ft.Container(
-						content=ft.Text(
-							value=self.place_data["info"]["description"],
-							color=ft.Colors.BLACK,
+						expand=True,
+						content=ft.Column(
+							scroll=ft.ScrollMode.HIDDEN,
+							controls=[
+								ft.Text(
+									value=split,
+									color=ft.Colors.BLACK,
+									text_align=ft.TextAlign.JUSTIFY,
+									selectable=True
+								) for split in splitted
+							]
 						)
 					)
 				)
 			)
 
 		if self.place_data["reviews"]["historic"]:
+			splitted: list = split_text(self.place_data["reviews"]["historic"])
 			result.append(
 				ft.Tab(
 					text="Reseña histórica",
 					content=ft.Container(
-						content=ft.Text(
-							value=self.place_data["reviews"]["historic"],
-							color=ft.Colors.BLACK,
+						expand=True,
+						content=ft.Column(
+							scroll=ft.ScrollMode.HIDDEN,
+							controls=[
+								ft.Text(
+									value=split,
+									color=ft.Colors.BLACK,
+									text_align=ft.TextAlign.JUSTIFY,
+									selectable=True
+								) for split in splitted
+							]
 						)
 					)
 				)
 			)
 
 		if self.place_data["reviews"]["general"]:
+			splitted: list = split_text(self.place_data["reviews"]["general"])
 			result.append(
 				ft.Tab(
 					text="Reseña general",
 					content=ft.Container(
-						content=ft.Text(
-							value=self.place_data["reviews"]["general"],
-							color=ft.Colors.BLACK,
+						expand=True,
+						content=ft.Column(
+							scroll=ft.ScrollMode.HIDDEN,
+							controls=[
+								ft.Text(
+									value=split,
+									color=ft.Colors.BLACK,
+									text_align=ft.TextAlign.JUSTIFY,
+									selectable=True
+								) for split in splitted
+							]
 						)
 					)
 				)
 			)
 
 		if self.place_data["info"]["services"]:
+			splitted: list = split_text(self.place_data["info"]["services"])
 			result.append(
 				ft.Tab(
 					text="Servicios",
 					content=ft.Container(
-						content=ft.Text(
-							value=self.place_data["info"]["services"],
-							color=ft.Colors.BLACK,
+						expand=True,
+						content=ft.Column(
+							scroll=ft.ScrollMode.HIDDEN,
+							controls=[
+								ft.Text(
+									value=split,
+									color=ft.Colors.BLACK,
+									text_align=ft.TextAlign.JUSTIFY,
+									selectable=True
+								) for split in splitted
+							]
 						)
 					)
 				)
 			)
 
 		if self.place_data["info"]["activities"]:
+			splitted: list = split_text(self.place_data["info"]["activities"])
 			result.append(
 				ft.Tab(
 					text="Actividades",
 					content=ft.Container(
-						content=ft.Text(
-							value=self.place_data["info"]["activities"],
-							color=ft.Colors.BLACK,
+						expand=True,
+						content=ft.Column(
+							scroll=ft.ScrollMode.HIDDEN,
+							controls=[
+								ft.Text(
+									value=split,
+									color=ft.Colors.BLACK,
+									text_align=ft.TextAlign.JUSTIFY,
+									selectable=True
+								) for split in splitted
+							]
 						)
 					)
 				)
 			)
 
 		if self.place_data["info"]["permanent_exhibitions"]:
+			splitted: list = split_text(self.place_data["info"]["permanent_exhibitions"])
 			result.append(
 				ft.Tab(
 					text="Salas permanentes",
 					content=ft.Container(
-						content=ft.Text(
-							value=self.place_data["info"]["permanent_exhibitions"],
-							color=ft.Colors.BLACK,
+						expand=True,
+						content=ft.Column(
+							scroll=ft.ScrollMode.HIDDEN,
+							controls=[
+								ft.Text(
+									value=split,
+									color=ft.Colors.BLACK,
+									text_align=ft.TextAlign.JUSTIFY,
+									selectable=True
+								) for split in splitted
+							]
 						)
 					)
 				)
 			)
 
 		if self.place_data["info"]["temporal_exhibitions"]:
+			splitted: list = split_text(self.place_data["info"]["temporal_exhibitions"])
 			result.append(
 				ft.Tab(
 					text="Salas temporales",
 					content=ft.Container(
-						content=ft.Text(
-							value=self.place_data["info"]["temporal_exhibitions"],
-							color=ft.Colors.BLACK,
+						expand=True,
+						content=ft.Column(
+							scroll=ft.ScrollMode.HIDDEN,
+							controls=[
+								ft.Text(
+									value=split,
+									color=ft.Colors.BLACK,
+									text_align=ft.TextAlign.JUSTIFY,
+									selectable=True
+								) for split in splitted
+							]
 						)
 					)
 				)
@@ -548,7 +636,7 @@ class PlaceDetailsView(ft.View):
 			self.place_data["info"]["website"],
 			self.place_data["info"]["sic_website"]
 		]):
-			contact_info: ft.Column = ft.Column()
+			contact_info: ft.Column = ft.Column(scroll=ft.ScrollMode.HIDDEN)
 
 			if self.place_data["info"]["mail"]:
 				contact_info.controls.append(
@@ -557,22 +645,24 @@ class PlaceDetailsView(ft.View):
 							controls=[
 								ft.Container(
 									content=ft.Text(
-										value=f"\nCorreo electrónico:",
+										value="Correo electrónico:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.Colors.BLACK
+										color=ft.Colors.BLACK,
+										selectable=True
 									)
 								),
 								ft.Container(
 									content=ft.Text(
 										value=self.place_data["info"]["mail"],
 										color=ft.Colors.BLACK,
+										text_align=ft.TextAlign.JUSTIFY,
+										selectable=True
 									)
 								)
 							]
 						)
 					)
 				)
-
 			if self.place_data["info"]["phone"]:
 				contact_info.controls.append(
 					ft.Container(
@@ -582,20 +672,22 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nTeléfono:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.Colors.BLACK
+										color=ft.Colors.BLACK,
+										selectable=True
 									)
 								),
 								ft.Container(
 									content=ft.Text(
 										value=self.place_data["info"]["phone"],
-										color=ft.Colors.BLACK
+										color=ft.Colors.BLACK,
+										text_align=ft.TextAlign.JUSTIFY,
+										selectable=True
 									)
 								)
 							]
 						)
 					)
 				)
-
 			if self.place_data["info"]["website"]:
 				contact_info.controls.append(
 					ft.Container(
@@ -605,13 +697,20 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nPágina web:",
 										weight=ft.FontWeight.BOLD,
-										color=ft.Colors.BLACK
+										color=ft.Colors.BLACK,
+										selectable=True
 									)
 								),
 								ft.Container(
-									content=ft.Text(
-										value=self.place_data["info"]["website"],
-										color=ft.Colors.BLACK,
+									content=ft.Markdown(
+										value=(
+											f"[{self.place_data['info']['website']}]"
+											f"({self.place_data['info']['website']})"
+										),
+										md_style_sheet=ft.MarkdownStyleSheet(
+											p_text_style=ft.TextStyle(color=ft.Colors.BLACK)
+										),
+										on_tap_link=lambda e: self.page.launch_url(e.data)
 									)
 								)
 							]
@@ -628,13 +727,20 @@ class PlaceDetailsView(ft.View):
 									content=ft.Text(
 										value=f"\nPágina del gobierno (SIC):",
 										weight=ft.FontWeight.BOLD,
-										color=ft.Colors.BLACK
+										color=ft.Colors.BLACK,
+										selectable=True
 									)
 								),
 								ft.Container(
-									content=ft.Text(
-										value=self.place_data["info"]["sic_website"],
-										color=ft.Colors.BLACK,
+									content=ft.Markdown(
+										value=(
+											f"[{self.place_data['info']['sic_website']}]"
+											f"({self.place_data['info']['sic_website']})"
+										),
+										md_style_sheet=ft.MarkdownStyleSheet(
+											p_text_style=ft.TextStyle(color=ft.Colors.BLACK)
+										),
+										on_tap_link=lambda e: self.page.launch_url(e.data)
 									)
 								)
 							]
@@ -645,7 +751,10 @@ class PlaceDetailsView(ft.View):
 			result.append(
 				ft.Tab(
 					text="Contacto",
-					content=contact_info
+					content=ft.Container(
+						expand=True,
+						content=contact_info
+					)
 				)
 			)
 
@@ -654,9 +763,11 @@ class PlaceDetailsView(ft.View):
 				ft.Tab(
 					text="Error",
 					content=ft.Container(
+						expand=True,
 						content=ft.Text(
-							value="No se encontró información",
-							color=ft.Colors.BLACK
+							value="No se encontró información sobre el sitio turístico seleccionado.",
+							color=ft.Colors.BLACK,
+							text_align=ft.TextAlign.JUSTIFY
 						)
 					)
 				)
@@ -675,6 +786,15 @@ class PlaceDetailsView(ft.View):
 				return ["default.png"]
 
 		except Exception:
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 			return ["default.png"]
 
 	def handle_saved_iconbutton(self, _) -> None:
@@ -703,6 +823,15 @@ class PlaceDetailsView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 				finally:
 					return
@@ -715,6 +844,15 @@ class PlaceDetailsView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 			else:
 				print("Error removing place from favorites")
@@ -728,6 +866,15 @@ class PlaceDetailsView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 		else:
 			logger.info("Adding place to favorites...")
@@ -758,6 +905,15 @@ class PlaceDetailsView(ft.View):
 					self.page.open(self.dlg_error)
 
 				finally:
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 					return
 
 			if response.status_code == 201:
@@ -768,6 +924,15 @@ class PlaceDetailsView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 			else:
 				logger.error("Error adding place to favorites")
 				self.dlg_error.title = ft.Text("Error al agregar")
@@ -780,3 +945,12 @@ class PlaceDetailsView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)

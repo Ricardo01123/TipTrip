@@ -6,7 +6,7 @@ from os.path import join
 PROJECT_NAME: str = "TIP TRIP"
 BOT_NAME: str = "Bot"
 
-# Text sizes
+# Text variables
 PROJECT_NAME_SIZE: int = 40
 PAGE_SUBTITLE_SIZE: int = 20
 BTN_TEXT_SIZE: int = 15
@@ -14,6 +14,10 @@ BTN_TEXT_SIZE: int = 15
 PLC_TITLE_SIZE: int = 22
 PLC_CATEGORY_SIZE: int = 16
 MESSAGE_TEXT_SIZE: int = 18
+
+CHUNK_SIZE: int = 300
+CHUNK_OVERLAY: int = 50
+CHUNK_SEPARATOR: str = '.'
 
 # Colors
 MAIN_COLOR: str = "#FF7F11"  # orange
@@ -42,7 +46,8 @@ LOGGING_FORMAT: str = "[%(asctime)s] %(levelname)s in %(name)s: %(message)s"
 RGX_EMAIL: str = r"^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$"
 
 # Back-End API
-BACK_END_URL: str = "http://145.223.74.225:5000"
+# BACK_END_URL: str = "http://145.223.74.225:5000"
+BACK_END_URL: str = "http://127.0.0.1:5000"
 PLACES_ENDPOINT: str = "places"
 USERS_ENDPOINT: str = "users"
 AUTH_USER_ENDPOINT: str = "users/auth"
@@ -50,13 +55,14 @@ FAVORITES_ENDPOINT: str = "users/favorites"
 AGENT_ENDPOINT: str = "models/agent"
 ASR_ENDPOINT: str = "models/asr"
 TTS_ENDPOINT: str = "models/tts"
+LOGS_ENDPOINT: str = "logs"
 
 # Chatbot audio file
 CHANNELS: int = 1
 CHUNK: int = 1_024
 SAMPLING_RATE: int = 16_000
-TEMP_USER_AUDIO_FILENAME: str = "temp_user_audio.wav"
-TEMP_AGENT_AUDIO_FILENAME: str = "temp_agent_audio.wav"
+TEMP_USER_AUDIO_FILENAME: str = "temp_user_audio"
+TEMP_AGENT_AUDIO_FILENAME: str = "temp_agent_audio"
 
 # Geolocation variables
 CDXM_MIN_LATITUDE: float = 19 + 3 / 60
@@ -66,8 +72,8 @@ CDXM_MAX_LONGITUDE: float = -98 - 57 / 60
 
 # Project paths
 PROJECT_DIR_ABSPATH: str = getcwd()
-TEMP_ABSPATH: str = join(PROJECT_DIR_ABSPATH, "temp")
 ASSETS_ABSPATH: str = join(PROJECT_DIR_ABSPATH, "assets")
+TEMP_ABSPATH: str = join(PROJECT_DIR_ABSPATH, "storage", "temp")
 
 # Places filters variables
 MUNICIPALITIES: list[str] = [

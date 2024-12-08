@@ -1,8 +1,7 @@
+import logging
 import flet as ft
-from os import remove
 from time import sleep
-from os.path import exists, join
-from logging import Logger, getLogger, basicConfig, INFO
+from os.path import join
 
 from resources.config import *
 from resources.functions import go_to_view
@@ -24,12 +23,23 @@ from views.privacy_politics import PrivacyPoliticsView
 from views.terms_conditions import TermsConditionsView
 
 
-basicConfig(level=INFO, format=LOGGING_FORMAT)
-logger: Logger = getLogger(PROJECT_NAME)
+logging.basicConfig(level=logging.INFO)
+# App loggers
+logger: logging.Logger = logging.getLogger(PROJECT_NAME)
+# .log file handler
+file_handler: logging.FileHandler = logging.FileHandler(
+	filename=join(TEMP_ABSPATH, f"{PROJECT_NAME}.log")
+)
+file_handler.setFormatter(logging.Formatter(LOGGING_FORMAT))
+logger.addHandler(file_handler)
+# Console handler
+console_handler: logging.StreamHandler = logging.StreamHandler()
+console_handler.setFormatter(logging.Formatter(LOGGING_FORMAT))
+logger.addHandler(console_handler)
 
 
 def main(page: ft.Page) -> None:
-	page.title = "Tip Trip"
+	page.title = PROJECT_NAME
 	page.window.width = 412 #! COMMENT
 	page.window.height = 915 #! COMMENT
 
@@ -80,10 +90,3 @@ def main(page: ft.Page) -> None:
 
 
 ft.app(main, assets_dir="assets")
-
-logger.info("Ending app execution, deleting temporal audio files if exists...")
-if exists(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME)):
-	remove(join(TEMP_ABSPATH, TEMP_USER_AUDIO_FILENAME))
-
-if exists(join(TEMP_ABSPATH, TEMP_AGENT_AUDIO_FILENAME)):
-	remove(join(TEMP_ABSPATH, TEMP_AGENT_AUDIO_FILENAME))

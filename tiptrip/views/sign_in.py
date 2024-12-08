@@ -67,11 +67,8 @@ class SignInView(ft.View):
 		)
 		self.dlg_error: ft.AlertDialog = ft.AlertDialog(
 			modal=True,
-			title=ft.Text("Error al iniciar sesión"),
-			content=ft.Text(
-				"Ocurrió un error al intentar iniciar sesión. "
-				"Favor de intentarlo de nuevo más tarde."
-			),
+			title=ft.Text(""),
+			content=ft.Text(""),
 			actions=[
 				ft.TextButton("Aceptar", on_click=lambda _: self.page.close(self.dlg_error)),
 			],
@@ -324,12 +321,30 @@ class SignInView(ft.View):
 							self.page.update()
 						except Exception as e:
 							logger.error(f"Error: {e}")
+							#! COMMENT
+							post(
+								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+								headers={"Content-Type": "application/json"},
+								json={
+									"user_id": self.page.session.get("id"),
+									"file": encode_logfile()
+								}
+							)
 							self.page.update()
 
 						try:
 							go_to_view(page=self.page, logger=logger, route='/')
 						except Exception as e:
 							logger.error(f"Error: {e}")
+							#! COMMENT
+							post(
+								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+								headers={"Content-Type": "application/json"},
+								json={
+									"user_id": self.page.session.get("id"),
+									"file": encode_logfile()
+								}
+							)
 							go_to_view(page=self.page, logger=logger, route='/')
 
 					except Exception as e:
@@ -341,12 +356,30 @@ class SignInView(ft.View):
 							self.page.update()
 						except Exception as e:
 							logger.error(f"Error: {e}")
+							#! COMMENT
+							post(
+								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+								headers={"Content-Type": "application/json"},
+								json={
+									"user_id": self.page.session.get("id"),
+									"file": encode_logfile()
+								}
+							)
 							self.page.update()
 
 						try:
 							go_to_view(page=self.page, logger=logger, route="/permissions")
 						except Exception as e:
 							logger.error(f"Error: {e}")
+							#! COMMENT
+							post(
+								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+								headers={"Content-Type": "application/json"},
+								json={
+									"user_id": self.page.session.get("id"),
+									"file": encode_logfile()
+								}
+							)
 							go_to_view(page=self.page, logger=logger, route="/permissions")
 
 				else:
@@ -358,12 +391,30 @@ class SignInView(ft.View):
 						self.page.update()
 					except Exception as e:
 						logger.error(f"Error: {e}")
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
 						self.page.update()
 
 					try:
 						go_to_view(page=self.page, logger=logger, route="/permissions")
 					except Exception as e:
 						logger.error(f"Error: {e}")
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
 						go_to_view(page=self.page, logger=logger, route="/permissions")
 
 			elif response.status_code == 401 or response.status_code == 404:
@@ -395,6 +446,13 @@ class SignInView(ft.View):
 					logger.error(f"Error: {e}")
 					self.page.update()
 
+				self.dlg_error.title=ft.Text(value="Error al iniciar sesión"),
+				self.dlg_error.content=ft.Text(
+					value=(
+						"Ocurrió un error al intentar iniciar sesión. "
+						"Favor de intentarlo de nuevo más tarde."
+					)
+				),
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:

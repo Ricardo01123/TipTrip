@@ -143,11 +143,29 @@ class VerifyUserView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 		try:
 			go_to_view(page=self.page, logger=logger, route="/sign_in")
 		except Exception as e:
 			logger.error(f"Error: {e}")
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 			go_to_view(page=self.page, logger=logger, route="/sign_in")
 
 	def btn_submit_clicked(self, _: ft.ControlEvent) -> None:
@@ -159,6 +177,15 @@ class VerifyUserView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 		elif not match(pattern=RGX_EMAIL, string=self.txt_email.value):
 			logger.warning("Invalid email format")
@@ -169,6 +196,15 @@ class VerifyUserView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 		else:
 			logger.info("Showing loading splash screen...")
@@ -180,6 +216,15 @@ class VerifyUserView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.info("Verifying user...")
 			try:
@@ -213,6 +258,15 @@ class VerifyUserView(ft.View):
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
 				finally:
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 					return
 
 			if response.status_code == 201:
@@ -225,6 +279,15 @@ class VerifyUserView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 				logger.info("Setting session data...")
 				self.page.session.set(key="aux", value=None) # This is a workaround to avoid a bug in the framework
@@ -239,11 +302,29 @@ class VerifyUserView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 				try:
 					go_to_view(page=self.page, logger=logger, route="/change_password")
 				except Exception as e:
 					logger.error(f"Error: {e}")
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 					go_to_view(page=self.page, logger=logger, route="/change_password")
 
 			elif response.status_code == 404:
@@ -263,12 +344,30 @@ class VerifyUserView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 			else:
 				logger.error("Error verifying user")
@@ -287,9 +386,27 @@ class VerifyUserView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 				try:
 					self.page.open(self.dlg_error)
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)

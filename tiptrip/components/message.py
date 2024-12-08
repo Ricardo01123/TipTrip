@@ -33,7 +33,8 @@ class Message(ft.Container):
 							color=ft.Colors.BLACK,
 							size=MESSAGE_TEXT_SIZE
 						)
-					)
+					),
+					selectable=True
 				)
 				if is_bot else
 				ft.Text(
@@ -51,7 +52,8 @@ class Message(ft.Container):
 						if is_bot and "ERROR" not in message
 						else ft.Colors.WHITE
 					),
-					size=MESSAGE_TEXT_SIZE
+					size=MESSAGE_TEXT_SIZE,
+					selectable=True
 				)
 			)
 		)

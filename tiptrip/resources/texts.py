@@ -51,7 +51,60 @@ AGENT_WELCOME_MESSAGE: str = (
 	"¿En qué puedo ayudarte?"
 )
 
-PRIVACY_POLITICS: str = "Esta es nuestra política de privacidad: ..."
+PRIVACY_POLITICS: str = """
+Fecha de Vigencia: 7 de diciembre de 2024
+
+1. Datos que Recopilamos
+Recopilamos los siguientes datos personales proporcionados por usted al registrarse o interactuar con la aplicación:
+
+Nombre
+Correo electrónico
+Ubicación geográfica actual (mediante servicios de geolocalización)
+Datos de interacción con la app para mejorar nuestros servicios.
+
+2. Finalidad del Tratamiento de Datos Personales
+Sus datos personales son tratados con las siguientes finalidades:
+
+Crear y gestionar su cuenta en la aplicación.
+Proporcionarle un servicio personalizado, adaptado a sus preferencias e intereses.
+Ofrecerle información sobre sitios turísticos basados en su ubicación.
+Mejorar y optimizar la funcionalidad de la aplicación.
+Responder a sus consultas o solicitudes de soporte técnico.
+3. Legitimación para el Tratamiento de Datos
+El tratamiento de sus datos se realiza con base a:
+
+Su consentimiento explícito al aceptar esta política de privacidad.
+La necesidad de tratar sus datos para ejecutar el servicio contratado a través de la aplicación.
+4. Cesión de Datos a Terceros
+No compartimos sus datos personales con terceros, salvo que sea necesario para:
+
+Cumplir con obligaciones legales.
+Proveer funcionalidades de la app mediante servicios externos, como proveedores de mapas o servicios de localización. En estos casos, garantizamos el cumplimiento de la normativa aplicable por parte de dichos terceros.
+
+5.  Plazo de Conservación de Datos
+Sus datos personales se conservarán únicamente durante el tiempo necesario para cumplir con las finalidades para las que se recopilaron o según lo exija la ley. Una vez cumplido este plazo, los datos serán eliminados de manera segura.
+
+6. Derechos de los Usuarios
+Como usuario, tiene los siguientes derechos en relación con sus datos personales:
+
+Acceso: Solicitar una copia de sus datos personales.
+Rectificación: Corregir datos inexactos o incompletos.
+Supresión: Solicitar la eliminación de sus datos personales, salvo en casos requeridos por ley.
+Limitación: Restringir el uso de sus datos en ciertas circunstancias.
+Portabilidad: Recibir sus datos en un formato estructurado.
+Oposición: Negarse al tratamiento de sus datos en situaciones específicas.
+
+7.  Actualizaciones de la Política de Privacidad
+Nos reservamos el derecho de modificar esta política de privacidad en cualquier momento. Notificaremos sobre cualquier cambio importante mediante la aplicación o al correo electrónico proporcionado. Le recomendamos revisar regularmente esta política para estar informado sobre cómo protegemos sus datos.
+
+8. Permisos Solicitados por la App
+Para funcionar correctamente, la app TipTrip solicita acceso a:
+
+Micrófono: Para procesar comandos de voz y mejorar la experiencia del agente conversacional.
+Ubicación: Para proporcionarle información turística basada en su posición geográfica.
+9. Tratamiento de Datos de Menores
+La app no está diseñada ni dirigida a menores de 13 años. Si descubrimos que hemos recopilado información de un menor sin el consentimiento de su tutor legal, eliminaremos dicha información inmediatamente.
+"""
 
 TERMS_CONDITIONS: str = """
 Cómo controlas tus datos personales.

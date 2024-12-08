@@ -1,4 +1,5 @@
 import flet as ft
+from requests import post
 from logging import Logger, getLogger
 
 from resources.config import *
@@ -89,7 +90,9 @@ class PermissionsView(ft.View):
 													"Puedes continuar sin otorgarlos, pero dichas funcionalidades "
 													"no estarán disponibles hasta que permitas el uso de tu ubicación."
 												),
-												color=ft.Colors.BLACK
+												color=ft.Colors.BLACK,
+												text_align=ft.TextAlign.JUSTIFY,
+												selectable=True
 											)
 										),
 										ft.Container(
@@ -127,6 +130,15 @@ class PermissionsView(ft.View):
 			go_to_view(page=self.page, logger=logger, route='/')
 		except Exception as e:
 			logger.error(f"Error: {e}")
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 			go_to_view(page=self.page, logger=logger, route='/')
 
 	def btn_yes_clicked(self, event: ft.ControlEvent) -> None:
@@ -137,6 +149,15 @@ class PermissionsView(ft.View):
 			self.page.update()
 		except Exception as e:
 			logger.error(f"Error: {e}")
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 			self.page.update()
 
 		logger.info("Checking location permissions...")
@@ -180,12 +201,30 @@ class PermissionsView(ft.View):
 					self.page.update()
 				except Exception as e:
 					logger.error(f"Error: {e}")
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 					self.page.update()
 
 				try:
 					go_to_view(page=self.page, logger=logger, route='/')
 				except Exception as e:
 					logger.error(f"Error: {e}")
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 					go_to_view(page=self.page, logger=logger, route='/')
 
 			except Exception as e:
@@ -197,6 +236,15 @@ class PermissionsView(ft.View):
 					self.page.update()
 				except Exception as e:
 					logger.error(f"Error: {e}")
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 					self.page.update()
 
 				self.continue_without_coordinates()
@@ -208,6 +256,15 @@ class PermissionsView(ft.View):
 				self.page.update()
 			except Exception as e:
 				logger.error(f"Error: {e}")
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 				self.page.update()
 
 			self.continue_without_coordinates()

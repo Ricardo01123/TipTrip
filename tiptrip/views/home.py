@@ -1,7 +1,7 @@
 import flet as ft
 from logging import Logger, getLogger
 
-from requests import get, Response
+from requests import get, post, Response
 from requests.exceptions import ConnectTimeout
 
 from components.bars import *
@@ -28,7 +28,14 @@ class HomeView(ft.View):
 			location_settings=ft.GeolocatorSettings(
 				accuracy=ft.GeolocatorPositionAccuracy.BEST
 			),
-			on_error=lambda error: logger.error(f"Geolocator error: {error}"),
+			on_error=lambda _: post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 		)
 		self.page.overlay.append(self.gl)
 
@@ -350,6 +357,15 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			finally:
 				return [
@@ -435,6 +451,15 @@ class HomeView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 	def set_page_indexes(self) -> None:
 		logger.info("Setting page indexes...")
@@ -451,6 +476,15 @@ class HomeView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 	def previous_page(self, _: ft.ControlEvent) -> None:
 		logger.info(f"Going to previous page...")
@@ -467,6 +501,15 @@ class HomeView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 	def next_page(self, _: ft.ControlEvent) -> None:
 		logger.info(f"Going to next page...")
@@ -483,6 +526,15 @@ class HomeView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 	def search_place(self, _: ft.ControlEvent) -> None:
 		if self.txt_place_searcher.value == "":
@@ -516,6 +568,15 @@ class HomeView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 		# Case when the distance filter was activated
 		if not self.chk_distance.value:
@@ -531,6 +592,15 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.info("Storing new distance filter value and coordinates in session...")
 			self.page.session.set(key="chk_distance_value", value=False)
@@ -564,6 +634,15 @@ class HomeView(ft.View):
 						except Exception as e:
 							logger.error(f"Error: {e}")
 							self.page.update()
+							#! COMMENT
+							post(
+								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+								headers={"Content-Type": "application/json"},
+								json={
+									"user_id": self.page.session.get("id"),
+									"file": encode_logfile()
+								}
+							)
 
 						logger.info("Storing new distance filter values in session...")
 						self.page.session.set(key="is_inside_cdmx", value=True)
@@ -591,11 +670,29 @@ class HomeView(ft.View):
 						except Exception as e:
 							logger.error(f"Error: {e}")
 							self.page.update()
+							#! COMMENT
+							post(
+								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+								headers={"Content-Type": "application/json"},
+								json={
+									"user_id": self.page.session.get("id"),
+									"file": encode_logfile()
+								}
+							)
 						try:
 							self.page.open(self.dlg_location)
 						except Exception as e:
 							logger.error(f"Error: {e}")
 							self.page.open(self.dlg_location)
+							#! COMMENT
+							post(
+								url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+								headers={"Content-Type": "application/json"},
+								json={
+									"user_id": self.page.session.get("id"),
+									"file": encode_logfile()
+								}
+							)
 
 				except Exception as e:
 					logger.warning(f"Error getting current coordinates: {e}")
@@ -607,6 +704,15 @@ class HomeView(ft.View):
 					except Exception as e:
 						logger.error(f"Error: {e}")
 						self.page.update()
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
 
 					self.dlg_error.title = ft.Text("Permisos de ubicación")
 					self.dlg_error.content = ft.Text(
@@ -618,6 +724,15 @@ class HomeView(ft.View):
 					except Exception as e:
 						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_error)
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": self.page.session.get("id"),
+								"file": encode_logfile()
+							}
+						)
 
 			else:
 				logger.warning("Location permissions are not granted...")
@@ -635,6 +750,15 @@ class HomeView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.update()
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 				logger.info("Opening location permissions dialog...")
 				self.dlg_error.title = ft.Text("Permisos de ubicación")
@@ -647,6 +771,15 @@ class HomeView(ft.View):
 				except Exception as e:
 					logger.error(f"Error: {e}")
 					self.page.open(self.dlg_error)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 	def apply_filters(self, event: ft.ControlEvent) -> None:
 		try:
@@ -659,6 +792,15 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.info("Applying filters...")
 			try:
@@ -723,6 +865,15 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 		except Exception as e:
 			logger.info("Hidding loading splash screen...")
@@ -734,6 +885,15 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.error(f"Error applying filters: {e}")
 			self.dlg_error.title.value = "Error al aplicar filtros"
@@ -747,6 +907,15 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 	def clean_filters(self, event: ft.ControlEvent) -> None:
 		try:
@@ -759,6 +928,15 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.info("Cleaning filters process started...")
 			try:
@@ -766,6 +944,15 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.close(self.dlg_sites_filter)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.info("Storing new clean filters values in session...")
 			self.page.session.set(key="drd_classification_value", value="Seleccionar todas")
@@ -781,6 +968,15 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.info("Checking location permissions...")
 			permission: ft.PermissionStatus = self.ph.request_permission(event.control.data, wait_timeout=60)
@@ -796,6 +992,15 @@ class HomeView(ft.View):
 					logger.error(f"Error getting current coordinates: {e}")
 					self.page.session.set(key="current_latitude", value=None)
 					self.page.session.set(key="current_longitude", value=None)
+					#! COMMENT
+					post(
+						url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+						headers={"Content-Type": "application/json"},
+						json={
+							"user_id": self.page.session.get("id"),
+							"file": encode_logfile()
+						}
+					)
 
 			else:
 				logger.warning("Location permissions are not granted. Continuing without distance filter...")
@@ -833,6 +1038,15 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 		except Exception as e:
 			logger.info("Hidding loading splash screen...")
@@ -844,6 +1058,15 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			logger.error(f"Error cleaning filters: {e}")
 			self.dlg_error.title.value = "Error al limpiar filtros"
@@ -857,6 +1080,15 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 	def check_if_open_map(self, event: ft.ControlEvent) -> None:
 		logger.info("Showing loading splash screen...")
@@ -867,6 +1099,15 @@ class HomeView(ft.View):
 		except Exception as e:
 			logger.error(f"Error: {e}")
 			self.page.update()
+			#! COMMENT
+			post(
+				url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+				headers={"Content-Type": "application/json"},
+				json={
+					"user_id": self.page.session.get("id"),
+					"file": encode_logfile()
+				}
+			)
 
 		logger.info("Checking location permissions...")
 		permission: ft.PermissionStatus = self.ph.request_permission(event.control.data, wait_timeout=60)
@@ -877,6 +1118,15 @@ class HomeView(ft.View):
 				go_to_view(self.page, logger=logger, route="/map")
 			except Exception as e:
 				logger.error(f"Error: {e}")
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 				go_to_view(self.page, logger=logger, route="/map")
 
 			logger.info("Hidding loading splash screen...")
@@ -886,6 +1136,15 @@ class HomeView(ft.View):
 				self.page.update()
 			except Exception as e:
 				logger.error(f"Error: {e}")
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 				self.page.update()
 
 		else:
@@ -898,6 +1157,15 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.update()
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)
 
 			self.dlg_error.title = ft.Text("Permisos de ubicación")
 			self.dlg_error.content = ft.Text(
@@ -909,3 +1177,12 @@ class HomeView(ft.View):
 			except Exception as e:
 				logger.error(f"Error: {e}")
 				self.page.open(self.dlg_error)
+				#! COMMENT
+				post(
+					url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+					headers={"Content-Type": "application/json"},
+					json={
+						"user_id": self.page.session.get("id"),
+						"file": encode_logfile()
+					}
+				)

@@ -54,9 +54,10 @@ class PrivacyPoliticsView(ft.View):
 									controls=[
 										ft.Container(
 											content=ft.Text(
-												value=PRIVACY_POLITICS,
+												value=TYC_AND_PP,
 												color=ft.Colors.BLACK,
-												text_align=ft.TextAlign.JUSTIFY
+												text_align=ft.TextAlign.JUSTIFY,
+												selectable=True
 											)
 										)
 									]

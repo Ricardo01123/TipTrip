@@ -4,7 +4,7 @@ from logging import Logger, getLogger
 from resources.config import *
 
 
-logger: Logger = getLogger(f"{PROJECT_NAME}.audio_player_component")
+logger: Logger = getLogger(f"{PROJECT_NAME}.{__name__}")
 
 
 class AudioPlayer(ft.Container):

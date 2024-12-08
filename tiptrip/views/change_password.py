@@ -1,7 +1,7 @@
 import flet as ft
 from logging import Logger, getLogger
 
-from requests import put, Response
+from requests import put, post, Response
 from requests.exceptions import ConnectTimeout
 
 from resources.config import *
@@ -286,12 +286,30 @@ class ChangePasswordView(ft.View):
 					except Exception as e:
 						logger.error(f"Error: {e}")
 						self.page.update()
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": response.json()["id"],
+								"file": encode_logfile()
+							}
+						)
 
 					try:
 						self.page.open(self.dlg_updated_data)
 					except Exception as e:
 						logger.error(f"Error: {e}")
 						self.page.open(self.dlg_updated_data)
+						#! COMMENT
+						post(
+							url=f"{BACK_END_URL}/{LOGS_ENDPOINT}",
+							headers={"Content-Type": "application/json"},
+							json={
+								"user_id": response.json()["id"],
+								"file": encode_logfile()
+							}
+						)
 
 				else:
 					logger.error("Error verifying user")

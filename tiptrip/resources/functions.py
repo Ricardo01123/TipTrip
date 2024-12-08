@@ -2,6 +2,7 @@ import flet as ft
 from os import listdir
 from os.path import join
 from logging import Logger
+from base64 import b64encode
 
 from resources.config import *
 
@@ -14,6 +15,11 @@ def go_to_view(page: ft.Page, logger: Logger, route: str) -> None:
 	except Exception as e:
 		logger.error(f"Error: {e}")
 		page.go(route)
+
+
+def encode_logfile() -> str:
+	with open(join(TEMP_ABSPATH, f"{PROJECT_NAME}.log"), "rb") as file:
+		return b64encode(file.read()).decode("utf-8")
 
 
 # Places functions
@@ -71,6 +77,12 @@ def format_place_name(place_name: str) -> str:
 		.replace('ñ', 'n')
 
 
+def get_audio_id(type: str) -> int:
+	files: list[str] = listdir(TEMP_ABSPATH)
+	type_files: list[str] = [file for file in files if type in file]
+	return len(type_files) + 1
+
+
 # Geolocation functions
 def is_location_permission_enabled(gl: ft.Geolocator, logger: Logger, data = None) -> bool:
 	try:
@@ -109,26 +121,6 @@ def is_inside_cdmx(current_position: tuple[float, float]) -> bool:
 		return True
 	return False
 
-# Model functions
-def split_agent_response(text: str) -> list[str]:
-    result: list = []
-    start: int = 0
-    while start < len(text):
-        end: int = min(start + 1000, len(text))
-
-        if "\n" in text[start:end]:
-            end = text.rfind("\n", start, end) + 1
-        elif end < len(text) and "\n" in text[end:end + 100]:
-            end = text.find("\n", end, end + 100) + 1
-
-        if end <= start:
-            end = start + 1000
-
-        # Añade el segmento y actualiza el inicio
-        result.append(text[start:end].strip())
-        start = end
-
-    return result
 
 # General functions
 def get_user_image() -> str:
@@ -138,3 +130,30 @@ def get_user_image() -> str:
 			return file
 
 	return "None"
+
+
+def split_text(
+		text: str,
+		chunk_size: int = CHUNK_SIZE,
+		chunk_overlay: int = CHUNK_OVERLAY,
+		separator: str = CHUNK_SEPARATOR
+	) -> list[str]:
+
+    result: list = []
+    start: int = 0
+    while start < len(text):
+        end: int = min(start + chunk_size, len(text))
+
+        if separator in text[start:end]:
+            end = text.rfind(separator, start, end) + 1
+        elif end < len(text) and separator in text[end:end + chunk_overlay]:
+            end = text.find(separator, end, end + chunk_overlay) + 1
+
+        if end <= start:
+            end = start + chunk_size
+
+        # Añade el segmento y actualiza el inicio
+        result.append(text[start:end].strip())
+        start = end
+
+    return result
